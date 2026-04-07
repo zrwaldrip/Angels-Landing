@@ -1,0 +1,38 @@
+name: Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore backend/AngelsLandingv2.API/AngelsLandingv2.API.csproj
+
+      - name: Build
+        run: dotnet build backend/AngelsLandingv2.API/AngelsLandingv2.API.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish backend/AngelsLandingv2.API/AngelsLandingv2.API.csproj --configuration Release --no-build --output ./publish
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          package: ./publish
