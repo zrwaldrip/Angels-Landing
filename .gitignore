@@ -9,6 +9,14 @@ bin/
 obj/
 out/
 publish/
+[Bb]in-verify/
+**/[Bb]in-verify/
+*.dll
+*.exe
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+*.staticwebassets.endpoints.json
 
 # ─── SQLite databases ─────────────────────────────────────────────────────────
 *.sqlite
@@ -35,7 +43,12 @@ frontend/.env
 frontend/.env.local
 frontend/.env.*.local
 
-# ─── macOS ───────────────────────────────────────────────────────────────────
+# ─── Python / Jupyter / ML ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# ─── OS files ────────────────────────────────────────────────────────────────
 .DS_Store
 .AppleDouble
 .LSOverride
