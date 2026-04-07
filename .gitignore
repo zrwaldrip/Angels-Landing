@@ -1,0 +1,51 @@
+# ─── .NET ────────────────────────────────────────────────────────────────────
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+bin/
+obj/
+out/
+publish/
+
+# ─── SQLite databases ─────────────────────────────────────────────────────────
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+
+# ─── Secrets & environment ───────────────────────────────────────────────────
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+secrets.json
+.env
+.env.*
+
+# ─── EF Core migrations (optional: remove these lines if you want to commit migrations) ──
+# Migrations/
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+node_modules/
+dist/
+.vite/
+frontend/.env
+frontend/.env.*
+
+# ─── macOS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# ─── Rider / JetBrains ───────────────────────────────────────────────────────
+.idea/
+
+# ─── VS Code ─────────────────────────────────────────────────────────────────
+.vscode/
+
+# ─── Azure publish profiles ──────────────────────────────────────────────────
+*.pubxml
+*.pubxml.user
