@@ -7,7 +7,7 @@ from supabase import create_client, Client
 # Environment variables via GitHub Secrets
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-MODEL_PATH = "AngelsLandingv2/models/resident-progress-classifier.pkl"
+MODEL_PATH = "models/resident-progress-classifier.pkl"
 
 def run_scorer():
     if not SUPABASE_URL or not SUPABASE_KEY:
