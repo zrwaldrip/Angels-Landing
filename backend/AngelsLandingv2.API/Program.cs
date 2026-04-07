@@ -220,7 +220,7 @@ using (var scope = app.Services.CreateScope())
     if (IsSqliteConnectionString(identityConn))
         await authDb.Database.EnsureCreatedAsync();
     else
-        await authDb.Database.MigrateAsync();
+        Console.WriteLine("Bypassing Auth MigrateAsync to prevent Azure Crash.");
 
     await AuthIdentityGenerator.GenerateDefaultIdentityAsync(scope.ServiceProvider, app.Configuration);
 
@@ -229,7 +229,7 @@ using (var scope = app.Services.CreateScope())
     if (IsSqliteConnectionString(lighthouseConn))
         await lighthouseDb.Database.EnsureCreatedAsync();
     else
-        await lighthouseDb.Database.MigrateAsync();
+        Console.WriteLine("Bypassing Lighthouse MigrateAsync to prevent Azure Crash.");
 
     // Seed from CSVs
     var dataFolder = Path.Combine(AppContext.BaseDirectory, "SeedData");
