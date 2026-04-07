@@ -55,4 +55,6 @@ public class Resident
     public string? DateClosed { get; set; }
     public string? CreatedAt { get; set; }
     public string? NotesRestricted { get; set; }
+    public string? MlPredictionStatus { get; set; }
+    public string? MlLastCalculated { get; set; }
 }

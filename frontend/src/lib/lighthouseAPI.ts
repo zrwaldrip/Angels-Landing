@@ -38,6 +38,8 @@ export interface Resident {
   dateOfAdmission?: string;
   dateEnrolled?: string;
   dateClosed?: string;
+  mlPredictionStatus?: string;
+  mlLastCalculated?: string;
   [key: string]: unknown;
 }
 
