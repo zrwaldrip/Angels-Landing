@@ -140,12 +140,12 @@ public class AuthController(
         }
 
         var user = await userManager.GetUserAsync(User);
-        var roles = User.Claims
-            .Where(claim => claim.Type == ClaimTypes.Role)
-            .Select(claim => claim.Value)
-            .Distinct()
-            .OrderBy(role => role)
-            .ToArray();
+        var roles = user is null
+            ? Array.Empty<string>()
+            : (await userManager.GetRolesAsync(user))
+                .Distinct()
+                .OrderBy(role => role)
+                .ToArray();
 
         return Ok(new
         {

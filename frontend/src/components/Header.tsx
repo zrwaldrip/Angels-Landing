@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 function Header() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
+  const hasDonorRole = authSession.roles.includes('Donor');
+  const hasDonorPrivileges = hasDonorRole || isAdmin;
+  const isDonorOnly = isAuthenticated && authSession.roles.includes('Donor') && !isAdmin;
 
   const statusText = isLoading
     ? 'Checking sign-in…'
@@ -27,13 +30,20 @@ function Header() {
         <nav className="d-flex gap-3 flex-wrap">
           {isAuthenticated && (
             <>
-              <NavLink className="text-white text-decoration-none" to="/residents">Residents</NavLink>
-              <NavLink className="text-white text-decoration-none" to="/safehouses">Safehouses</NavLink>
-              <NavLink className="text-white text-decoration-none" to="/donations">Donations</NavLink>
-              <NavLink className="text-white text-decoration-none" to="/incidents">Case Records</NavLink>
+              {isDonorOnly ? (
+                <NavLink className="text-white text-decoration-none" to="/donor-portal">Donor Portal</NavLink>
+              ) : (
+                <>
+                  <NavLink className="text-white text-decoration-none" to="/residents">Residents</NavLink>
+                  <NavLink className="text-white text-decoration-none" to="/safehouses">Safehouses</NavLink>
+                  <NavLink className="text-white text-decoration-none" to="/donations">Donations</NavLink>
+                  <NavLink className="text-white text-decoration-none" to="/incidents">Case Records</NavLink>
+                  {isAdmin ? <NavLink className="text-white text-decoration-none" to="/users">Users</NavLink> : null}
+                </>
+              )}
             </>
           )}
-          <NavLink className="text-white text-decoration-none" to="/cookies">Cookies</NavLink>
+          {!isDonorOnly ? <NavLink className="text-white text-decoration-none" to="/cookies">Cookies</NavLink> : null}
         </nav>
       </div>
 
@@ -47,6 +57,7 @@ function Header() {
             </>
           ) : (
             <>
+              {hasDonorPrivileges ? <NavLink className="btn btn-light btn-sm text-primary" to="/donor-portal?donate=1">Donate</NavLink> : null}
               <NavLink className="text-white text-decoration-none" to="/mfa">MFA</NavLink>
               <NavLink className="text-white text-decoration-none" to="/logout">Logout</NavLink>
             </>

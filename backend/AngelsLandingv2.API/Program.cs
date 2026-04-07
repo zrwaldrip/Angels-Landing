@@ -32,9 +32,10 @@ if (corsOrigins.Count == 0 && !string.IsNullOrWhiteSpace(frontendUrl))
 if (corsOrigins.Count == 0)
     corsOrigins.Add(DefaultFrontendUrl);
 
+// If this API is configured with CORS origins, auth is expected to flow from a separate SPA origin.
+// Use cross-site cookie settings so browser credentialed fetches can carry the auth cookie.
 var needsCrossSiteAuthCookies =
-    allowAnyOrigin ||
-    corsOrigins.Exists(static o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+    allowAnyOrigin || corsOrigins.Count > 0;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,11 @@ static string ResolveIdentityConnectionString(IConfiguration configuration)
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<IForexRateService, ForexRateService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.frankfurter.app/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 // Identity database
 var identityConnectionString = ResolveIdentityConnectionString(builder.Configuration);
