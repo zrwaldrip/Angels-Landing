@@ -15,11 +15,13 @@ import SafehousesPage from './pages/SafehousesPage';
 import DonationsPage from './pages/DonationsPage';
 import IncidentsPage from './pages/IncidentsPage';
 import DonorPortalPage from './pages/DonorPortalPage';
+import UserManagementPage from './pages/UserManagementPage';
 
 function AppRoutes() {
   const { authSession, isAuthenticated } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
   const hasDonorRole = authSession.roles.includes('Donor');
+  const hasDonorPrivileges = hasDonorRole || isAdmin;
   const isDonorOnly = isAuthenticated && hasDonorRole && !isAdmin;
   const authenticatedHome = isDonorOnly ? '/donor-portal' : '/residents';
 
@@ -31,7 +33,7 @@ function AppRoutes() {
       <Route path="/logout" element={<LogoutPage />} />
       <Route path="/mfa" element={<ManageMFAPage />} />
       <Route path="/cookies" element={isDonorOnly ? <Navigate to="/donor-portal" replace /> : <CookiePolicyPage />} />
-      <Route path="/donor-portal" element={hasDonorRole ? <DonorPortalPage /> : <Navigate to="/" replace />} />
+      <Route path="/donor-portal" element={hasDonorPrivileges ? <DonorPortalPage /> : <Navigate to="/" replace />} />
 
       {isDonorOnly ? (
         <Route path="*" element={<Navigate to="/donor-portal" replace />} />
@@ -41,6 +43,7 @@ function AppRoutes() {
           <Route path="/safehouses" element={<SafehousesPage />} />
           <Route path="/donations" element={<DonationsPage />} />
           <Route path="/incidents" element={<IncidentsPage />} />
+          <Route path="/users" element={isAdmin ? <UserManagementPage /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       )}

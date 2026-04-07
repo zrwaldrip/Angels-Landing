@@ -5,6 +5,7 @@ function Header() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
   const hasDonorRole = authSession.roles.includes('Donor');
+  const hasDonorPrivileges = hasDonorRole || isAdmin;
   const isDonorOnly = isAuthenticated && authSession.roles.includes('Donor') && !isAdmin;
 
   const statusText = isLoading
@@ -37,6 +38,7 @@ function Header() {
                   <NavLink className="text-white text-decoration-none" to="/safehouses">Safehouses</NavLink>
                   <NavLink className="text-white text-decoration-none" to="/donations">Donations</NavLink>
                   <NavLink className="text-white text-decoration-none" to="/incidents">Case Records</NavLink>
+                  {isAdmin ? <NavLink className="text-white text-decoration-none" to="/users">Users</NavLink> : null}
                 </>
               )}
             </>
@@ -55,7 +57,7 @@ function Header() {
             </>
           ) : (
             <>
-              {hasDonorRole ? <NavLink className="btn btn-light btn-sm text-primary" to="/donor-portal?donate=1">Donate</NavLink> : null}
+              {hasDonorPrivileges ? <NavLink className="btn btn-light btn-sm text-primary" to="/donor-portal?donate=1">Donate</NavLink> : null}
               <NavLink className="text-white text-decoration-none" to="/mfa">MFA</NavLink>
               <NavLink className="text-white text-decoration-none" to="/logout">Logout</NavLink>
             </>
