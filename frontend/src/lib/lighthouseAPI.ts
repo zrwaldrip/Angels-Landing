@@ -148,9 +148,33 @@ export interface DonationListResult {
   items: Donation[];
 }
 
+export interface ForexConversionResult {
+  fromCurrency: string;
+  toCurrency: string;
+  amount: number;
+  convertedAmount: number;
+  rate: number;
+  asOfDate: string;
+  provider: string;
+}
+
 export function getDonations(params?: Record<string, string | number>) {
   const qs = new URLSearchParams(Object.entries(params ?? {}).map(([k, v]) => [k, String(v)])).toString();
   return apiFetch<DonationListResult>(`/api/donations${qs ? '?' + qs : ''}`);
+}
+
+export function getMyDonations(params?: Record<string, string | number>) {
+  const qs = new URLSearchParams(Object.entries(params ?? {}).map(([k, v]) => [k, String(v)])).toString();
+  return apiFetch<DonationListResult>(`/api/donations/mine${qs ? '?' + qs : ''}`);
+}
+
+export function createMyDonation(d: Partial<Donation>) {
+  return apiFetch<Donation>('/api/donations/mine', { method: 'POST', body: JSON.stringify(d) });
+}
+
+export function convertCurrency(from: 'USD' | 'PHP', to: 'USD' | 'PHP', amount: number) {
+  const qs = new URLSearchParams({ from, to, amount: String(amount) }).toString();
+  return apiFetch<ForexConversionResult>(`/api/forex/convert?${qs}`);
 }
 
 export function createDonation(d: Partial<Donation>) {

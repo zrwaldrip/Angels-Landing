@@ -25,7 +25,7 @@ function LoginPage() {
     try {
       await loginUser(email, password, rememberMe, twoFactorCode || undefined, recoveryCode || undefined);
       await refreshAuthState();
-      navigate('/residents');
+      navigate('/');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to log in.');
     } finally {
