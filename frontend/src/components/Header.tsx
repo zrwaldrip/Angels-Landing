@@ -31,7 +31,10 @@ function Header() {
           {isAuthenticated && (
             <>
               {isDonorOnly ? (
-                <NavLink className="text-white text-decoration-none" to="/donor-portal">Donor Portal</NavLink>
+                <>
+                  <NavLink className="text-white text-decoration-none" to="/donor-portal">Donor Portal</NavLink>
+                  <NavLink className="text-white text-decoration-none" to="/donor-impact">Donor Impact</NavLink>
+                </>
               ) : (
                 <>
                   <NavLink className="text-white text-decoration-none" to="/residents">Residents</NavLink>
