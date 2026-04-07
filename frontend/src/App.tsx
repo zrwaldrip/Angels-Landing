@@ -1,6 +1,8 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
 import { CookieConsentProvider } from './context/CookieConsentContext';
 import CookieConsentBanner from './components/CookieConsentBanner';
@@ -16,7 +18,6 @@ import DonationsPage from './pages/DonationsPage';
 import IncidentsPage from './pages/IncidentsPage';
 import DonorPortalPage from './pages/DonorPortalPage';
 import UserManagementPage from './pages/UserManagementPage';
-import DonorImpactPage from './pages/DonorImpactPage';
 
 function AppRoutes() {
   const { authSession, isAuthenticated } = useAuth();
@@ -35,7 +36,6 @@ function AppRoutes() {
       <Route path="/mfa" element={<ManageMFAPage />} />
       <Route path="/cookies" element={isDonorOnly ? <Navigate to="/donor-portal" replace /> : <CookiePolicyPage />} />
       <Route path="/donor-portal" element={hasDonorPrivileges ? <DonorPortalPage /> : <Navigate to="/" replace />} />
-      <Route path="/donor-impact" element={hasDonorPrivileges ? <DonorImpactPage /> : <Navigate to="/" replace />} />
 
       {isDonorOnly ? (
         <Route path="*" element={<Navigate to="/donor-portal" replace />} />
@@ -52,12 +52,14 @@ function AppRoutes() {
     </Routes>
   );
 }
+import SocialMediaInsights from './pages/admin/SocialMediaInsights';
 
 function App() {
   return (
     <CookieConsentProvider>
       <AuthProvider>
         <Router>
+          <AppRoutes />
           <AppRoutes />
           <CookieConsentBanner />
         </Router>
