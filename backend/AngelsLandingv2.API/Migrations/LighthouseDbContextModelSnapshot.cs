@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace AngelsLandingv2.API.Migrations.LighthouseDb
+namespace AngelsLandingv2.API.Migrations
 {
     [DbContext(typeof(LighthouseDbContext))]
     partial class LighthouseDbContextModelSnapshot : ModelSnapshot
