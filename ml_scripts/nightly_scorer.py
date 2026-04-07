@@ -7,7 +7,7 @@ from supabase import create_client, Client
 # Environment variables via GitHub Secrets
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-MODEL_PATH = "AngelsLandingv2/models/resident-progress-classifier.pkl"
+MODEL_PATH = "models/resident-progress-classifier.pkl"
 
 def run_scorer():
     if not SUPABASE_URL or not SUPABASE_KEY:
@@ -22,12 +22,12 @@ def run_scorer():
     seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
     
     # Notice: we filter in python to avoid complex supabase nested query logic via REST
-    resp = supabase.table("Residents").select("*").in_("caseStatus", ["Open", "In Progress"]).execute()
+    resp = supabase.table("Residents").select("*").in_("CaseStatus", ["Open", "In Progress"]).execute()
     all_active = resp.data
     
     residents_to_score = []
     for r in all_active:
-        last_calc = r.get("mlLastCalculated")
+        last_calc = r.get("MlLastCalculated")
         if not last_calc or last_calc < seven_days_ago:
             residents_to_score.append(r)
             
@@ -56,11 +56,11 @@ def run_scorer():
         
         # 3. Write back to Supabase
         update_data = {
-            "mlPredictionStatus": label,
-            "mlLastCalculated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            "MlPredictionStatus": label,
+            "MlLastCalculated": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
-        res = supabase.table("Residents").update(update_data).eq("residentId", resident["residentId"]).execute()
-        print(f"Updated Resident {resident['residentId']} -> {label}")
+        res = supabase.table("Residents").update(update_data).eq("ResidentId", resident["ResidentId"]).execute()
+        print(f"Updated Resident {resident['ResidentId']} -> {label}")
 
 if __name__ == '__main__':
     run_scorer()
