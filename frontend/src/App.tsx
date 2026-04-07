@@ -13,6 +13,7 @@ import ResidentsPage from './pages/ResidentsPage';
 import SafehousesPage from './pages/SafehousesPage';
 import DonationsPage from './pages/DonationsPage';
 import IncidentsPage from './pages/IncidentsPage';
+import SocialMediaInsights from './pages/admin/SocialMediaInsights';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/safehouses" element={<SafehousesPage />} />
             <Route path="/donations" element={<DonationsPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
+            <Route path="/admin/social-media-insights" element={<SocialMediaInsights />} />
           </Routes>
           <CookieConsentBanner />
         </Router>
