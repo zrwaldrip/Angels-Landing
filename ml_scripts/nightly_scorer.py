@@ -22,7 +22,7 @@ def run_scorer():
     seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
     
     # Notice: we filter in python to avoid complex supabase nested query logic via REST
-    resp = supabase.table("Residents").select("*").in_("CaseStatus", ["Open", "In Progress"]).execute()
+    resp = supabase.table("Residents").select("*").in_("CaseStatus", ["Active"]).execute()
     all_active = resp.data
     
     residents_to_score = []
