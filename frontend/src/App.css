@@ -216,6 +216,47 @@ body {
   color: #e5edff;
 }
 
+.app-main .mfa-setup-panel {
+  background: rgba(10, 23, 45, 0.78);
+  border-color: rgba(170, 195, 236, 0.24) !important;
+}
+
+.app-main .mfa-qr-image {
+  background: #eef4ff;
+  border-color: rgba(147, 173, 215, 0.5) !important;
+}
+
+.app-main .mfa-shared-key {
+  color: #c6dbff;
+  background: rgba(8, 18, 36, 0.7);
+  border: 1px solid rgba(148, 175, 220, 0.35);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  overflow-wrap: anywhere;
+}
+
+.app-main .mfa-recovery-alert {
+  background: rgba(31, 57, 99, 0.5);
+  border: 1px solid rgba(159, 187, 238, 0.38);
+  color: #e8f1ff;
+}
+
+.app-main .mfa-required-popup {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(126, 183, 255, 0.6);
+  background: linear-gradient(135deg, rgba(34, 92, 173, 0.95), rgba(44, 122, 198, 0.95));
+  color: #f5faff;
+  box-shadow: 0 14px 36px rgba(20, 77, 154, 0.45);
+}
+
+.app-main .mfa-required-popup-title {
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.2rem;
+}
+
 .app-main .bg-white,
 .app-main .bg-light {
   background-color: rgba(15, 30, 57, 0.72) !important;
@@ -473,7 +514,7 @@ body {
 
 .app-footer {
   border-top: 1px solid rgba(26, 42, 58, 0.15);
-  padding: 1.2rem 0 0.9rem;
+  padding: 3.2rem 0 0.9rem;
   color: rgba(235, 243, 255, 0.92);
 }
 

@@ -106,13 +106,13 @@ function ManageMfaPage() {
                   </div>
                   <div className="row g-4">
                     <div className="col-md-5">
-                      <div className="border rounded p-3 h-100 bg-light-subtle">
+                      <div className="border rounded p-3 h-100 mfa-setup-panel">
                         <h3 className="h6">Authenticator setup</h3>
                         {qrCodeDataUrl ? (
-                          <img src={qrCodeDataUrl} alt="Authenticator app QR code" className="img-fluid border rounded bg-white p-2 mb-3" />
+                          <img src={qrCodeDataUrl} alt="Authenticator app QR code" className="img-fluid border rounded mfa-qr-image p-2 mb-3" />
                         ) : null}
                         <p className="mb-2"><strong>Shared key</strong></p>
-                        <code className="d-block mb-3">{twoFactorStatus.sharedKey ?? 'Unavailable'}</code>
+                        <code className="d-block mb-3 mfa-shared-key">{twoFactorStatus.sharedKey ?? 'Unavailable'}</code>
                         <p className="small text-muted mb-0">Scan the QR code or enter the shared key manually.</p>
                       </div>
                     </div>
@@ -147,7 +147,7 @@ function ManageMfaPage() {
                     </div>
                   </div>
                   {recoveryCodes.length > 0 ? (
-                    <div className="alert alert-warning mt-4 mb-0" role="alert">
+                    <div className="alert mfa-recovery-alert mt-4 mb-0" role="alert">
                       <h3 className="h6">Recovery codes</h3>
                       <p className="mb-2">Save these now. They are shown only when newly generated.</p>
                       <ul className="mb-0">
