@@ -1,0 +1,61 @@
+<step title="BackgroundTrace" date="2026-04-07T19:08:01.703" instance="a6e48b" url="/api/zipdeploy" method="POST" >
+  <step title="Updating shutdown sentinel last write time" date="2026-04-07T19:08:01.718" SemaphoreCount="7" /><!-- duration: 0ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-04-07T19:08:01.718" /><!-- duration: 0ms -->
+  <step title="Creating temporary deployment" date="2026-04-07T19:08:01.718" /><!-- duration: 62ms -->
+  <step title="Performing fetch based deployment" date="2026-04-07T19:08:01.781" >
+    <step title="Fetching changes." date="2026-04-07T19:08:01.828" /><!-- duration: 16ms -->
+    <step title="Starting LocalZipHandler" date="2026-04-07T19:08:01.859" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\dp4aljbo.zip (21.54 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-04-07T19:08:01.890" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\dp4aljbo.zip (21.54 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-04-07T19:08:01.890" >
+      <step title="Extracting 114 entries to C:\local\Temp\zipdeploy\extracted directory" date="2026-04-07T19:08:01.906" >
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Swashbuckle.AspNetCore.Swagger.dll ..." date="2026-04-07T19:08:01.906" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Microsoft.Data.Sqlite.dll ..." date="2026-04-07T19:08:01.937" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\appsettings.Development.json ..." date="2026-04-07T19:08:01.937" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll ..." date="2026-04-07T19:08:01.953" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\SQLitePCLRaw.core.dll ..." date="2026-04-07T19:08:01.953" /><!-- duration: 0ms -->
+        <step title="Omitting extracting file traces ..." date="2026-04-07T19:08:01.968" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\linux-musl-s390x\native\libe_sqlite3.so ..." date="2026-04-07T19:08:02.562" /><!-- duration: 31ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\win-x64\native\e_sqlite3.dll ..." date="2026-04-07T19:08:02.593" /><!-- duration: 31ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\browser-wasm\nativeassets\net9.0\e_sqlite3.a ..." date="2026-04-07T19:08:02.625" /><!-- duration: 31ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\linux-riscv64\native\libe_sqlite3.so ..." date="2026-04-07T19:08:02.656" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\runtimes\win-x86\native\e_sqlite3.dll ..." date="2026-04-07T19:08:02.672" /><!-- duration: 31ms -->
+      </step><!-- duration: 797ms -->
+    </step><!-- duration: 813ms -->
+    <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2026-04-07T19:08:02.703" /><!-- duration: 16ms -->
+    <step title="DeploymentManager.Deploy(id:8d1495e9eb624ad5819a4f77a7779723)" date="2026-04-07T19:08:02.718" >
+      <step title="Collecting changeset information" date="2026-04-07T19:08:02.734" /><!-- duration: 16ms -->
+      <step title="Updating submodules" date="2026-04-07T19:08:02.765" >
+        <step title="Updating submodules." date="2026-04-07T19:08:02.781" /><!-- duration: 0ms -->
+      </step><!-- duration: 31ms -->
+      <step title="Preparing deployment for commit id &apos;8d1495e9eb&apos;." date="2026-04-07T19:08:02.828" /><!-- duration: 0ms -->
+      <step title="Determining deployment builder" date="2026-04-07T19:08:02.859" >
+        <step title="Builder is BasicBuilder" date="2026-04-07T19:08:02.859" /><!-- duration: 0ms -->
+      </step><!-- duration: 16ms -->
+      <step title="Copying SSH keys" date="2026-04-07T19:08:02.890" /><!-- duration: 0ms -->
+      <step title="Building" date="2026-04-07T19:08:02.890" >
+        <step title="Generating deployment script." date="2026-04-07T19:08:02.937" /><!-- duration: 0ms -->
+        <step title="Generating deployment script" date="2026-04-07T19:08:02.953" >
+          <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2026-04-07T19:08:02.984" /><!-- duration: 0ms -->
+          <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2026-04-07T19:08:03.000" /><!-- duration: 0ms -->
+        </step><!-- duration: 63ms -->
+        <step title="Running deployment command..." date="2026-04-07T19:08:03.046" /><!-- duration: 16ms -->
+        <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2026-04-07T19:08:03.078" /><!-- duration: 0ms -->
+        <step title="Executing external process" date="2026-04-07T19:08:03.093" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+          <step title="Handling Basic Web Site deployment." date="2026-04-07T19:08:03.234" /><!-- duration: 0ms -->
+          <step title="Creating app_offline.htm" date="2026-04-07T19:08:03.562" /><!-- duration: 0ms -->
+          <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2026-04-07T19:08:03.562" /><!-- duration: 16ms -->
+          <step title="Deleting app_offline.htm" date="2026-04-07T19:08:03.578" /><!-- duration: 0ms -->
+          <step title="Finished successfully." date="2026-04-07T19:08:03.593" /><!-- duration: 0ms -->
+        </step><!-- duration: 500ms -->
+        <step title="Running post deployment command(s)..." date="2026-04-07T19:08:03.625" /><!-- duration: 0ms -->
+        <step title="Triggering recycle (preview mode disabled)." date="2026-04-07T19:08:03.671" /><!-- duration: 0ms -->
+        <step title="Ignoring FS watcher based recycle request as this is a classic Windows app." date="2026-04-07T19:08:03.671" /><!-- duration: 0ms -->
+        <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = ZipDeploy. Extract zip. , deployer = ms-azuretools-vscode, os = windows, sku = Free, siteName = AngelsLanding-Backend, siteHostName = angelslanding-backend-bagjg0bvcmgrbybk.eastus-01.azurewebsites.net, deploymentStatus = Success" date="2026-04-07T19:08:03.718" /><!-- duration: 0ms -->
+      </step><!-- duration: 953ms -->
+    </step><!-- duration: 1141ms -->
+    <step title="Cleaning up temp files" date="2026-04-07T19:08:03.859" /><!-- duration: 0ms -->
+    <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-04-07T19:08:03.875" /><!-- duration: 0ms -->
+  </step><!-- duration: 2109ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-04-07T19:08:03.890" /><!-- duration: 16ms -->
+  <step title="Deleting shutdown sentinel file" date="2026-04-07T19:08:03.906" SemaphoreCount="8" /><!-- duration: 0ms -->
+</step><!-- duration: 2203ms -->

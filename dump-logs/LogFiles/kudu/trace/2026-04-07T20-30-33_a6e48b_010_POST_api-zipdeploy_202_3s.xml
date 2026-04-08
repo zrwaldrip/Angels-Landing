@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-04-07T20:30:33.943" instance="a6e48b" url="/api/zipdeploy?author=ms-azuretools-vscode&amp;deployer=ms-azuretools-vscode&amp;isAsync=true&amp;trackDeploymentId=true" method="POST" type="request" pid="9736,2,17" Transfer-Encoding="chunked" Accept-Encoding="gzip,deflate" Accept-Language="en" Authorization="Bea..." Host="angelslanding-backend-bagjg0bvcmgrbybk.scm.eastus-01.azurewebsites.net" User-Agent="vscode-azureappservice/0.26.5 core-rest-pipeline/1.22.2 Node/22.22.1 (Darwin 25.3.0; arm64)" x-ms-correlation-request-id="048251f3-ced6-4cf0-9d0a-4285e2862680" x-ms-client-request-id="d2ae798a-e40b-495b-8dac-a05fc4090330" X-ARR-LOG-ID="d2ae798a-e40b-495b-8dac-a05fc4090330" CLIENT-IP="128.187.112.27:57718" X-SITE-DEPLOYMENT-ID="AngelsLanding-Backend" WAS-DEFAULT-HOSTNAME="angelslanding-backend-bagjg0bvcmgrbybk.scm.eastus-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?author=ms-azuretools-vscode&amp;deployer=ms-azuretools-vscode&amp;isAsync=true&amp;trackDeploymentId=true" >
+  <step title="Cleanup Xml Logs" date="2026-04-07T20:30:33.943" /><!-- duration: 0ms -->
+  <step title="ZipPushDeploy" date="2026-04-07T20:30:34.068" >
+    <step title="ZipDeploy. Extract zip. " date="2026-04-07T20:30:34.068" /><!-- duration: 16ms -->
+    <step title="Starting PushDeployAsync" date="2026-04-07T20:30:34.083" /><!-- duration: 0ms -->
+    <step title="Updating shutdown sentinel last write time" date="2026-04-07T20:30:34.083" SemaphoreCount="7" /><!-- duration: 16ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-04-07T20:30:34.099" /><!-- duration: 16ms -->
+    <step title="Saving request content to C:\local\Temp\zipdeploy\phke1eni.zip" date="2026-04-07T20:30:34.115" >
+      <step title="Total 22,669,172 bytes written to C:\local\Temp\zipdeploy\phke1eni.zip" date="2026-04-07T20:30:36.615" /><!-- duration: 0ms -->
+    </step><!-- duration: 2516ms -->
+    <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-04-07T20:30:36.646" /><!-- duration: 0ms -->
+    <step title="Deleting shutdown sentinel file" date="2026-04-07T20:30:36.646" SemaphoreCount="8" /><!-- duration: 0ms -->
+    <step title="Starting FetchDeploy" date="2026-04-07T20:30:36.662" /><!-- duration: 0ms -->
+    <step title="Start deployment in the background" date="2026-04-07T20:30:36.662" /><!-- duration: 47ms -->
+  </step><!-- duration: 2641ms -->
+  <step title="Outgoing response" date="2026-04-07T20:30:36.709" type="response" statusCode="202" statusText="Accepted" Server="Microsoft-IIS/10.0" x-ms-request-id="d2ae798a-e40b-495b-8dac-a05fc4090330" Retry-After="30" Cache-Control="private" X-AspNet-Version="4.0.30319" Location="https://angelslanding-backend-bagjg0bvcmgrbybk.scm.eastus-01.azurewebsites.net/api/deployments/latest?deployer=ms-azuretools-vscode&amp;time=2026-04-07_20-30-36Z" /><!-- duration: 16ms -->
+</step><!-- duration: 2781ms -->
