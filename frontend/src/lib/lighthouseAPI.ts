@@ -127,6 +127,18 @@ export function getSafehouseMetrics(safehouseId?: number) {
   return apiFetch<SafehouseMetric[]>(`/api/safehouse-metrics${qs}`);
 }
 
+export function createSafehouseMetric(m: Partial<SafehouseMetric>) {
+  return apiFetch<SafehouseMetric>('/api/safehouse-metrics', { method: 'POST', body: JSON.stringify(m) });
+}
+
+export function updateSafehouseMetric(id: number, m: Partial<SafehouseMetric>) {
+  return apiFetch<void>(`/api/safehouse-metrics/${id}`, { method: 'PUT', body: JSON.stringify(m) });
+}
+
+export function deleteSafehouseMetric(id: number) {
+  return apiFetch<void>(`/api/safehouse-metrics/${id}`, { method: 'DELETE' });
+}
+
 // ─── Donations ────────────────────────────────────────────────────────────────
 export interface Donation {
   donationId: number;
@@ -325,6 +337,18 @@ export function getHealthRecords(residentId?: number) {
   return apiFetch<HealthRecord[]>(`/api/health-records${qs}`);
 }
 
+export function createHealthRecord(h: Partial<HealthRecord>) {
+  return apiFetch<HealthRecord>('/api/health-records', { method: 'POST', body: JSON.stringify(h) });
+}
+
+export function updateHealthRecord(id: number, h: Partial<HealthRecord>) {
+  return apiFetch<void>(`/api/health-records/${id}`, { method: 'PUT', body: JSON.stringify(h) });
+}
+
+export function deleteHealthRecord(id: number) {
+  return apiFetch<void>(`/api/health-records/${id}`, { method: 'DELETE' });
+}
+
 // ─── Education Records ────────────────────────────────────────────────────────
 export interface EducationRecord {
   educationRecordId: number;
@@ -344,6 +368,18 @@ export function getEducationRecords(residentId?: number) {
   return apiFetch<EducationRecord[]>(`/api/education-records${qs}`);
 }
 
+export function createEducationRecord(e: Partial<EducationRecord>) {
+  return apiFetch<EducationRecord>('/api/education-records', { method: 'POST', body: JSON.stringify(e) });
+}
+
+export function updateEducationRecord(id: number, e: Partial<EducationRecord>) {
+  return apiFetch<void>(`/api/education-records/${id}`, { method: 'PUT', body: JSON.stringify(e) });
+}
+
+export function deleteEducationRecord(id: number) {
+  return apiFetch<void>(`/api/education-records/${id}`, { method: 'DELETE' });
+}
+
 // ─── Intervention Plans ───────────────────────────────────────────────────────
 export interface InterventionPlan {
   planId: number;
@@ -358,6 +394,18 @@ export interface InterventionPlan {
 export function getInterventionPlans(residentId?: number) {
   const qs = residentId ? `?residentId=${residentId}` : '';
   return apiFetch<InterventionPlan[]>(`/api/intervention-plans${qs}`);
+}
+
+export function createInterventionPlan(p: Partial<InterventionPlan>) {
+  return apiFetch<InterventionPlan>('/api/intervention-plans', { method: 'POST', body: JSON.stringify(p) });
+}
+
+export function updateInterventionPlan(id: number, p: Partial<InterventionPlan>) {
+  return apiFetch<void>(`/api/intervention-plans/${id}`, { method: 'PUT', body: JSON.stringify(p) });
+}
+
+export function deleteInterventionPlan(id: number) {
+  return apiFetch<void>(`/api/intervention-plans/${id}`, { method: 'DELETE' });
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────
@@ -375,6 +423,18 @@ export interface Partner {
 
 export function getPartners() {
   return apiFetch<Partner[]>('/api/partners');
+}
+
+export function createPartner(p: Partial<Partner>) {
+  return apiFetch<Partner>('/api/partners', { method: 'POST', body: JSON.stringify(p) });
+}
+
+export function updatePartner(id: number, p: Partial<Partner>) {
+  return apiFetch<void>(`/api/partners/${id}`, { method: 'PUT', body: JSON.stringify(p) });
+}
+
+export function deletePartner(id: number) {
+  return apiFetch<void>(`/api/partners/${id}`, { method: 'DELETE' });
 }
 
 // ─── Campaigns ────────────────────────────────────────────────────────────────
