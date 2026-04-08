@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+import statsmodels.formula.api as smf
 from datetime import datetime
 from supabase import create_client, Client
 
@@ -14,9 +15,19 @@ VERDICT_MID  = 0.3
 
 
 def fetch_table(supabase: Client, table: str) -> pd.DataFrame:
-    """Fetch all rows from a Supabase table as a DataFrame."""
-    resp = supabase.table(table).select("*").execute()
-    return pd.DataFrame(resp.data) if resp.data else pd.DataFrame()
+    """Fetch all rows from a Supabase table using pagination."""
+    all_data = []
+    start = 0
+    limit = 1000
+    while True:
+        resp = supabase.table(table).select("*").range(start, start + limit - 1).execute()
+        if not resp.data:
+            break
+        all_data.extend(resp.data)
+        if len(resp.data) < limit:
+            break
+        start += limit
+    return pd.DataFrame(all_data) if all_data else pd.DataFrame()
 
 
 def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFrame) -> pd.DataFrame:
@@ -53,6 +64,23 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
             how='left'
         )
 
+    # --- New Metrics ---
+    # 1. Top Channel 
+    if 'acquisition_channel' in df.columns:
+        channel_revenue = df.groupby(['campaign_name', 'acquisition_channel'])['estimated_value'].sum().reset_index()
+        top_channels = channel_revenue.sort_values('estimated_value', ascending=False).drop_duplicates('campaign_name')
+        top_channels = top_channels.rename(columns={'acquisition_channel': 'top_channel'}).drop(columns=['estimated_value'])
+    else:
+        top_channels = pd.DataFrame(columns=['campaign_name', 'top_channel'])
+
+    # 2. Recurring Rate
+    if 'is_recurring' in df.columns:
+        df['is_recurring'] = df['is_recurring'].fillna(False).astype(bool)
+        recurring_rates = df.groupby('campaign_name')['is_recurring'].mean().reset_index()
+        recurring_rates = recurring_rates.rename(columns={'is_recurring': 'recurring_rate'})
+    else:
+        recurring_rates = pd.DataFrame(columns=['campaign_name', 'recurring_rate'])
+
     # --- Campaign-level aggregation ---
     campaign_summary = df.groupby('campaign_name').agg(
         total_value  = ('estimated_value', 'sum'),
@@ -60,14 +88,29 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
         donor_count  = ('supporter_id', 'nunique'),
     ).reset_index()
 
-    # --- Composite score: 50% normalised total value + 50% normalised donor count ---
-    def norm(series: pd.Series) -> pd.Series:
-        rng = series.max() - series.min()
-        return (series - series.min()) / rng if rng > 0 else pd.Series([0.5] * len(series), index=series.index)
+    campaign_summary = campaign_summary.merge(top_channels, on='campaign_name', how='left')
+    campaign_summary = campaign_summary.merge(recurring_rates, on='campaign_name', how='left')
 
+    # 3. Significance (OLS)
+    try:
+        model = smf.ols("estimated_value ~ C(campaign_name)", data=df).fit()
+        pvals = model.pvalues
+        sig_dict = {}
+        for campaign in campaign_summary['campaign_name']:
+            col_name = f"C(campaign_name)[T.{campaign}]"
+            if col_name in pvals and pvals[col_name] < 0.05:
+                sig_dict[campaign] = True
+            else:
+                sig_dict[campaign] = False
+        campaign_summary['mlr_significant'] = campaign_summary['campaign_name'].map(sig_dict)
+    except Exception as e:
+        print(f"Warning: MLR failed to run: {e}")
+        campaign_summary['mlr_significant'] = False
+
+    # --- Composite score: Rank Scaling ---
     campaign_summary['composite_score'] = (
-        0.5 * norm(campaign_summary['total_value']) +
-        0.5 * norm(campaign_summary['donor_count'])
+        0.5 * campaign_summary['total_value'].rank(pct=True) +
+        0.5 * campaign_summary['donor_count'].rank(pct=True)
     )
 
     # --- Rank and verdict ---
@@ -113,6 +156,9 @@ def run_scorer():
             "Rank":             int(row['rank']),
             "Verdict":          row['verdict'],
             "MlLastCalculated": now,
+            "RecurringRate":    float(row.get('recurring_rate', 0)),
+            "TopChannel":       str(row.get('top_channel', '')),
+            "MlrSignificant":   bool(row.get('mlr_significant', False)),
         }
 
         # Upsert on CampaignName (unique column) so re-runs update rather than insert

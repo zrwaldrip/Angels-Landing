@@ -1,0 +1,14 @@
+2026-04-07T04:09:19.8850649Z,Updating submodules.,2fff5e7a-53f8-45c2-8cf8-2531fbcb0820,0
+2026-04-07T04:09:19.9163166Z,Preparing deployment for commit id 'ad43a9e119'.,413a1dd4-8c78-437e-ac18-8eaeb7cc6d6e,0
+2026-04-07T04:09:20.0256927Z,Generating deployment script.,d27ff563-b37c-428a-aee6-27c4c00e29d7,0
+	2026-04-07T04:09:20.1038154Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-04-07T04:09:20.1350693Z,Running deployment command...,9303a623-2514-441c-b5d9-80482630edd5,0
+	2026-04-07T04:09:20.1506929Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-04-07T04:09:20.3225727Z,Handling Basic Web Site deployment.,,0
+	2026-04-07T04:09:20.5725740Z,Creating app_offline.htm,,0
+	2026-04-07T04:09:20.5882020Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-04-07T04:09:20.5882020Z,Deleting app_offline.htm,,0
+	2026-04-07T04:09:20.6038222Z,Finished successfully.,,0
+2026-04-07T04:09:20.6350725Z,Running post deployment command(s)...,b9ff23a0-a5c1-495b-bf22-06b0db05e243,0
+2026-04-07T04:09:20.6975730Z,Triggering recycle (preview mode disabled).,8b8e752d-b2d6-4281-9140-2c1e882bb662,0
+2026-04-07T04:09:20.7288273Z,Deployment successful.,f601fe26-8942-42a5-8a8d-06c63499597b,0

@@ -1,0 +1,62 @@
+<step title="BackgroundTrace" date="2026-04-08T18:48:00.037" instance="a6e48b" url="/api/zipdeploy" method="POST" >
+  <step title="Updating shutdown sentinel last write time" date="2026-04-08T18:48:00.037" SemaphoreCount="7" /><!-- duration: 0ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; acquired" date="2026-04-08T18:48:00.037" /><!-- duration: 16ms -->
+  <step title="Creating temporary deployment" date="2026-04-08T18:48:00.053" /><!-- duration: 16ms -->
+  <step title="Performing fetch based deployment" date="2026-04-08T18:48:00.068" >
+    <step title="Fetching changes." date="2026-04-08T18:48:00.115" /><!-- duration: 16ms -->
+    <step title="Starting LocalZipHandler" date="2026-04-08T18:48:00.146" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\ln0i0ob0.zip (21.64 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-04-08T18:48:00.162" /><!-- duration: 0ms -->
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file C:\local\Temp\zipdeploy\ln0i0ob0.zip (21.64 MB) to C:\local\Temp\zipdeploy\extracted" date="2026-04-08T18:48:00.162" >
+      <step title="Renaming extractTargetDirectory(C:\local\Temp\zipdeploy\extracted) to tempDirectory(C:\local\Temp\zipdeploy\ydqu5zop.3ao)" date="2026-04-08T18:48:00.162" /><!-- duration: 16ms -->
+      <step title="Extracting 168 entries to C:\local\Temp\zipdeploy\extracted directory" date="2026-04-08T18:48:00.193" >
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Microsoft.OpenApi.dll ..." date="2026-04-08T18:48:00.193" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Microsoft.EntityFrameworkCore.Abstractions.dll ..." date="2026-04-08T18:48:00.225" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\AngelsLandingv2.API.dll ..." date="2026-04-08T18:48:00.225" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Swashbuckle.AspNetCore.Swagger.dll ..." date="2026-04-08T18:48:00.240" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\Microsoft.Data.Sqlite.dll ..." date="2026-04-08T18:48:00.240" /><!-- duration: 16ms -->
+        <step title="Omitting extracting file traces ..." date="2026-04-08T18:48:00.256" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\publish\publish\bin-verify\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json ..." date="2026-04-08T18:48:01.006" /><!-- duration: 16ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\publish\publish\publish\BuildHost-net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config ..." date="2026-04-08T18:48:01.021" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json ..." date="2026-04-08T18:48:01.021" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config ..." date="2026-04-08T18:48:01.037" /><!-- duration: 0ms -->
+        <step title="Extracting to C:\local\Temp\zipdeploy\extracted\publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json ..." date="2026-04-08T18:48:01.037" /><!-- duration: 0ms -->
+      </step><!-- duration: 859ms -->
+    </step><!-- duration: 891ms -->
+    <step title="Before sending BuildRequestReceived status to /api/updatedeploystatus" date="2026-04-08T18:48:01.053" /><!-- duration: 0ms -->
+    <step title="DeploymentManager.Deploy(id:de2809af583e4594952faaf196ae92b2)" date="2026-04-08T18:48:01.053" >
+      <step title="Collecting changeset information" date="2026-04-08T18:48:01.068" /><!-- duration: 31ms -->
+      <step title="Updating submodules" date="2026-04-08T18:48:01.100" >
+        <step title="Updating submodules." date="2026-04-08T18:48:01.131" /><!-- duration: 0ms -->
+      </step><!-- duration: 47ms -->
+      <step title="Preparing deployment for commit id &apos;de2809af58&apos;." date="2026-04-08T18:48:01.209" /><!-- duration: 16ms -->
+      <step title="Determining deployment builder" date="2026-04-08T18:48:01.240" >
+        <step title="Builder is BasicBuilder" date="2026-04-08T18:48:01.240" /><!-- duration: 16ms -->
+      </step><!-- duration: 16ms -->
+      <step title="Copying SSH keys" date="2026-04-08T18:48:01.271" /><!-- duration: 0ms -->
+      <step title="Building" date="2026-04-08T18:48:01.271" >
+        <step title="Generating deployment script." date="2026-04-08T18:48:01.553" /><!-- duration: 0ms -->
+        <step title="Generating deployment script" date="2026-04-08T18:48:01.568" >
+          <step title="Using cached version of the deployment script for command: -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;" date="2026-04-08T18:48:01.584" /><!-- duration: 0ms -->
+          <step title="Using cached version of deployment script (command: &apos;azure -y --no-dot-deployment -r &quot;C:\local\Temp\zipdeploy\extracted&quot; -o &quot;C:\home\site\deployments\tools&quot; --basic --sitePath &quot;C:\local\Temp\zipdeploy\extracted&quot;&apos;)." date="2026-04-08T18:48:01.600" /><!-- duration: 0ms -->
+        </step><!-- duration: 31ms -->
+        <step title="Running deployment command..." date="2026-04-08T18:48:01.631" /><!-- duration: 0ms -->
+        <step title="Command: &quot;C:\home\site\deployments\tools\deploy.cmd&quot;" date="2026-04-08T18:48:01.646" /><!-- duration: 0ms -->
+        <step title="Executing external process" date="2026-04-08T18:48:01.662" type="process" path="starter.cmd" arguments="&quot;C:\home\site\deployments\tools\deploy.cmd&quot;" >
+          <step title="Handling Basic Web Site deployment." date="2026-04-08T18:48:01.787" /><!-- duration: 0ms -->
+          <step title="Creating app_offline.htm" date="2026-04-08T18:48:02.131" /><!-- duration: 16ms -->
+          <step title="KuduSync.NET from: &apos;C:\local\Temp\zipdeploy\extracted&apos; to: &apos;C:\home\site\wwwroot&apos;" date="2026-04-08T18:48:02.146" /><!-- duration: 0ms -->
+          <step title="Deleting app_offline.htm" date="2026-04-08T18:48:02.162" /><!-- duration: 0ms -->
+          <step title="Finished successfully." date="2026-04-08T18:48:02.162" /><!-- duration: 0ms -->
+        </step><!-- duration: 516ms -->
+        <step title="Running post deployment command(s)..." date="2026-04-08T18:48:02.209" /><!-- duration: 0ms -->
+        <step title="Triggering recycle (preview mode disabled)." date="2026-04-08T18:48:02.256" /><!-- duration: 0ms -->
+        <step title="Ignoring FS watcher based recycle request as this is a classic Windows app." date="2026-04-08T18:48:02.256" /><!-- duration: 0ms -->
+        <step title="Deployment successful. DEPLOYMENTINFO: deploymentPath = ZipDeploy. Extract zip. , deployer = ms-azuretools-vscode, os = windows, sku = Free, siteName = AngelsLanding-Backend, siteHostName = angelslanding-backend-bagjg0bvcmgrbybk.eastus-01.azurewebsites.net, deploymentStatus = Success" date="2026-04-08T18:48:02.287" /><!-- duration: 0ms -->
+      </step><!-- duration: 1125ms -->
+    </step><!-- duration: 1359ms -->
+    <step title="Cleaning up temp files" date="2026-04-08T18:48:02.412" /><!-- duration: 0ms -->
+    <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-04-08T18:48:02.428" /><!-- duration: 0ms -->
+  </step><!-- duration: 2359ms -->
+  <step title="LockFile &apos;C:\home\site\locks\deployments.lock&apos; released" date="2026-04-08T18:48:02.443" /><!-- duration: 0ms -->
+  <step title="Deleting shutdown sentinel file" date="2026-04-08T18:48:02.443" SemaphoreCount="8" /><!-- duration: 0ms -->
+</step><!-- duration: 2422ms -->

@@ -1,0 +1,549 @@
+<Events><Event><System><Provider Name=".NET Runtime"/><EventID>1026</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:46:50Z"/><EventRecordID>1305947703</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application: w3wp.exe
+CoreCLR Version: 10.0.326.7603
+.NET Version: 10.0.3
+Description: The process was terminated due to an unhandled exception.
+Exception Info: System.InvalidOperationException: ConnectionStrings:AngelsLandingIdentityConnection is empty. ASPNETCORE_ENVIRONMENT=(not set). For local dev: set LocalDevelopment:UseSqliteIdentity to true in appsettings.Development.json.
+   at Program.&lt;&lt;Main&gt;$&gt;g__ResolveIdentityConnectionString|0_6(IConfiguration configuration) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 123
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 138
+   at Program.&lt;Main&gt;(String[] args)
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1018</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:46:50Z"/><EventRecordID>1305947718</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' hit unexpected managed exception, exception code = '0xe0434352'. First 30KB characters of captured stdout and stderr logs:
+Unhandled exception. System.InvalidOperationException: ConnectionStrings:AngelsLandingIdentityConnection is empty. ASPNETCORE_ENVIRONMENT=(not set). For local dev: set LocalDevelopment:UseSqliteIdentity to true in appsettings.Development.json.
+   at Program.&lt;&lt;Main&gt;$&gt;g__ResolveIdentityConnectionString|0_6(IConfiguration configuration) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 123
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 138
+   at Program.&lt;Main&gt;(String[] args)
+</Data><Data>Process Id: 14912.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1007</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:46:50Z"/><EventRecordID>1305947718</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' failed to load coreclr. Exception message:
+CLR worker thread exited prematurely</Data><Data>Process Id: 14912.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:54:11Z"/><EventRecordID>1306388593</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Database.Connection
+EventId: 20004
+
+An error occurred using the connection to database 'postgres' on server 'tcp://db.yenymyiibslxcjlkyvcc.supabase.co:5432'.
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1026</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:54:11Z"/><EventRecordID>1306388609</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application: w3wp.exe
+CoreCLR Version: 10.0.326.7603
+.NET Version: 10.0.3
+Description: The process was terminated due to an unhandled exception.
+Exception Info: Npgsql.NpgsqlException (0x80004005): The requested name is valid, but no data of the requested type was found.
+ ---&gt; System.Net.Sockets.SocketException (11004): The requested name is valid, but no data of the requested type was found.
+   at System.Net.NameResolutionPal.ProcessResult(SocketError errorCode, GetAddrInfoExContext* context)
+   at System.Net.NameResolutionPal.GetAddressInfoExCallback(Int32 error, Int32 bytes, NativeOverlapped* overlapped)
+--- End of stack trace from previous location ---
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.&lt;Open&gt;g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.&lt;Get&gt;g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.&lt;Open&gt;g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 217
+   at Program.&lt;Main&gt;(String[] args)
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1018</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:54:11Z"/><EventRecordID>1306388625</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' hit unexpected managed exception, exception code = '0xe0434352'. First 30KB characters of captured stdout and stderr logs:
+fail: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'postgres' on server 'tcp://db.yenymyiibslxcjlkyvcc.supabase.co:5432'.
+Unhandled exception. Npgsql.NpgsqlException (0x80004005): The requested name is valid, but no data of the requested type was found.
+ ---&gt; System.Net.Sockets.SocketException (11004): The requested name is valid, but no data of the requested type was found.
+   at System.Net.NameResolutionPal.ProcessResult(SocketError errorCode, GetAddrInfoExContext* context)
+   at System.Net.NameResolutionPal.GetAddressInfoExCallback(Int32 error, Int32 bytes, NativeOverlapped* overlapped)
+--- End of stack trace from previous location ---
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.&lt;Open&gt;g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.&lt;Get&gt;g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.&lt;Open&gt;g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 217
+   at Program.&lt;Main&gt;(String[] args)
+</Data><Data>Process Id: 6896.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1007</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:54:11Z"/><EventRecordID>1306388625</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' failed to load coreclr. Exception message:
+CLR worker thread exited prematurely</Data><Data>Process Id: 6896.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:58:42Z"/><EventRecordID>1306659250</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Database.Connection
+EventId: 20004
+
+An error occurred using the connection to database 'postgres' on server 'tcp://db.yenymyiibslxcjlkyvcc.supabase.co:5432'.
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1026</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:58:42Z"/><EventRecordID>1306659265</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application: w3wp.exe
+CoreCLR Version: 10.0.326.7603
+.NET Version: 10.0.3
+Description: The process was terminated due to an unhandled exception.
+Exception Info: Npgsql.NpgsqlException (0x80004005): The requested name is valid, but no data of the requested type was found.
+ ---&gt; System.Net.Sockets.SocketException (11004): The requested name is valid, but no data of the requested type was found.
+   at System.Net.NameResolutionPal.ProcessResult(SocketError errorCode, GetAddrInfoExContext* context)
+   at System.Net.NameResolutionPal.GetAddressInfoExCallback(Int32 error, Int32 bytes, NativeOverlapped* overlapped)
+--- End of stack trace from previous location ---
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.&lt;Open&gt;g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.&lt;Get&gt;g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.&lt;Open&gt;g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 217
+   at Program.&lt;Main&gt;(String[] args)
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1018</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:58:42Z"/><EventRecordID>1306659281</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' hit unexpected managed exception, exception code = '0xe0434352'. First 30KB characters of captured stdout and stderr logs:
+fail: Microsoft.EntityFrameworkCore.Database.Connection[20004]
+      An error occurred using the connection to database 'postgres' on server 'tcp://db.yenymyiibslxcjlkyvcc.supabase.co:5432'.
+Unhandled exception. Npgsql.NpgsqlException (0x80004005): The requested name is valid, but no data of the requested type was found.
+ ---&gt; System.Net.Sockets.SocketException (11004): The requested name is valid, but no data of the requested type was found.
+   at System.Net.NameResolutionPal.ProcessResult(SocketError errorCode, GetAddrInfoExContext* context)
+   at System.Net.NameResolutionPal.GetAddressInfoExCallback(Int32 error, Int32 bytes, NativeOverlapped* overlapped)
+--- End of stack trace from previous location ---
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.&lt;Open&gt;g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.&lt;Get&gt;g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.&lt;Open&gt;g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository.GetAppliedMigrationsAsync(CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 217
+   at Program.&lt;Main&gt;(String[] args)
+</Data><Data>Process Id: 8240.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1007</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T03:58:42Z"/><EventRecordID>1306659281</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' failed to load coreclr. Exception message:
+CLR worker thread exited prematurely</Data><Data>Process Id: 8240.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>2</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T04:09:37Z"/><EventRecordID>1307314468</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager
+EventId: 35
+
+No XML encryptor configured. Key {9247d7a6-7ecc-4fd6-ad0d-969e34f6beb5} may be persisted to storage in unencrypted form.
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T04:09:37Z"/><EventRecordID>1307314531</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 4932.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T04:25:40Z"/><EventRecordID>1308277125</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 4932.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T04:55:46Z"/><EventRecordID>1310083750</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 9164.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T05:07:21Z"/><EventRecordID>1310778453</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 9164.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T05:08:04Z"/><EventRecordID>1310821265</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 11620.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T05:08:05Z"/><EventRecordID>1310822140</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 11620.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T05:08:20Z"/><EventRecordID>1310837812</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 6776.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T05:31:12Z"/><EventRecordID>1312209109</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 6776.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T15:09:47Z"/><EventRecordID>1346924031</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 10800.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T15:54:21Z"/><EventRecordID>1349598125</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 10800.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T16:23:05Z"/><EventRecordID>1351321953</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 2696.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T17:01:54Z"/><EventRecordID>1353650593</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 2696.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T17:16:52Z"/><EventRecordID>1354549250</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 14716.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T17:45:41Z"/><EventRecordID>1356277890</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 14716.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T18:40:43Z"/><EventRecordID>1359580156</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 10216.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:04:19Z"/><EventRecordID>1360995859</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 10216.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:06:22Z"/><EventRecordID>1361119000</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 13588.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:08:03Z"/><EventRecordID>1361219515</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 13588.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:08:03Z"/><EventRecordID>1361219593</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 13588.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:08:15Z"/><EventRecordID>1361232156</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 11016.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:16:53Z"/><EventRecordID>1361750156</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 11016.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:16:54Z"/><EventRecordID>1361750250</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 11016.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:17:11Z"/><EventRecordID>1361767796</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 13856.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T19:57:00Z"/><EventRecordID>1364156625</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 13856.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:05:48Z"/><EventRecordID>1364684328</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 11528.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:28:20Z"/><EventRecordID>1366036390</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 11528.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:28:20Z"/><EventRecordID>1366036437</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 11528.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1026</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:28:30Z"/><EventRecordID>1366046531</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application: w3wp.exe
+CoreCLR Version: 10.0.326.7603
+.NET Version: 10.0.3
+Description: The process was terminated due to an unhandled exception.
+Exception Info: System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'LighthouseDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 232
+   at Program.&lt;Main&gt;(String[] args)
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1018</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:28:30Z"/><EventRecordID>1366046531</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' hit unexpected managed exception, exception code = '0xe0434352'. First 30KB characters of captured stdout and stderr logs:
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (128ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (94ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (89ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" character varying(150) NOT NULL,
+          "ProductVersion" character varying(32) NOT NULL,
+          CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (84ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (91ms) [Parameters=[@normalizedName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[@normalizedName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[@normalizedEmail='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."AccessFailedCount", a."ConcurrencyStamp", a."Email", a."EmailConfirmed", a."LockoutEnabled", a."LockoutEnd", a."NormalizedEmail", a."NormalizedUserName", a."PasswordHash", a."PhoneNumber", a."PhoneNumberConfirmed", a."SecurityStamp", a."TwoFactorEnabled", a."UserName"
+      FROM "AspNetUsers" AS a
+      WHERE a."NormalizedEmail" = @normalizedEmail
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[@normalizedRoleName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedRoleName
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[@p='?', @p0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."UserId", a."RoleId"
+      FROM "AspNetUserRoles" AS a
+      WHERE a."UserId" = @p AND a."RoleId" = @p0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (85ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+Unhandled exception. System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'LighthouseDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 232
+   at Program.&lt;Main&gt;(String[] args)
+</Data><Data>Process Id: 11128.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1007</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:28:30Z"/><EventRecordID>1366046546</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' failed to load coreclr. Exception message:
+CLR worker thread exited prematurely</Data><Data>Process Id: 11128.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:30:38Z"/><EventRecordID>1366174312</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 11128.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:30:38Z"/><EventRecordID>1366174828</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 11128.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1026</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:30:49Z"/><EventRecordID>1366185390</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application: w3wp.exe
+CoreCLR Version: 10.0.326.7603
+.NET Version: 10.0.3
+Description: The process was terminated due to an unhandled exception.
+Exception Info: System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'LighthouseDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 232
+   at Program.&lt;Main&gt;(String[] args)
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1018</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:30:49Z"/><EventRecordID>1366185390</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' hit unexpected managed exception, exception code = '0xe0434352'. First 30KB characters of captured stdout and stderr logs:
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (124ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (91ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (86ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+          "MigrationId" character varying(150) NOT NULL,
+          "ProductVersion" character varying(32) NOT NULL,
+          CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (82ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (82ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20405]
+      No migrations were applied. The database is already up to date.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (91ms) [Parameters=[@normalizedName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (83ms) [Parameters=[@normalizedName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedName
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (83ms) [Parameters=[@normalizedEmail='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."AccessFailedCount", a."ConcurrencyStamp", a."Email", a."EmailConfirmed", a."LockoutEnabled", a."LockoutEnd", a."NormalizedEmail", a."NormalizedUserName", a."PasswordHash", a."PhoneNumber", a."PhoneNumberConfirmed", a."SecurityStamp", a."TwoFactorEnabled", a."UserName"
+      FROM "AspNetUsers" AS a
+      WHERE a."NormalizedEmail" = @normalizedEmail
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (83ms) [Parameters=[@normalizedRoleName='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."Id", a."ConcurrencyStamp", a."Name", a."NormalizedName"
+      FROM "AspNetRoles" AS a
+      WHERE a."NormalizedName" = @normalizedRoleName
+      LIMIT 2
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (84ms) [Parameters=[@p='?', @p0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT a."UserId", a."RoleId"
+      FROM "AspNetUserRoles" AS a
+      WHERE a."UserId" = @p AND a."RoleId" = @p0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (84ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+Unhandled exception. System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'LighthouseDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Program.&lt;Main&gt;$(String[] args) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Program.cs:line 232
+   at Program.&lt;Main&gt;(String[] args)
+</Data><Data>Process Id: 5132.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1007</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:30:49Z"/><EventRecordID>1366185406</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application '/LM/W3SVC/262043260/ROOT' with physical root 'C:\home\site\wwwroot\' failed to load coreclr. Exception message:
+CLR worker thread exited prematurely</Data><Data>Process Id: 5132.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:46:41Z"/><EventRecordID>1367137343</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 5132.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:46:41Z"/><EventRecordID>1367137859</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 5132.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:46:58Z"/><EventRecordID>1367154203</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 13308.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:08Z"/><EventRecordID>1367164937</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Database.Command
+EventId: 20102
+SpanId: 1953a70e09469ca8
+TraceId: 9a2dd9cb4d7c0581bc0c6dcb1f3126d9
+ParentId: 0000000000000000
+RequestId: 400015f4-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+ActionId: da33928f-a577-4dfd-b5d7-b71d4544c75e
+ActionName: AngelsLandingv2.API.Controllers.ResidentsController.GetAll (AngelsLandingv2.API)
+
+Failed executing DbCommand (90ms) [Parameters=[@p0='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT r."ResidentId", r."AgeUponAdmission", r."AssignedSocialWorker", r."BirthStatus", r."CaseCategory", r."CaseControlNo", r."CaseStatus", r."CreatedAt", r."CurrentRiskLevel", r."DateCaseStudyPrepared", r."DateClosed", r."DateColbObtained", r."DateColbRegistered", r."DateEnrolled", r."DateOfAdmission", r."DateOfBirth", r."FamilyIndigenous", r."FamilyInformalSettler", r."FamilyIs4ps", r."FamilyParentPwd", r."FamilySoloParent", r."HasSpecialNeeds", r."InitialCaseAssessment", r."InitialRiskLevel", r."InternalCode", r."IsPwd", r."LengthOfStay", r."MlLastCalculated", r."MlPredictionStatus", r."NotesRestricted", r."PlaceOfBirth", r."PresentAge", r."PwdType", r."ReferralSource", r."ReferringAgencyPerson", r."ReintegrationStatus", r."ReintegrationType", r."Religion", r."SafehouseId", r."Sex", r."SpecialNeedsDiagnosis", r."SubCatAtRisk", r."SubCatChildLabor", r."SubCatChildWithHiv", r."SubCatCicl", r."SubCatOrphaned", r."SubCatOsaec", r."SubCatPhysicalAbuse", r."SubCatSexualAbuse", r."SubCatStreetChild", r."SubCatTrafficked"
+FROM "Residents" AS r
+ORDER BY r."ResidentId"
+LIMIT @p0 OFFSET @p
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:08Z"/><EventRecordID>1367165015</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Query
+EventId: 10100
+SpanId: 1953a70e09469ca8
+TraceId: 9a2dd9cb4d7c0581bc0c6dcb1f3126d9
+ParentId: 0000000000000000
+RequestId: 400015f4-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+ActionId: da33928f-a577-4dfd-b5d7-b71d4544c75e
+ActionName: AngelsLandingv2.API.Controllers.ResidentsController.GetAll (AngelsLandingv2.API)
+
+An exception occurred while iterating over the results of a query for context type 'AngelsLandingv2.API.Data.LighthouseDbContext'.
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+
+Exception: 
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:08Z"/><EventRecordID>1367165031</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer
+EventId: 2
+SpanId: 1953a70e09469ca8
+TraceId: 9a2dd9cb4d7c0581bc0c6dcb1f3126d9
+ParentId: 0000000000000000
+RequestId: 400015f4-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+
+Connection ID "17437937766573807081", Request ID "400015f4-0002-f200-b63f-84710c7967bb": An unhandled exception was thrown by the application.
+
+Exception: 
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at AngelsLandingv2.API.Controllers.ResidentsController.GetAll(Int32 page, Int32 pageSize, String search, String caseStatus, String riskLevel, Nullable`1 safehouseId) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Controllers/ResidentsController.cs:line 38
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AngelsLandingv2.API.Infrastructure.SecurityHeaders.&lt;&gt;c__DisplayClass1_0.&lt;&lt;UseSecurityHeaders&gt;b__0&gt;d.MoveNext() in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Infrastructure/SecurityHeaders.cs:line 21
+--- End of stack trace from previous location ---
+   at AngelsLandingv2.API.Infrastructure.ManualCorsMiddleware.&lt;&gt;c__DisplayClass0_0.&lt;&lt;UseManualCors&gt;b__0&gt;d.MoveNext() in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Infrastructure/ManualCorsMiddleware.cs:line 66
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:21Z"/><EventRecordID>1367177968</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Database.Command
+EventId: 20102
+SpanId: dc4d90ed388b1f36
+TraceId: c35b9cea16abac68e9b283f308fea6b0
+ParentId: 0000000000000000
+RequestId: 400015f8-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+ActionId: da33928f-a577-4dfd-b5d7-b71d4544c75e
+ActionName: AngelsLandingv2.API.Controllers.ResidentsController.GetAll (AngelsLandingv2.API)
+
+Failed executing DbCommand (84ms) [Parameters=[@p0='?' (DbType = Int32), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT r."ResidentId", r."AgeUponAdmission", r."AssignedSocialWorker", r."BirthStatus", r."CaseCategory", r."CaseControlNo", r."CaseStatus", r."CreatedAt", r."CurrentRiskLevel", r."DateCaseStudyPrepared", r."DateClosed", r."DateColbObtained", r."DateColbRegistered", r."DateEnrolled", r."DateOfAdmission", r."DateOfBirth", r."FamilyIndigenous", r."FamilyInformalSettler", r."FamilyIs4ps", r."FamilyParentPwd", r."FamilySoloParent", r."HasSpecialNeeds", r."InitialCaseAssessment", r."InitialRiskLevel", r."InternalCode", r."IsPwd", r."LengthOfStay", r."MlLastCalculated", r."MlPredictionStatus", r."NotesRestricted", r."PlaceOfBirth", r."PresentAge", r."PwdType", r."ReferralSource", r."ReferringAgencyPerson", r."ReintegrationStatus", r."ReintegrationType", r."Religion", r."SafehouseId", r."Sex", r."SpecialNeedsDiagnosis", r."SubCatAtRisk", r."SubCatChildLabor", r."SubCatChildWithHiv", r."SubCatCicl", r."SubCatOrphaned", r."SubCatOsaec", r."SubCatPhysicalAbuse", r."SubCatSexualAbuse", r."SubCatStreetChild", r."SubCatTrafficked"
+FROM "Residents" AS r
+ORDER BY r."ResidentId"
+LIMIT @p0 OFFSET @p
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:21Z"/><EventRecordID>1367177984</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.EntityFrameworkCore.Query
+EventId: 10100
+SpanId: dc4d90ed388b1f36
+TraceId: c35b9cea16abac68e9b283f308fea6b0
+ParentId: 0000000000000000
+RequestId: 400015f8-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+ActionId: da33928f-a577-4dfd-b5d7-b71d4544c75e
+ActionName: AngelsLandingv2.API.Controllers.ResidentsController.GetAll (AngelsLandingv2.API)
+
+An exception occurred while iterating over the results of a query for context type 'AngelsLandingv2.API.Data.LighthouseDbContext'.
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+
+Exception: 
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+</Data></EventData></Event><Event><System><Provider Name=".NET Runtime"/><EventID>1000</EventID><Level>1</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T20:47:21Z"/><EventRecordID>1367177984</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Category: Microsoft.AspNetCore.Server.IIS.Core.IISHttpServer
+EventId: 2
+SpanId: dc4d90ed388b1f36
+TraceId: c35b9cea16abac68e9b283f308fea6b0
+ParentId: 0000000000000000
+RequestId: 400015f8-0002-f200-b63f-84710c7967bb
+RequestPath: /api/residents
+
+Connection ID "17437937766573807081", Request ID "400015f8-0002-f200-b63f-84710c7967bb": An unhandled exception was thrown by the application.
+
+Exception: 
+Npgsql.PostgresException (0x80004005): 42703: column r.MlLastCalculated does not exist
+
+POSITION: 550
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at AngelsLandingv2.API.Controllers.ResidentsController.GetAll(Int32 page, Int32 pageSize, String search, String caseStatus, String riskLevel, Nullable`1 safehouseId) in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Controllers/ResidentsController.cs:line 38
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeActionMethodAsync&gt;g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeNextActionFilterAsync&gt;g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State&amp; next, Scope&amp; scope, Object&amp; state, Boolean&amp; isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.&lt;InvokeInnerFilterAsync&gt;g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeFilterPipelineAsync&gt;g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.&lt;InvokeAsync&gt;g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AngelsLandingv2.API.Infrastructure.SecurityHeaders.&lt;&gt;c__DisplayClass1_0.&lt;&lt;UseSecurityHeaders&gt;b__0&gt;d.MoveNext() in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Infrastructure/SecurityHeaders.cs:line 21
+--- End of stack trace from previous location ---
+   at AngelsLandingv2.API.Infrastructure.ManualCorsMiddleware.&lt;&gt;c__DisplayClass0_0.&lt;&lt;UseManualCors&gt;b__0&gt;d.MoveNext() in /Users/zacharywaldrip/Intex2/AngelsLandingv2/backend/AngelsLandingv2.API/Infrastructure/ManualCorsMiddleware.cs:line 66
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.IIS.Core.IISHttpContextOfT`1.ProcessRequestAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column r.MlLastCalculated does not exist
+    Position: 550
+    File: parse_relation.c
+    Line: 3716
+    Routine: errorMissingColumn
+</Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T21:08:48Z"/><EventRecordID>1368464640</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 13308.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T21:10:17Z"/><EventRecordID>1368553234</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 3584.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T22:07:07Z"/><EventRecordID>1371963625</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 3584.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T22:11:14Z"/><EventRecordID>1372210250</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 10884.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-07T22:33:04Z"/><EventRecordID>1373520578</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 10884.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T05:21:50Z"/><EventRecordID>1398046281</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 14112.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T05:43:40Z"/><EventRecordID>1399356609</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 14112.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T15:07:28Z"/><EventRecordID>1433183578</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 15668.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:08:44Z"/><EventRecordID>1436860109</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 15668.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:08:44Z"/><EventRecordID>1436860203</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 15668.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:08:57Z"/><EventRecordID>1436872968</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 4164.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:56:45Z"/><EventRecordID>1439741109</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 4164.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:56:45Z"/><EventRecordID>1439741171</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 4164.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T16:56:56Z"/><EventRecordID>1439751750</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 11056.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T17:18:49Z"/><EventRecordID>1441064421</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 11056.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T17:19:24Z"/><EventRecordID>1441099421</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 5924.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T17:42:14Z"/><EventRecordID>1442469718</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 5924.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T17:43:08Z"/><EventRecordID>1442523953</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 13824.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T18:48:01Z"/><EventRecordID>1446417046</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 13824.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T18:48:01Z"/><EventRecordID>1446417093</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 13824.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T18:48:13Z"/><EventRecordID>1446429078</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 11632.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1012</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T19:06:08Z"/><EventRecordID>1447504187</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' was recycled after detecting app_offline.htm.</Data><Data>Process Id: 11632.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1033</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T19:06:09Z"/><EventRecordID>1447504250</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'MACHINE/WEBROOT/APPHOST/ANGELSLANDING-BACKEND' has shutdown.</Data><Data>Process Id: 11632.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event><Event><System><Provider Name="IIS AspNetCore Module V2"/><EventID>1032</EventID><Level>4</Level><Task>0</Task><Keywords>Keywords</Keywords><TimeCreated SystemTime="2026-04-08T19:06:24Z"/><EventRecordID>1447519750</EventRecordID><Channel>Application</Channel><Computer>WEBWK000005</Computer><Security/></System><EventData><Data>Application 'C:\home\site\wwwroot\' started successfully.</Data><Data>Process Id: 8036.</Data><Data>File Version: 20.0.26025.3. Description: IIS ASP.NET Core Module V2 Request Handler. Commit: </Data></EventData></Event></Events>

@@ -22,12 +22,14 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import ResidentsPage from "./pages/ResidentsPage";
 import SafehousesPage from "./pages/SafehousesPage";
 import DonationsPage from "./pages/DonationsPage";
+import PartnersPage from "./pages/PartnersPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
+import CampaignAnalysisPage from "./pages/CampaignAnalysisPage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -227,11 +229,31 @@ function AppLayout() {
 						}
 					/>
 					<Route
+						path="/partners"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<PartnersPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
 						path="/donations"
 						element={
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<DonationsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/campaign-analysis"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<CampaignAnalysisPage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}

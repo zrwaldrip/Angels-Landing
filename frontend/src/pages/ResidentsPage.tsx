@@ -4,11 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import {
   getResidents,
   getResidentFilterOptions,
+  getSafehouses,
   createResident,
   updateResident,
   deleteResident,
   type Resident,
+  type Safehouse,
 } from '../lib/lighthouseAPI';
+
+const SEX_OPTIONS = ['Female', 'Male', 'Other'] as const;
+const CASE_CATEGORY_OPTIONS = ['Exploitation', 'Abuse', 'Poverty', 'Abandonment', 'Health'] as const;
+const REINTEGRATION_STATUS_OPTIONS = ['Active', 'Pending', 'Completed', 'At Risk', 'Discontinued'] as const;
 
 function ResidentsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
@@ -24,6 +30,7 @@ function ResidentsPage() {
   const [riskLevelFilter, setRiskLevelFilter] = useState('');
   const [caseStatuses, setCaseStatuses] = useState<string[]>([]);
   const [riskLevels, setRiskLevels] = useState<string[]>([]);
+  const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,6 +54,10 @@ function ResidentsPage() {
       const opts = await getResidentFilterOptions();
       setCaseStatuses(opts.caseStatuses);
       setRiskLevels(opts.riskLevels);
+    } catch { /* ignore */ }
+    try {
+      const sh = await getSafehouses();
+      setSafehouses(sh);
     } catch { /* ignore */ }
   }
 
@@ -237,22 +248,139 @@ function ResidentsPage() {
               <div className="modal-body">
                 {saveError ? <div className="alert alert-danger">{saveError}</div> : null}
                 <div className="row g-3">
-                  {[
-                    ['internalCode', 'Internal Code'], ['caseControlNo', 'Case Control No'],
-                    ['caseStatus', 'Case Status'], ['sex', 'Sex'],
-                    ['caseCategory', 'Case Category'], ['currentRiskLevel', 'Risk Level'],
-                    ['assignedSocialWorker', 'Social Worker'], ['safehouseId', 'Safehouse ID'],
-                    ['dateOfAdmission', 'Date of Admission'], ['reintegrationStatus', 'Reintegration Status'],
-                  ].map(([field, label]) => (
-                    <div className="col-md-6" key={field}>
-                      <label className="form-label small">{label}</label>
-                      <input
-                        type="text" className="form-control form-control-sm"
-                        value={String(editingResident[field] ?? '')}
-                        onChange={(e) => setEditingResident(prev => prev ? { ...prev, [field]: e.target.value } : prev)}
-                      />
-                    </div>
-                  ))}
+                  <div className="col-md-6">
+                    <label className="form-label small">Internal Code</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.internalCode ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, internalCode: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Case Control No</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.caseControlNo ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseControlNo: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Case Status</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.caseStatus ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseStatus: e.target.value } : prev)}
+                    >
+                      <option value="">Select status...</option>
+                      {caseStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Sex</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.sex ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, sex: e.target.value } : prev)}
+                    >
+                      <option value="">Select sex...</option>
+                      {SEX_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date of Birth</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateOfBirth ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateOfBirth: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Case Category</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.caseCategory ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseCategory: e.target.value } : prev)}
+                    >
+                      <option value="">Select category...</option>
+                      {CASE_CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Risk Level</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.currentRiskLevel ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, currentRiskLevel: e.target.value } : prev)}
+                    >
+                      <option value="">Select risk level...</option>
+                      {riskLevels.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Initial Risk Level</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.initialRiskLevel ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, initialRiskLevel: e.target.value } : prev)}
+                    >
+                      <option value="">Select risk level...</option>
+                      {riskLevels.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Safehouse</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.safehouseId ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, safehouseId: Number(e.target.value) || undefined } : prev)}
+                    >
+                      <option value="">Select safehouse...</option>
+                      {safehouses.map((s) => <option key={s.safehouseId} value={s.safehouseId}>{s.safehouseId} - {s.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Social Worker</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.assignedSocialWorker ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, assignedSocialWorker: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date of Admission</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateOfAdmission ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateOfAdmission: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Reintegration Status</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.reintegrationStatus ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, reintegrationStatus: e.target.value } : prev)}
+                    >
+                      <option value="">Select status...</option>
+                      {REINTEGRATION_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date Enrolled</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateEnrolled ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateEnrolled: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date Closed</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateClosed ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateClosed: e.target.value } : prev)}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">

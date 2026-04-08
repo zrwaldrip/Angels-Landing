@@ -1,0 +1,37 @@
+2026-04-07T20:46:40.7879155Z,Updating submodules.,969ee685-d1b1-4b0b-894d-d89c9f9ab534,0
+2026-04-07T20:46:40.8191655Z,Preparing deployment for commit id 'd0f8cea192'.,57c49979-9766-4117-b259-8f6bb905b608,0
+2026-04-07T20:46:40.9129248Z,Generating deployment script.,ed045f41-75e8-43c6-8926-01bb9b6c3471,0
+	2026-04-07T20:46:40.9441693Z,Using cached version of deployment script (command: 'azure -y --no-dot-deployment -r "C:\local\Temp\zipdeploy\extracted" -o "C:\home\site\deployments\tools" --basic --sitePath "C:\local\Temp\zipdeploy\extracted"').,,0
+2026-04-07T20:46:40.9910446Z,Running deployment command...,7fb933fd-2c75-406f-a320-f7d9dce730fe,0
+	2026-04-07T20:46:40.9910446Z,Command: "C:\home\site\deployments\tools\deploy.cmd",,0
+	2026-04-07T20:46:41.1316706Z,Handling Basic Web Site deployment.,,0
+	2026-04-07T20:46:41.6004262Z,Creating app_offline.htm,,0
+	2026-04-07T20:46:41.6160542Z,KuduSync.NET from: 'C:\local\Temp\zipdeploy\extracted' to: 'C:\home\site\wwwroot',,0
+	2026-04-07T20:46:41.6160542Z,Copying file: 'AngelsLandingv2.API',,0
+	2026-04-07T20:46:41.6316780Z,Copying file: 'AngelsLandingv2.API.deps.json',,0
+	2026-04-07T20:46:41.6316780Z,Copying file: 'AngelsLandingv2.API.dll',,0
+	2026-04-07T20:46:41.6473024Z,Copying file: 'AngelsLandingv2.API.pdb',,0
+	2026-04-07T20:46:41.6629273Z,Copying file: 'AngelsLandingv2.API.runtimeconfig.json',,0
+	2026-04-07T20:46:41.6629273Z,Copying file: 'publish\publish\bin-verify\AngelsLandingv2.API.deps.json',,0
+	2026-04-07T20:46:41.6785522Z,Copying file: 'publish\publish\bin-verify\AngelsLandingv2.API.runtimeconfig.json',,0
+	2026-04-07T20:46:41.6941801Z,Copying file: 'publish\publish\bin-verify\AngelsLandingv2.API.staticwebassets.endpoints.json',,0
+	2026-04-07T20:46:41.6941801Z,Copying file: 'publish\publish\bin-verify\appsettings.json',,0
+	2026-04-07T20:46:41.7098111Z,Copying file: 'publish\publish\bin-verify\BuildHost-net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config',,0
+	2026-04-07T20:46:41.7098111Z,Copying file: 'publish\publish\bin-verify\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json',,0
+	2026-04-07T20:46:41.7254340Z,Copying file: 'publish\publish\bin-verify\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config',,0
+	2026-04-07T20:46:41.8191788Z,Copying file: 'publish\publish\bin-verify\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json',,0
+	2026-04-07T20:46:41.8348046Z,Copying file: 'publish\publish\publish\AngelsLandingv2.API.deps.json',,0
+	2026-04-07T20:46:41.8348046Z,Copying file: 'publish\publish\publish\AngelsLandingv2.API.runtimeconfig.json',,0
+	2026-04-07T20:46:41.8504295Z,Copying file: 'publish\publish\publish\AngelsLandingv2.API.staticwebassets.endpoints.json',,0
+	2026-04-07T20:46:41.8660546Z,Copying file: 'publish\publish\publish\appsettings.Development.json',,0
+	2026-04-07T20:46:41.8660546Z,Copying file: 'publish\publish\publish\appsettings.json',,0
+	2026-04-07T20:46:41.8816832Z,Copying file: 'publish\publish\publish\BuildHost-net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config',,0
+	2026-04-07T20:46:41.8816832Z,Copying file: 'publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json',,0
+	2026-04-07T20:46:41.8973052Z,Copying file: 'publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config',,0
+	2026-04-07T20:46:41.9129312Z,Copying file: 'publish\publish\publish\BuildHost-netcore\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json',,0
+	2026-04-07T20:46:43.7098293Z,Copying file: 'publish\publish\publish\web.config',,0
+	2026-04-07T20:46:43.7254527Z,Deleting app_offline.htm,,0
+	2026-04-07T20:46:43.7410797Z,Finished successfully.,,0
+2026-04-07T20:46:43.7723286Z,Running post deployment command(s)...,3f08276a-dd73-47c7-861b-72251ba56834,0
+2026-04-07T20:46:43.8035802Z,Triggering recycle (preview mode disabled).,99c57507-5980-478f-9a16-9aa7e12348ca,0
+2026-04-07T20:46:43.8504584Z,Deployment successful.,e674976a-5e30-46b7-af43-17124cb9a18b,0
