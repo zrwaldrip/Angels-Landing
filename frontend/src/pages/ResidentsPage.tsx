@@ -12,8 +12,43 @@ import {
   type Safehouse,
 } from '../lib/lighthouseAPI';
 
-const SEX_OPTIONS = ['Female', 'Male', 'Other'] as const;
-const CASE_CATEGORY_OPTIONS = ['Exploitation', 'Abuse', 'Poverty', 'Abandonment', 'Health'] as const;
+const SEX_OPTIONS = ['Female'] as const;
+const CASE_STATUS_OPTIONS = ['Active', 'On Hold', 'Reintegrated', 'Transferred', 'Closed'] as const;
+const CASE_CATEGORY_OPTIONS = [
+  'Abandoned',
+  'Neglected',
+  'Physically Abused',
+  'Sexually Abused',
+  'Trafficked',
+  'Child Laborer',
+  'Street Child',
+  'Child With HIV',
+  'OSAEC',
+  'CICL',
+  'At Risk',
+  'Other',
+] as const;
+const BIRTH_STATUS_OPTIONS = ['Legitimate', 'Illegitimate', 'Unknown'] as const;
+const REFERRAL_SOURCE_OPTIONS = [
+  'WCPD',
+  'DSWD',
+  'LGU',
+  'Barangay',
+  'School',
+  'Hospital',
+  'Court',
+  'NGO',
+  'Walk-in',
+  'Other',
+] as const;
+const REINTEGRATION_TYPE_OPTIONS = [
+  'Family Reintegration',
+  'Independent Living',
+  'Transfer to Another Facility',
+  'Foster Care',
+  'Adoption',
+  'Not Yet Planned',
+] as const;
 const REINTEGRATION_STATUS_OPTIONS = ['Active', 'Pending', 'Completed', 'At Risk', 'Discontinued'] as const;
 
 function ResidentsPage() {
@@ -27,9 +62,9 @@ function ResidentsPage() {
 
   const [search, setSearch] = useState('');
   const [caseStatusFilter, setCaseStatusFilter] = useState('');
-  const [riskLevelFilter, setRiskLevelFilter] = useState('');
-  const [safehouseFilter, setSafehouseFilter] = useState('');
   const [caseCategoryFilter, setCaseCategoryFilter] = useState('');
+  const [safehouseFilter, setSafehouseFilter] = useState('');
+  const [riskLevelFilter, setRiskLevelFilter] = useState('');
   const [caseStatuses, setCaseStatuses] = useState<string[]>([]);
   const [riskLevels, setRiskLevels] = useState<string[]>([]);
   const [caseCategories, setCaseCategories] = useState<string[]>([]);
@@ -50,7 +85,7 @@ function ResidentsPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void loadResidents();
-  }, [isAuthenticated, isLoading, page, search, caseStatusFilter, riskLevelFilter, safehouseFilter, caseCategoryFilter]);
+  }, [isAuthenticated, isLoading, page, search, caseStatusFilter, caseCategoryFilter, safehouseFilter, riskLevelFilter]);
 
   async function loadFilterOptions() {
     try {
@@ -63,6 +98,12 @@ function ResidentsPage() {
       const sh = await getSafehouses();
       setSafehouses(sh);
     } catch { /* ignore */ }
+
+    try {
+      const result = await getResidents({ page: 1, pageSize: 1000 });
+      const categories = Array.from(new Set(result.items.map((resident) => resident.caseCategory).filter((category): category is string => Boolean(category)))).sort();
+      setCaseCategories(categories);
+    } catch { /* ignore */ }
   }
 
   async function loadResidents() {
@@ -72,9 +113,9 @@ function ResidentsPage() {
       const params: Record<string, string | number> = { page, pageSize };
       if (search) params.search = search;
       if (caseStatusFilter) params.caseStatus = caseStatusFilter;
-      if (riskLevelFilter) params.riskLevel = riskLevelFilter;
-      if (safehouseFilter) params.safehouseId = safehouseFilter;
       if (caseCategoryFilter) params.caseCategory = caseCategoryFilter;
+      if (safehouseFilter) params.safehouseId = Number(safehouseFilter);
+      if (riskLevelFilter) params.riskLevel = riskLevelFilter;
       const result = await getResidents(params);
       setResidents(result.items);
       setTotal(result.total);
@@ -91,6 +132,50 @@ function ResidentsPage() {
     setShowModal(true);
   }
 
+  function safehouseLabel(id?: number) {
+    if (id == null) return 'Unassigned';
+    const safehouse = safehouses.find((item) => item.safehouseId === id);
+    return safehouse ? `${safehouse.safehouseCode ?? safehouse.safehouseId} - ${safehouse.name ?? 'Unnamed safehouse'}` : String(id);
+  }
+
+  function parseDate(value?: string) {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function formatYearsMonths(start: Date, end: Date) {
+    if (end < start) return '';
+
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+
+    if (end.getDate() < start.getDate()) {
+      months -= 1;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    if (years < 0) return '';
+
+    return `${years} year(s) ${months} month(s)`;
+  }
+
+  function computeAge(dateOfBirth?: string, referenceDate?: string) {
+    const dob = parseDate(dateOfBirth);
+    const reference = referenceDate ? parseDate(referenceDate) : new Date();
+    if (!dob || !reference || reference < dob) return '';
+    return formatYearsMonths(dob, reference);
+  }
+
+  function computeLengthOfStay(dateOfAdmission?: string, dateClosed?: string) {
+    const admission = parseDate(dateOfAdmission);
+    const end = dateClosed ? parseDate(dateClosed) : new Date();
+    if (!admission || !end || end < admission) return '';
+    return formatYearsMonths(admission, end);
+  }
+
   function handleNew() {
     setEditingResident({});
     setSaveError('');
@@ -102,10 +187,17 @@ function ResidentsPage() {
     setSaving(true);
     setSaveError('');
     try {
+      const payload: Partial<Resident> = {
+        ...editingResident,
+        ageUponAdmission: computeAge(String(editingResident.dateOfBirth ?? ''), String(editingResident.dateOfAdmission ?? '')),
+        presentAge: computeAge(String(editingResident.dateOfBirth ?? '')),
+        lengthOfStay: computeLengthOfStay(String(editingResident.dateOfAdmission ?? ''), String(editingResident.dateClosed ?? '')),
+      };
+
       if (editingResident.residentId) {
-        await updateResident(editingResident.residentId, editingResident);
+        await updateResident(editingResident.residentId, payload);
       } else {
-        await createResident(editingResident);
+        await createResident(payload);
       }
       setShowModal(false);
       await loadResidents();
@@ -142,7 +234,7 @@ function ResidentsPage() {
       <div className="row g-2 mb-3">
         <div className="col-md-4">
           <input
-            type="text" className="form-control form-control-sm" placeholder="Search by code or worker..."
+            type="text" className="form-control form-control-sm" placeholder="Search code, worker, category, referral..."
             value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
@@ -154,24 +246,28 @@ function ResidentsPage() {
           </select>
         </div>
         <div className="col-md-2">
-          <select className="form-select form-select-sm" value={riskLevelFilter}
-            onChange={(e) => { setRiskLevelFilter(e.target.value); setPage(1); }}>
-            <option value="">All risk levels</option>
-            {riskLevels.map((r) => <option key={r} value={r}>{r}</option>)}
+          <select className="form-select form-select-sm" value={caseCategoryFilter}
+            onChange={(e) => { setCaseCategoryFilter(e.target.value); setPage(1); }}>
+            <option value="">All case categories</option>
+            {caseCategories.map((category) => <option key={category} value={category}>{category}</option>)}
           </select>
         </div>
         <div className="col-md-2">
           <select className="form-select form-select-sm" value={safehouseFilter}
             onChange={(e) => { setSafehouseFilter(e.target.value); setPage(1); }}>
             <option value="">All safehouses</option>
-            {safehouses.map((s) => <option key={s.safehouseId} value={s.safehouseId}>{s.name ?? `Safehouse ${s.safehouseId}`}</option>)}
+            {safehouses.map((safehouse) => (
+              <option key={safehouse.safehouseId} value={safehouse.safehouseId}>
+                {safehouse.safehouseCode ?? safehouse.safehouseId} - {safehouse.name ?? 'Unnamed safehouse'}
+              </option>
+            ))}
           </select>
         </div>
         <div className="col-md-2">
-          <select className="form-select form-select-sm" value={caseCategoryFilter}
-            onChange={(e) => { setCaseCategoryFilter(e.target.value); setPage(1); }}>
-            <option value="">All categories</option>
-            {caseCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+          <select className="form-select form-select-sm" value={riskLevelFilter}
+            onChange={(e) => { setRiskLevelFilter(e.target.value); setPage(1); }}>
+            <option value="">All risk levels</option>
+            {riskLevels.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
       </div>
@@ -205,7 +301,7 @@ function ResidentsPage() {
                   <tr key={r.residentId}>
                     <td>{r.residentId}</td>
                     <td><code>{r.internalCode}</code></td>
-                    <td>{r.safehouseId}</td>
+                    <td>{safehouseLabel(r.safehouseId)}</td>
                     <td>
                       <span className={`badge ${r.caseStatus === 'Active' ? 'text-bg-success' : r.caseStatus === 'Closed' ? 'text-bg-secondary' : 'text-bg-warning'}`}>
                         {r.caseStatus}
@@ -292,7 +388,18 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseStatus: e.target.value } : prev)}
                     >
                       <option value="">Select status...</option>
-                      {caseStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {CASE_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Case Category</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.caseCategory ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseCategory: e.target.value } : prev)}
+                    >
+                      <option value="">Select category...</option>
+                      {CASE_CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -315,17 +422,14 @@ function ResidentsPage() {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label small">Case Category</label>
+                    <label className="form-label small">Birth Status</label>
                     <select
                       className="form-select form-select-sm"
-                      value={String(editingResident.caseCategory ?? '')}
-                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseCategory: e.target.value } : prev)}
+                      value={String(editingResident.birthStatus ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, birthStatus: e.target.value } : prev)}
                     >
-                      <option value="">Select category...</option>
-                      {CASE_CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                      {caseCategories.filter((c) => !CASE_CATEGORY_OPTIONS.includes(c as (typeof CASE_CATEGORY_OPTIONS)[number])).map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                      <option value="">Select birth status...</option>
+                      {BIRTH_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
                     </select>
                   </div>
                   <div className="col-12">
@@ -353,6 +457,122 @@ function ResidentsPage() {
                               onChange={(e) => setEditingResident(prev => prev ? { ...prev, [key]: e.target.checked } : prev)}
                             />
                             <label className="form-check-label small" htmlFor={key}>{label}</label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Place of Birth</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.placeOfBirth ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, placeOfBirth: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Religion</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.religion ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, religion: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Case Sub-categories</label>
+                    <div className="row g-2">
+                      {[
+                        ['subCatTrafficked', 'Trafficked'],
+                        ['subCatPhysicalAbuse', 'Physical Abuse'],
+                        ['subCatSexualAbuse', 'Sexual Abuse'],
+                        ['subCatChildLabor', 'Child Labor'],
+                        ['subCatOrphaned', 'Orphaned'],
+                        ['subCatAtRisk', 'At Risk'],
+                        ['subCatStreetChild', 'Street Child'],
+                        ['subCatChildWithHiv', 'Child With HIV'],
+                        ['subCatOsaec', 'OSAEC'],
+                        ['subCatCicl', 'CICL'],
+                      ].map(([field, label]) => (
+                        <div className="col-md-6" key={field}>
+                          <div className="form-check mt-1">
+                            <input
+                              id={field}
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={Boolean(editingResident[field as keyof Resident])}
+                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [field]: e.target.checked } : prev)}
+                            />
+                            <label className="form-check-label small" htmlFor={field}>{label}</label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Disability / Special Needs</label>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <div className="form-check mt-1">
+                          <input
+                            id="isPwd"
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={Boolean(editingResident.isPwd)}
+                            onChange={(e) => setEditingResident(prev => prev ? { ...prev, isPwd: e.target.checked } : prev)}
+                          />
+                          <label className="form-check-label small" htmlFor="isPwd">Person With Disability</label>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="form-check mt-1">
+                          <input
+                            id="hasSpecialNeeds"
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={Boolean(editingResident.hasSpecialNeeds)}
+                            onChange={(e) => setEditingResident(prev => prev ? { ...prev, hasSpecialNeeds: e.target.checked } : prev)}
+                          />
+                          <label className="form-check-label small" htmlFor="hasSpecialNeeds">Has Special Needs</label>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <label className="form-label small">PWD Type</label>
+                        <input
+                          type="text" className="form-control form-control-sm"
+                          value={String(editingResident.pwdType ?? '')}
+                          onChange={(e) => setEditingResident(prev => prev ? { ...prev, pwdType: e.target.value } : prev)}
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label small">Special Needs Diagnosis</label>
+                        <input
+                          type="text" className="form-control form-control-sm"
+                          value={String(editingResident.specialNeedsDiagnosis ?? '')}
+                          onChange={(e) => setEditingResident(prev => prev ? { ...prev, specialNeedsDiagnosis: e.target.value } : prev)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Family Socio-demographic Profile</label>
+                    <div className="row g-2">
+                      {[
+                        ['familyIs4ps', '4Ps Beneficiary'],
+                        ['familySoloParent', 'Solo Parent'],
+                        ['familyIndigenous', 'Indigenous Group'],
+                        ['familyParentPwd', 'Parent/PWD in Family'],
+                        ['familyInformalSettler', 'Informal Settler'],
+                      ].map(([field, label]) => (
+                        <div className="col-md-6" key={field}>
+                          <div className="form-check mt-1">
+                            <input
+                              id={field}
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={Boolean(editingResident[field as keyof Resident])}
+                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [field]: e.target.checked } : prev)}
+                            />
+                            <label className="form-check-label small" htmlFor={field}>{label}</label>
                           </div>
                         </div>
                       ))}
@@ -441,6 +661,25 @@ function ResidentsPage() {
                     />
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label small">Referral Source</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.referralSource ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, referralSource: e.target.value } : prev)}
+                    >
+                      <option value="">Select referral source...</option>
+                      {REFERRAL_SOURCE_OPTIONS.map((source) => <option key={source} value={source}>{source}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Referring Agency / Person</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.referringAgencyPerson ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, referringAgencyPerson: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label small">Date of Admission</label>
                     <input
                       type="date" className="form-control form-control-sm"
@@ -449,20 +688,41 @@ function ResidentsPage() {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label small">Referral Source</label>
+                    <label className="form-label small">Date COLB Registered</label>
                     <input
-                      type="text" className="form-control form-control-sm"
-                      value={String(editingResident.referralSource ?? '')}
-                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, referralSource: e.target.value } : prev)}
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateColbRegistered ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateColbRegistered: e.target.value } : prev)}
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label small">Referring Agency/Person</label>
+                    <label className="form-label small">Date COLB Obtained</label>
                     <input
-                      type="text" className="form-control form-control-sm"
-                      value={String(editingResident.referringAgencyPerson ?? '')}
-                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, referringAgencyPerson: e.target.value } : prev)}
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateColbObtained ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateColbObtained: e.target.value } : prev)}
                     />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Age Upon Admission</label>
+                    <div className="border rounded p-2 small fw-semibold">
+                      {computeAge(String(editingResident.dateOfBirth ?? ''), String(editingResident.dateOfAdmission ?? '')) || '—'}
+                    </div>
+                    <small className="form-text">Calculated from Date of Birth and Admission Date</small>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Present Age</label>
+                    <div className="border rounded p-2 small fw-semibold">
+                      {computeAge(String(editingResident.dateOfBirth ?? '')) || '—'}
+                    </div>
+                    <small className="form-text">Calculated from Date of Birth and current date</small>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Length of Stay</label>
+                    <div className="border rounded p-2 small fw-semibold">
+                      {computeLengthOfStay(String(editingResident.dateOfAdmission ?? ''), String(editingResident.dateClosed ?? '')) || '—'}
+                    </div>
+                    <small className="form-text">Calculated from Admission Date to Closed Date (or today)</small>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Reintegration Status</label>
@@ -476,6 +736,17 @@ function ResidentsPage() {
                     </select>
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label small">Reintegration Type</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.reintegrationType ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, reintegrationType: e.target.value } : prev)}
+                    >
+                      <option value="">Select reintegration type...</option>
+                      {REINTEGRATION_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label small">Date Enrolled</label>
                     <input
                       type="date" className="form-control form-control-sm"
@@ -484,11 +755,37 @@ function ResidentsPage() {
                     />
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label small">Date Case Study Prepared</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateCaseStudyPrepared ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateCaseStudyPrepared: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label small">Date Closed</label>
                     <input
                       type="date" className="form-control form-control-sm"
                       value={String(editingResident.dateClosed ?? '')}
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateClosed: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Initial Case Assessment</label>
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows={3}
+                      value={String(editingResident.initialCaseAssessment ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, initialCaseAssessment: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Notes Restricted</label>
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows={2}
+                      value={String(editingResident.notesRestricted ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, notesRestricted: e.target.value } : prev)}
                     />
                   </div>
                 </div>
