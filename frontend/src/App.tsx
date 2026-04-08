@@ -253,16 +253,6 @@ function AppLayout() {
 						}
 					/>
 					<Route
-						path="/home-visitation-conferences"
-						element={
-							<ProtectedRoute>
-								<RoleRoute allowedRoles={["Admin"]}>
-									<HomeVisitationCaseConferencePage />
-								</RoleRoute>
-							</ProtectedRoute>
-						}
-					/>
-					<Route
 						path="/donations"
 						element={
 							<ProtectedRoute>
