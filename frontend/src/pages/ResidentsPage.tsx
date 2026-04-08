@@ -164,6 +164,8 @@ function ResidentsPage() {
                   <th>Risk Level</th>
                   <th>Social Worker</th>
                   <th>Admitted</th>
+                  <th>Progress</th>
+                  <th>Checked On</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
@@ -187,6 +189,18 @@ function ResidentsPage() {
                     </td>
                     <td>{r.assignedSocialWorker}</td>
                     <td>{r.dateOfAdmission}</td>
+                    <td>
+                      {r.mlPredictionStatus ? (
+                        <span className={`badge ${r.mlPredictionStatus === 'Stalling' ? 'text-bg-danger' : 'text-bg-primary'} bg-opacity-75`}>
+                          {r.mlPredictionStatus}
+                        </span>
+                      ) : (
+                        <span className="text-muted small">Pending</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      <input type="checkbox" className="form-check-input" aria-label="Checked on Resident" />
+                    </td>
                     {isAdmin && (
                       <td>
                         <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEdit(r)}>Edit</button>

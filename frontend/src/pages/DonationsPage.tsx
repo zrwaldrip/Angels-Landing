@@ -3,6 +3,14 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { getDonations, getSupporters, createDonation, updateDonation, deleteDonation, type Donation, type Supporter } from '../lib/lighthouseAPI';
 
+const DONATION_TYPE_OPTIONS = ['Monetary', 'InKind', 'Time', 'Skills', 'SocialMedia'] as const;
+const CHANNEL_OPTIONS = ['Campaign', 'Event', 'Direct', 'SocialMedia', 'PartnerReferral'] as const;
+const CAMPAIGN_OPTIONS = ['', 'Year-End Hope', 'GivingTuesday', 'Summer of Safety', 'Back to School'] as const;
+
+function isMonetaryType(type: string | undefined) {
+  return type === 'Monetary';
+}
+
 function DonationsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
@@ -57,7 +65,13 @@ function DonationsPage() {
   }
 
   function handleNew() {
-    setEditingDonation({});
+    setEditingDonation({
+      donationType: 'Monetary',
+      donationDate: new Date().toISOString().slice(0, 10),
+      currencyCode: 'PHP',
+      channelSource: 'Direct',
+      isRecurring: false,
+    });
     setSaveError('');
     setShowModal(true);
   }
@@ -66,10 +80,28 @@ function DonationsPage() {
     if (!editingDonation) return;
     setSaving(true); setSaveError('');
     try {
+      const donationType = String(editingDonation.donationType ?? '').trim();
+      const amountRaw = String(editingDonation.amount ?? '').trim();
+      const estimatedRaw = String(editingDonation.estimatedValue ?? '').trim();
+      const amountValue = amountRaw.length > 0 ? Number(amountRaw) : undefined;
+      const estimatedValue = estimatedRaw.length > 0 ? Number(estimatedRaw) : undefined;
+
+      const payload: Partial<Donation> = {
+        ...editingDonation,
+        supporterId: editingDonation.supporterId != null ? Number(editingDonation.supporterId) : undefined,
+        donationType,
+        donationDate: editingDonation.donationDate ? String(editingDonation.donationDate).trim() : undefined,
+        channelSource: editingDonation.channelSource ? String(editingDonation.channelSource).trim() : undefined,
+        campaignName: editingDonation.campaignName ? String(editingDonation.campaignName).trim() : undefined,
+        currencyCode: editingDonation.currencyCode ? String(editingDonation.currencyCode).trim() : undefined,
+        amount: amountValue,
+        estimatedValue,
+      };
+
       if (editingDonation.donationId) {
-        await updateDonation(editingDonation.donationId, editingDonation);
+        await updateDonation(editingDonation.donationId, payload);
       } else {
-        await createDonation(editingDonation);
+        await createDonation(payload);
       }
       setShowModal(false);
       await loadDonations();
@@ -206,20 +238,121 @@ function DonationsPage() {
               <div className="modal-body">
                 {saveError ? <div className="alert alert-danger">{saveError}</div> : null}
                 <div className="row g-3">
-                  {[
-                    ['donationType', 'Type'], ['donationDate', 'Date'],
-                    ['currencyCode', 'Currency'], ['amount', 'Amount'],
-                    ['channelSource', 'Channel'], ['campaignName', 'Campaign'],
-                  ].map(([field, label]) => (
-                    <div className="col-md-6" key={field}>
-                      <label className="form-label small">{label}</label>
+                  <div className="col-md-6">
+                    <label className="form-label small">Supporter</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingDonation.supporterId ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, supporterId: Number(e.target.value) || undefined } : prev)}
+                    >
+                      <option value="">Select supporter...</option>
+                      {supporters.map((s) => (
+                        <option key={s.supporterId} value={s.supporterId}>
+                          {s.supporterId} - {s.displayName ?? s.email ?? 'Unnamed'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Type</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingDonation.donationType ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, donationType: e.target.value } : prev)}
+                    >
+                      {DONATION_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={String(editingDonation.donationDate ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, donationDate: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Channel</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingDonation.channelSource ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, channelSource: e.target.value } : prev)}
+                    >
+                      {CHANNEL_OPTIONS.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Campaign</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingDonation.campaignName ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, campaignName: e.target.value } : prev)}
+                    >
+                      {CAMPAIGN_OPTIONS.map((campaign) => (
+                        <option key={campaign || 'none'} value={campaign}>{campaign || 'No campaign'}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {isMonetaryType(editingDonation.donationType) ? (
+                    <>
+                      <div className="col-md-3">
+                        <label className="form-label small">Currency</label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={String(editingDonation.currencyCode ?? 'PHP')}
+                          onChange={(e) => setEditingDonation(prev => prev ? { ...prev, currencyCode: e.target.value } : prev)}
+                        >
+                          <option value="PHP">PHP</option>
+                          <option value="USD">USD</option>
+                        </select>
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label small">Amount</label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          className="form-control form-control-sm"
+                          value={String(editingDonation.amount ?? '')}
+                          onChange={(e) => setEditingDonation(prev => prev ? { ...prev, amount: Number(e.target.value) } : prev)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="col-md-6">
+                      <label className="form-label small">Estimated Value</label>
                       <input
-                        type="text" className="form-control form-control-sm"
-                        value={String(editingDonation[field as keyof Donation] ?? '')}
-                        onChange={(e) => setEditingDonation(prev => prev ? { ...prev, [field]: e.target.value } : prev)}
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        className="form-control form-control-sm"
+                        value={String(editingDonation.estimatedValue ?? '')}
+                        onChange={(e) => setEditingDonation(prev => prev ? { ...prev, estimatedValue: Number(e.target.value) } : prev)}
                       />
                     </div>
-                  ))}
+                  )}
+                  <div className="col-md-6">
+                    <div className="form-check mt-4">
+                      <input
+                        id="adminRecurring"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={Boolean(editingDonation.isRecurring)}
+                        onChange={(e) => setEditingDonation(prev => prev ? { ...prev, isRecurring: e.target.checked } : prev)}
+                      />
+                      <label className="form-check-label small" htmlFor="adminRecurring">Recurring donation</label>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Notes</label>
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows={2}
+                      value={String(editingDonation.notes ?? '')}
+                      onChange={(e) => setEditingDonation(prev => prev ? { ...prev, notes: e.target.value } : prev)}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
