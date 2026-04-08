@@ -75,6 +75,12 @@ function Header() {
 								</NavLink>
 							) : null}
 
+							{isAuthenticated ? (
+								<NavLink className={navClassName} to="/process-recordings" onClick={closeMobileMenu}>
+									Process Recordings
+								</NavLink>
+							) : null}
+
 							{isAuthenticated && isAdmin ? (
 								<div
 									className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}
