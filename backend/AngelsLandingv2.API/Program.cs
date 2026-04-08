@@ -255,6 +255,15 @@ using (var scope = app.Services.CreateScope())
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "RecurringRate", "REAL NULL");
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "TopChannel", "TEXT NULL");
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "MlrSignificant", "INTEGER NULL");
+
+        // Create FeatureImportances table if it doesn't exist yet
+        await lighthouseDb.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""FeatureImportances"" (
+                ""Id""           INTEGER PRIMARY KEY AUTOINCREMENT,
+                ""Feature""      TEXT NULL,
+                ""Importance""   REAL NOT NULL DEFAULT 0,
+                ""CalculatedAt"" TEXT NULL
+            );");
     }
     else
         Console.WriteLine("Bypassing Lighthouse MigrateAsync to prevent Azure Crash.");

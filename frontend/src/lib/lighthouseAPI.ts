@@ -578,10 +578,31 @@ export interface CampaignChannelBreakdown {
   donorCount?: number;
 }
 
+export interface CampaignMonthlyTrend {
+  campaign: string;
+  month: string;       // "YYYY-MM"
+  totalValue: number;
+}
+
+export interface CampaignFeatureImportance {
+  id: number;
+  feature: string;
+  importance: number;
+  calculatedAt?: string;
+}
+
 export function getCampaigns() {
   return apiFetch<Campaign[]>('/api/campaigns');
 }
 
 export function getCampaignChannelBreakdown() {
   return apiFetch<CampaignChannelBreakdown[]>('/api/campaigns/channel-breakdown');
+}
+
+export function getCampaignMonthlyTrend() {
+  return apiFetch<CampaignMonthlyTrend[]>('/api/campaigns/monthly-trend');
+}
+
+export function getCampaignFeatureImportance() {
+  return apiFetch<CampaignFeatureImportance[]>('/api/campaigns/feature-importance');
 }
