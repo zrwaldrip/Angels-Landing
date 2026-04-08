@@ -32,10 +32,11 @@ if (corsOrigins.Count == 0 && !string.IsNullOrWhiteSpace(frontendUrl))
 if (corsOrigins.Count == 0)
     corsOrigins.Add(DefaultFrontendUrl);
 
-// If this API is configured with CORS origins, auth is expected to flow from a separate SPA origin.
-// Use cross-site cookie settings so browser credentialed fetches can carry the auth cookie.
+// Cross-site auth cookies (SameSite=None) are only safe when requests are over HTTPS.
+// In local HTTP development, using None causes the browser to reject the cookie unless Secure=true.
 var needsCrossSiteAuthCookies =
-    allowAnyOrigin || corsOrigins.Count > 0;
+    allowAnyOrigin ||
+    corsOrigins.Exists(static o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
