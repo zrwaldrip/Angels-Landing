@@ -107,11 +107,17 @@ function Header() {
 										Admin
 									</button>
 									<div className="app-menu-panel">
-										<NavLink className="app-menu-item" to="/users" onClick={closeMobileMenu}>
-											Users
+										<NavLink className="app-menu-item" to="/admin-dashboard" onClick={closeMobileMenu}>
+											Admin Dashboard
 										</NavLink>
 										<NavLink className="app-menu-item" to="/donations" onClick={closeMobileMenu}>
 											Donations
+										</NavLink>
+										<NavLink className="app-menu-item" to="/admin-reports" onClick={closeMobileMenu}>
+											Reports &amp; Analytics
+										</NavLink>
+										<NavLink className="app-menu-item" to="/users" onClick={closeMobileMenu}>
+											Users
 										</NavLink>
 										<NavLink className="app-menu-item" to="/campaign-analysis" onClick={closeMobileMenu}>
 											Campaign Analysis

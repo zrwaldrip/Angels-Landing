@@ -2,7 +2,7 @@ import Header from '../components/Header';
 
 function CookiePolicyPage() {
   return (
-    <div className="container mt-4">
+    <div className="container policy-page">
       <Header />
       <div className="row justify-content-center">
         <div className="col-lg-10">

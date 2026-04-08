@@ -27,6 +27,8 @@ import IncidentsPage from "./pages/IncidentsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminReportsPage from "./pages/AdminReportsPage";
 import CampaignAnalysisPage from "./pages/CampaignAnalysisPage";
 
 function AppLayout() {
@@ -49,6 +51,10 @@ function AppLayout() {
 		isRecurring: false,
 		notes: "",
 	});
+
+	useEffect(() => {
+		window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+	}, [location.pathname, location.search]);
 
 	useEffect(() => {
 		function handleOpenDonateModal() {
@@ -95,7 +101,7 @@ function AppLayout() {
 				if (cancelled) return;
 				setFxPreview(
 					`${amount.toFixed(2)} ${from} ≈ ${conversion.convertedAmount.toFixed(2)} ${to} ` +
-						`(1 ${from} = ${conversion.rate.toFixed(4)} ${to}, ${conversion.asOfDate})`
+						`(1 ${from} = ${conversion.rate.toFixed(4)} ${to}, ${conversion.asOfDate})`,
 				);
 			} catch (error) {
 				if (cancelled) return;
@@ -263,11 +269,31 @@ function AppLayout() {
 						}
 					/>
 					<Route
+						path="/admin-dashboard"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<AdminDashboardPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
 						path="/users"
 						element={
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<UserManagementPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/admin-reports"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<AdminReportsPage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}
@@ -286,7 +312,8 @@ function AppLayout() {
 									<div className="modal-body">
 										{donateError ? <div className="alert alert-danger">{donateError}</div> : null}
 										<div className="alert alert-info py-2 px-3 small">
-											This donor form records money donations only. Non-cash contributions are tracked by staff through the admin workflow.
+											This donor form records money donations only. Non-cash contributions are tracked by staff through the admin
+											workflow.
 										</div>
 										<div className="mb-2">
 											<label className="form-label">Donation Amount</label>
