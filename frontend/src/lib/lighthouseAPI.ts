@@ -441,6 +441,7 @@ export interface InterventionPlan {
   servicesProvided?: string;
   status?: string;
   targetDate?: string;
+  caseConferenceDate?: string;
 }
 
 export function getInterventionPlans(residentId?: number) {
@@ -458,6 +459,41 @@ export function updateInterventionPlan(id: number, p: Partial<InterventionPlan>)
 
 export function deleteInterventionPlan(id: number) {
   return apiFetch<void>(`/api/intervention-plans/${id}`, { method: 'DELETE' });
+}
+
+// ─── Home Visitations ───────────────────────────────────────────────────────
+export interface HomeVisitation {
+  visitationId: number;
+  residentId?: number;
+  visitDate?: string;
+  socialWorker?: string;
+  visitType?: string;
+  locationVisited?: string;
+  familyMembersPresent?: string;
+  purpose?: string;
+  observations?: string;
+  familyCooperationLevel?: string;
+  safetyConcernsNoted?: boolean;
+  followUpNeeded?: boolean;
+  followUpNotes?: string;
+  visitOutcome?: string;
+}
+
+export function getHomeVisitations(residentId?: number) {
+  const qs = residentId ? `?residentId=${residentId}` : '';
+  return apiFetch<HomeVisitation[]>(`/api/home-visitations${qs}`);
+}
+
+export function createHomeVisitation(v: Partial<HomeVisitation>) {
+  return apiFetch<HomeVisitation>('/api/home-visitations', { method: 'POST', body: JSON.stringify(v) });
+}
+
+export function updateHomeVisitation(id: number, v: Partial<HomeVisitation>) {
+  return apiFetch<void>(`/api/home-visitations/${id}`, { method: 'PUT', body: JSON.stringify(v) });
+}
+
+export function deleteHomeVisitation(id: number) {
+  return apiFetch<void>(`/api/home-visitations/${id}`, { method: 'DELETE' });
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────
