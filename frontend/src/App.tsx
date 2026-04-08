@@ -26,6 +26,7 @@ import IncidentsPage from "./pages/IncidentsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import CampaignAnalysisPage from "./pages/CampaignAnalysisPage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -226,6 +227,16 @@ function AppLayout() {
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<DonationsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/campaign-analysis"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<CampaignAnalysisPage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}

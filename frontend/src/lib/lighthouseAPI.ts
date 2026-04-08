@@ -385,6 +385,9 @@ export interface Campaign {
   donorCount?: number;
   meanValue?: number;
   compositeScore?: number;
+  recurringRate?: number;
+  topChannel?: string;
+  mlrSignificant?: boolean;
   rank?: number;
   verdict?: string;
   mlLastCalculated?: string;
