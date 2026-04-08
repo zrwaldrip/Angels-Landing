@@ -142,8 +142,9 @@ body {
 }
 
 .app-menu-panel {
+  display: none;
   position: absolute;
-  top: calc(100% + 0.45rem);
+  top: 100%;
   right: 0;
   min-width: 12rem;
   border-radius: 0.55rem;
@@ -160,11 +161,11 @@ body {
   right: auto;
 }
 
-.app-menu-dropdown:not([open]) .app-menu-panel {
-  display: none;
+.app-menu-dropdown-open .app-menu-panel {
+  display: block;
 }
 
-.app-menu-dropdown-open .app-menu-panel {
+.app-profile-dropdown[open] .app-menu-panel {
   display: block;
 }
 
@@ -231,12 +232,6 @@ body {
   border-bottom: 1px solid rgba(26, 42, 58, 0.15);
   margin-bottom: 0.2rem;
   overflow-wrap: anywhere;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .app-menu-dropdown:hover > .app-menu-panel {
-    display: block;
-  }
 }
 
 .cookie-consent-banner {

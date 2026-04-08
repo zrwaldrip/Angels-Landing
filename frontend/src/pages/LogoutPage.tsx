@@ -21,8 +21,8 @@ function LogoutPage() {
         }
         await refreshAuthState();
         if (isMounted) {
-          setMessage('You are now signed out.');
-          navigate('/login', { replace: true });
+          setMessage('You were successfully logged out.');
+          navigate('/', { replace: true });
         }
       } catch (error) {
         if (isMounted) {
@@ -45,10 +45,7 @@ function LogoutPage() {
               <h2 className="h4 mb-3">Logout</h2>
               <p>{message}</p>
               {errorMessage ? <div className="alert alert-danger" role="alert">{errorMessage}</div> : null}
-              <div className="d-flex gap-3">
-                <Link className="btn btn-primary" to="/residents">Return to dashboard</Link>
-                <Link className="btn btn-outline-secondary" to="/login">Go to login</Link>
-              </div>
+              <Link className="btn btn-primary" to="/">Go to home</Link>
             </div>
           </div>
         </div>

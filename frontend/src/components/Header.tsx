@@ -73,7 +73,6 @@ function Header() {
 							{isAuthenticated && isAdmin ? (
 								<div
 									className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}
-									onMouseEnter={() => setOpenNavMenu("operations")}
 								>
 									<button type="button" className="app-menu-summary" onClick={() => toggleNavMenu("operations")}>
 										Operations
@@ -95,7 +94,6 @@ function Header() {
 							{isAuthenticated && isAdmin ? (
 								<div
 									className={`app-menu-dropdown ${openNavMenu === "admin" ? "app-menu-dropdown-open" : ""}`}
-									onMouseEnter={() => setOpenNavMenu("admin")}
 								>
 									<button type="button" className="app-menu-summary" onClick={() => toggleNavMenu("admin")}>
 										Admin
