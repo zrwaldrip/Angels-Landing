@@ -2,10 +2,10 @@ import type { AuthSession } from "../types/AuthSession";
 
 const roleHomeMap: Record<string, string> = {
 	admin: "/residents",
-	donor: "/donations",
+	donor: "/donor-portal",
 };
 
-const allowedReturnPaths = new Set(["/residents", "/safehouses", "/donations", "/incidents", "/mfa"]);
+const allowedReturnPaths = new Set(["/residents", "/safehouses", "/donations", "/incidents", "/donor-portal", "/donor-impact", "/mfa"]);
 
 export function normalizeRoles(roles: string[]): string[] {
 	return roles.map((role) => role.trim().toLowerCase()).filter(Boolean);

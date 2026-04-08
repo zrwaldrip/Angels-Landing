@@ -1,8 +1,8 @@
 using AngelsLandingv2.API.Data;
+using AngelsLandingv2.API.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace AngelsLandingv2.API.Controllers;
 
@@ -21,29 +21,18 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
     ];
 
     [HttpGet("summary")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetSummary()
     {
-        var email = User.FindFirstValue(ClaimTypes.Email);
-        if (string.IsNullOrWhiteSpace(email))
-            return Unauthorized(new { message = "Signed-in account does not include an email claim." });
+        var allDonations = await db.Donations.ToListAsync();
 
-        var normalizedEmail = email.Trim().ToLowerInvariant();
-        var supporterIds = await db.Supporters
-            .Where(s => s.Email != null && s.Email.Trim().ToLower() == normalizedEmail)
-            .Select(s => s.SupporterId)
-            .ToListAsync();
-
-        var myDonations = await db.Donations
-            .Where(d => d.SupporterId.HasValue && supporterIds.Contains(d.SupporterId.Value))
-            .ToListAsync();
-
-        var totalGivingLifetime = myDonations.Sum(d => d.EstimatedValue ?? d.Amount ?? 0);
-        var recurringCount = myDonations.Count(d => d.IsRecurring == true);
-        var recurringValue = myDonations
+        var totalGivingLifetime = allDonations.Sum(d => d.EstimatedValue ?? d.Amount ?? 0);
+        var recurringCount = allDonations.Count(d => d.IsRecurring == true);
+        var recurringValue = allDonations
             .Where(d => d.IsRecurring == true)
             .Sum(d => d.EstimatedValue ?? d.Amount ?? 0);
 
-        var donationMix = myDonations
+        var donationMix = allDonations
             .GroupBy(d => string.IsNullOrWhiteSpace(d.DonationType) ? "Unknown" : d.DonationType!)
             .Select(group =>
             {
@@ -104,7 +93,7 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             .FirstOrDefaultAsync();
 
         var currentYear = DateTime.UtcNow.Year;
-        var yearlyContribution = myDonations
+        var yearlyContribution = allDonations
             .Where(d => DateTime.TryParse(d.DonationDate, out var parsedDate) && parsedDate.Year == currentYear)
             .Sum(d => d.EstimatedValue ?? d.Amount ?? 0);
 
@@ -113,7 +102,7 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             ? 0
             : yearlyContribution / CounselingMonthEquivalentPhp;
 
-        var donorCampaigns = myDonations
+        var donorCampaigns = allDonations
             .Where(d => !string.IsNullOrWhiteSpace(d.CampaignName))
             .GroupBy(d => d.CampaignName!.Trim())
             .Select(group => new

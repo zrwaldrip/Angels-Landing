@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 
 function LandingPage() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="container mt-4">
       <Header />
@@ -11,10 +14,12 @@ function LandingPage() {
           Providing safety, healing, and hope for vulnerable girls through secure care, compassionate support, and
           data-driven impact.
         </p>
-        <div className="d-flex justify-content-center gap-3 mt-4 flex-wrap">
-          <Link to="/register" className="btn btn-primary btn-lg">Get Started</Link>
-          <Link to="/login" className="btn btn-outline-secondary btn-lg">Login</Link>
-        </div>
+        {!isAuthenticated ? (
+          <div className="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+            <Link to="/register" className="btn btn-primary btn-lg">Get Started</Link>
+            <Link to="/login" className="btn btn-outline-secondary btn-lg">Login</Link>
+          </div>
+        ) : null}
       </section>
 
       <section className="row text-center g-4 pb-5">

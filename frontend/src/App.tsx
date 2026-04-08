@@ -63,13 +63,7 @@ function App() {
 
 								<Route
 									path="/donor-impact"
-									element={
-										<ProtectedRoute>
-											<RoleRoute allowedRoles={["Donor", "Admin"]}>
-												<DonorImpactPage />
-											</RoleRoute>
-										</ProtectedRoute>
-									}
+									element={<DonorImpactPage />}
 								/>
 								<Route
 									path="/donor-portal"

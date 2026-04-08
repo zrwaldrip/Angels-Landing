@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { getDonorImpactSummary, type DonorImpactSummary } from "../lib/lighthouseAPI";
+import { normalizeRoles } from "../routes/roleRouting";
 
 function formatCurrencyPhp(value: number) {
 	return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 }).format(value);
@@ -13,16 +14,18 @@ function formatPercent(value: number) {
 }
 
 function DonorImpactPage() {
-	const { authSession, isAuthenticated, isLoading } = useAuth();
-	const hasDonorPrivileges = authSession.roles.includes("Donor") || authSession.roles.includes("Admin");
+	const { authSession, isAuthenticated } = useAuth();
+	const normalizedRoles = normalizeRoles(authSession.roles);
+	const hasDonorPrivileges = isAuthenticated && (normalizedRoles.includes("donor") || normalizedRoles.includes("admin"));
+	const donateLink = isAuthenticated ? "/donor-portal?donate=1" : "/login";
 
 	const [summary, setSummary] = useState<DonorImpactSummary | null>(null);
 	const [loadingSummary, setLoadingSummary] = useState(true);
 	const [error, setError] = useState("");
 
 	useEffect(() => {
-		if (!isLoading && isAuthenticated && hasDonorPrivileges) void loadSummary();
-	}, [isAuthenticated, isLoading, hasDonorPrivileges]);
+		void loadSummary();
+	}, []);
 
 	async function loadSummary() {
 		setLoadingSummary(true);
@@ -40,10 +43,10 @@ function DonorImpactPage() {
 	const reportText = useMemo(() => {
 		if (!summary) return "";
 		const lines = [
-			`Donor Impact Statement`,
+			`Organizational Impact Statement`,
 			`Generated: ${new Date().toISOString()}`,
 			"",
-			`Total Lifetime Giving (PHP equivalent): ${formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}`,
+			`Total Lifetime Donations (PHP equivalent): ${formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}`,
 			`Recurring Donations: ${summary.personalContributionSummary.recurringStatus.recurringDonationCount}`,
 			`Recurring Estimated Value: ${formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)}`,
 			"",
@@ -52,8 +55,8 @@ function DonorImpactPage() {
 			`Educational Progress Avg: ${formatPercent(summary.organizationalImpact.educationalProgressAveragePercent)}`,
 			`Health Goals Met: ${formatPercent(summary.organizationalImpact.healthWellbeingGoalsMetPercent)}`,
 			"",
-			`This Year Contribution: ${formatCurrencyPhp(summary.connection.donorContributionThisYear)}`,
-			`Counseling Month Equivalent: ${summary.connection.counselingMonthsEquivalent.toFixed(2)}`,
+			`This Year Funding: ${formatCurrencyPhp(summary.connection.donorContributionThisYear)}`,
+			`Counseling Month Equivalent (overall): ${summary.connection.counselingMonthsEquivalent.toFixed(2)}`,
 			`Assumption: ${summary.connection.assumption}`,
 			"",
 			`Campaign Outcomes:`,
@@ -66,71 +69,17 @@ function DonorImpactPage() {
 		return lines.join("\n");
 	}, [summary]);
 
-	function downloadImpactStatementPdfLike() {
-		if (!summary) return;
-		const printWindow = window.open("", "_blank", "noopener,noreferrer,width=800,height=900");
-		if (!printWindow) return;
-
-		const escaped = reportText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br />");
-
-		printWindow.document.write(`
-      <html>
-        <head>
-          <title>Impact Statement</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
-            h1 { font-size: 20px; margin-bottom: 12px; }
-            .note { color: #555; font-size: 12px; margin-bottom: 16px; }
-            .content { font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <h1>Donor Impact Statement</h1>
-          <div class="note">Use your browser's "Save as PDF" in the print dialog.</div>
-          <div class="content">${escaped}</div>
-          <script>
-            window.onload = () => window.print();
-          </script>
-        </body>
-      </html>
-    `);
-		printWindow.document.close();
-	}
-
-	if (!isLoading && !isAuthenticated) {
-		return (
-			<div className="container mt-4">
-				<Header />
-				<div className="alert alert-warning">
-					Please <Link to="/login">sign in</Link> to view donor impact.
-				</div>
-			</div>
-		);
-	}
-
-	if (!isLoading && isAuthenticated && !hasDonorPrivileges) {
-		return (
-			<div className="container mt-4">
-				<Header />
-				<div className="alert alert-danger">Donor impact is available only to donor-enabled accounts.</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="container mt-4">
 			<Header />
 			<div className="d-flex justify-content-between align-items-center mb-3">
-				<h2 className="h4 mb-0">Donor Impact</h2>
+				<h2 className="h4 mb-0">Impact Overview</h2>
 				<div className="d-flex gap-2">
 					<button className="btn btn-outline-secondary btn-sm" onClick={() => void loadSummary()} disabled={loadingSummary}>
 						Refresh
 					</button>
-					<button className="btn btn-outline-primary btn-sm" onClick={downloadImpactStatementPdfLike} disabled={!summary}>
-						Download Impact Statement (PDF)
-					</button>
-					<Link to="/donor-portal?donate=1" className="btn btn-primary btn-sm">
-						Add New Donation
+					<Link to={donateLink} className="btn btn-primary btn-sm">
+						Donate
 					</Link>
 				</div>
 			</div>
@@ -145,11 +94,11 @@ function DonorImpactPage() {
 				<>
 					<div className="card mb-3">
 						<div className="card-body">
-							<h3 className="h6 mb-3">1. Personal Contribution Summary</h3>
+							<h3 className="h6 mb-3">1. Funding Summary</h3>
 							<div className="row g-3">
 								<div className="col-md-4">
 									<div className="border rounded p-3 h-100">
-										<div className="text-muted small">Total Giving Lifetime</div>
+										<div className="text-muted small">Total Donations (Lifetime)</div>
 										<div className="h4 mb-0">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
 									</div>
 								</div>
@@ -184,7 +133,7 @@ function DonorImpactPage() {
 
 					<div className="card mb-3">
 						<div className="card-body">
-							<h3 className="h6 mb-3">2. Organizational "Macro" Impact</h3>
+							<h3 className="h6 mb-3">2. Organizational Impact</h3>
 							<div className="row g-3">
 								<div className="col-md-3">
 									<div className="border rounded p-3">
@@ -225,9 +174,9 @@ function DonorImpactPage() {
 
 					<div className="card mb-3">
 						<div className="card-body">
-							<h3 className="h6 mb-3">3. Where Your Money Goes</h3>
+							<h3 className="h6 mb-3">3. How Funding Supports Services</h3>
 							<p className="mb-1">
-								Your total contributions this year are <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong>.
+								Total contributions this year are <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong>.
 							</p>
 							<p className="mb-1">
 								Equivalent support: <strong>{summary.connection.counselingMonthsEquivalent.toFixed(2)}</strong> counseling-months.
@@ -242,8 +191,8 @@ function DonorImpactPage() {
 										<div className="border rounded p-2 mb-2 small" key={campaign.campaignName}>
 											<div className="fw-semibold">{campaign.campaignName}</div>
 											<div>
-												Your contribution: {formatCurrencyPhp(campaign.donorValue)} of {formatCurrencyPhp(campaign.campaignTotal)}{" "}
-												campaign total ({formatPercent(campaign.donorSharePercent)}).
+												Campaign funding: {formatCurrencyPhp(campaign.donorValue)} of {formatCurrencyPhp(campaign.campaignTotal)} campaign
+												total ({formatPercent(campaign.donorSharePercent)}).
 											</div>
 										</div>
 									))
@@ -271,14 +220,20 @@ function DonorImpactPage() {
 					<div className="card mb-4">
 						<div className="card-body">
 							<h3 className="h6 mb-3">5. Interactive Elements</h3>
-							<div className="d-flex gap-2 flex-wrap">
-								<Link to="/donor-portal?donate=1" className="btn btn-primary btn-sm">
-									Add New Donation
-								</Link>
-								<button className="btn btn-outline-primary btn-sm" onClick={downloadImpactStatementPdfLike}>
-									Download Impact Statement (PDF)
-								</button>
-							</div>
+							{hasDonorPrivileges ? (
+								<div className="d-flex gap-2 flex-wrap">
+									<Link to={donateLink} className="btn btn-primary btn-sm">
+										Donate
+									</Link>
+								</div>
+							) : (
+								<div className="d-flex gap-2 flex-wrap align-items-center">
+									<Link to={donateLink} className="btn btn-primary btn-sm">
+										Donate
+									</Link>
+									<span className="small text-muted">Sign in with a donor-enabled account to submit a donation.</span>
+								</div>
+							)}
 							<div className="small text-muted mt-2">{summary.reportPlaceholders.pipeline455}</div>
 						</div>
 					</div>
