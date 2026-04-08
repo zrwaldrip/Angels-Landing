@@ -46,4 +46,53 @@ public class CampaignsController(LighthouseDbContext db) : ControllerBase
 
         return Ok(breakdown);
     }
+
+    // GET /api/campaigns/monthly-trend
+    // Returns donation totals grouped by campaign + month (YYYY-MM) for the time-series chart
+    [HttpGet("monthly-trend")]
+    public async Task<IActionResult> GetMonthlyTrend()
+    {
+        var raw = await db.Donations
+            .Where(d => d.EstimatedValue != null
+                && d.CampaignName != null
+                && d.DonationDate != null)
+            .Select(d => new { d.CampaignName, d.DonationDate, d.EstimatedValue })
+            .ToListAsync();
+
+        var grouped = raw
+            .Select(d =>
+            {
+                DateTime.TryParse(d.DonationDate, out var dt);
+                return new
+                {
+                    Campaign = d.CampaignName!.Trim(),
+                    Month    = dt == default ? null : dt.ToString("yyyy-MM"),
+                    d.EstimatedValue
+                };
+            })
+            .Where(x => x.Month != null && x.Campaign != "")
+            .GroupBy(x => new { x.Campaign, x.Month })
+            .Select(g => new
+            {
+                Campaign   = g.Key.Campaign,
+                Month      = g.Key.Month,
+                TotalValue = Math.Round(g.Sum(x => x.EstimatedValue ?? 0), 2)
+            })
+            .OrderBy(x => x.Month)
+            .ThenBy(x => x.Campaign)
+            .ToList();
+
+        return Ok(grouped);
+    }
+
+    // GET /api/campaigns/feature-importance
+    // Returns decision-tree feature importances written by campaign_scorer.py
+    [HttpGet("feature-importance")]
+    public async Task<IActionResult> GetFeatureImportance()
+    {
+        var items = await db.FeatureImportances
+            .OrderByDescending(f => f.Importance)
+            .ToListAsync();
+        return Ok(items);
+    }
 }
