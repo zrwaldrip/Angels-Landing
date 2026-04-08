@@ -1,6 +1,7 @@
 using System.Reflection;
 using Npgsql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Data.Sqlite;
 using AngelsLandingv2.API.Data;
 using Microsoft.AspNetCore.Identity;
@@ -177,6 +178,9 @@ builder.Services.AddDbContext<LighthouseDbContext>(options =>
         options.UseSqlite(lighthouseConn);
     else
         options.UseNpgsql(MaybeRewriteSupabaseDirectToSessionPooler(lighthouseConn, builder.Configuration));
+
+    // Schema is managed manually via SQL scripts (not EF migrations), so suppress this warning
+    options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 });
 
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
