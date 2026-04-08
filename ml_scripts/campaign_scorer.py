@@ -38,8 +38,8 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
     df.rename(columns=lambda c: ''.join(['_' + ch.lower() if ch.isupper() else ch for ch in c]).lstrip('_'),
               inplace=True)
 
-    # Fill missing campaign names (no campaign = "No Campaign")
-    df['campaign_name'] = df['campaign_name'].fillna('No Campaign')
+    # Drop donations with no campaign — these are untagged and not a real campaign
+    df = df[df['campaign_name'].notna() & (df['campaign_name'].str.strip() != '')]
 
     # Merge in supporter metadata for donor type info
     if not supporters_df.empty:
