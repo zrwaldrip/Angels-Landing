@@ -257,6 +257,26 @@ body {
   margin-bottom: 0.2rem;
 }
 
+.app-main .donor-portal-donate-btn {
+  min-width: 10.75rem;
+  min-height: 2.9rem;
+  padding: 0.72rem 1.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(216, 233, 255, 0.95);
+  background: #d6e9ff;
+  color: #07214b;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 28px rgba(16, 60, 124, 0.34);
+}
+
+.app-main .donor-portal-donate-btn:hover {
+  background: #edf6ff;
+  color: #051a3d;
+  box-shadow: 0 15px 30px rgba(16, 60, 124, 0.44);
+}
+
 .app-main .bg-white,
 .app-main .bg-light {
   background-color: rgba(15, 30, 57, 0.72) !important;

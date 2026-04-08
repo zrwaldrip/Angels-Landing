@@ -5,7 +5,10 @@ import './LandingPage.css';
 
 function LandingPage() {
   const { isAuthenticated } = useAuth();
-  const donateTarget = isAuthenticated ? '/donor-portal?donate=1' : '/login';
+
+  function handleDonateClick() {
+    window.dispatchEvent(new Event('open-donate-modal'));
+  }
 
   return (
     <div className="landing-page">
@@ -19,7 +22,11 @@ function LandingPage() {
             reporting that keeps every donor impact visible.
           </p>
           <div className="landing-cta-group">
-            <Link to={donateTarget} className="landing-btn landing-btn-donate">Donate Now</Link>
+            {isAuthenticated ? (
+              <button type="button" className="landing-btn landing-btn-donate" onClick={handleDonateClick}>Donate Now</button>
+            ) : (
+              <Link to="/login" className="landing-btn landing-btn-donate">Donate Now</Link>
+            )}
             {!isAuthenticated ? (
               <>
                 <Link to="/register" className="landing-btn landing-btn-primary">Get Started</Link>
