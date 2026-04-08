@@ -37,10 +37,10 @@ function Header() {
 	}
 
 	return (
-		<header className="app-header fixed-top bg-primary text-white">
+		<header className="app-header fixed-top">
 			<div className="container-fluid app-header-container">
 				<div className="app-header-inner">
-					<NavLink to="/" className="app-brand text-white text-decoration-none">
+					<NavLink to="/" className="app-brand">
 						<h1 className="h5 mb-0 fw-semibold">Angels' Landing</h1>
 					</NavLink>
 
@@ -58,14 +58,14 @@ function Header() {
 
 					<div className={`app-nav-shell ${isMobileMenuOpen ? "app-nav-shell-open" : ""}`}>
 						<nav className="app-main-nav" ref={navMenusRef}>
-							<NavLink className={navClassName + " text-white text-decoration-none"} to="/" onClick={closeMobileMenu}>
+							<NavLink className={navClassName} to="/" onClick={closeMobileMenu}>
 								Home
 							</NavLink>
-							<NavLink className={navClassName + " text-white text-decoration-none"} to="/donor-impact" onClick={closeMobileMenu}>
+							<NavLink className={navClassName} to="/donor-impact" onClick={closeMobileMenu}>
 								Impact
 							</NavLink>
 							{isAuthenticated && isDonor ? (
-								<NavLink className={navClassName + " text-white text-decoration-none"} to="/donor-portal" onClick={closeMobileMenu}>
+								<NavLink className={navClassName} to="/donor-portal" onClick={closeMobileMenu}>
 									Donor Portal
 								</NavLink>
 							) : null}
@@ -112,7 +112,7 @@ function Header() {
 
 						<div className="app-auth-nav">
 							{!isAuthenticated ? (
-								<NavLink className={navClassName + " text-white text-decoration-none"} to="/login" onClick={closeMobileMenu}>
+								<NavLink className={navClassName} to="/login" onClick={closeMobileMenu}>
 									Login
 								</NavLink>
 							) : isDonor ? (
