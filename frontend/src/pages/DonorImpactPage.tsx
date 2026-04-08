@@ -74,10 +74,7 @@ function DonorImpactPage() {
 			<Header />
 			<div className="d-flex justify-content-between align-items-center mb-3">
 				<h2 className="h4 mb-0">Impact Overview</h2>
-				<div className="d-flex gap-2">
-					<button className="btn btn-outline-secondary btn-sm" onClick={() => void loadSummary()} disabled={loadingSummary}>
-						Refresh
-					</button>
+				<div>
 					<Link to={donateLink} className="btn btn-primary btn-sm">
 						Donate
 					</Link>
