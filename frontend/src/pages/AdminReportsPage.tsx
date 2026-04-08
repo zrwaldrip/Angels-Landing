@@ -1,20 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import {
-  getDonations,
-  getResidents,
-  getSafehouses,
-  getSafehouseMetrics,
-  getEducationRecords,
-  getHealthRecords,
-  getInterventionPlans,
-  type Donation,
-  type EducationRecord,
-  type HealthRecord,
-  type InterventionPlan,
-  type Resident,
-  type Safehouse,
-  type SafehouseMetric,
+  getAdminReportsSummary,
+  type AdminReportsSummary
 } from '../lib/lighthouseAPI';
 
 function normalizeMonthKey(dateText: string | undefined) {
@@ -40,13 +28,7 @@ function progressVariant(percent: number) {
 function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [reportDonations, setReportDonations] = useState<Donation[]>([]);
-  const [reportResidents, setReportResidents] = useState<Resident[]>([]);
-  const [reportSafehouses, setReportSafehouses] = useState<Safehouse[]>([]);
-  const [reportSafehouseMetrics, setReportSafehouseMetrics] = useState<SafehouseMetric[]>([]);
-  const [reportEducationRecords, setReportEducationRecords] = useState<EducationRecord[]>([]);
-  const [reportHealthRecords, setReportHealthRecords] = useState<HealthRecord[]>([]);
-  const [reportInterventionPlans, setReportInterventionPlans] = useState<InterventionPlan[]>([]);
+  const [summary, setSummary] = useState<AdminReportsSummary | null>(null);
   const [hoveredTrendPointIndex, setHoveredTrendPointIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -57,22 +39,8 @@ function AdminReportsPage() {
     setLoading(true);
     setError('');
     try {
-      const [donationData, residentData, safehouseData, safehouseMetricData, educationData, healthData, interventionData] = await Promise.all([
-        getDonations({ page: 1, pageSize: 1000 }),
-        getResidents({ page: 1, pageSize: 1000 }),
-        getSafehouses(),
-        getSafehouseMetrics(),
-        getEducationRecords(),
-        getHealthRecords(),
-        getInterventionPlans(),
-      ]);
-      setReportDonations(donationData.items ?? []);
-      setReportResidents(residentData.items ?? []);
-      setReportSafehouses(safehouseData ?? []);
-      setReportSafehouseMetrics(safehouseMetricData ?? []);
-      setReportEducationRecords(educationData ?? []);
-      setReportHealthRecords(healthData ?? []);
-      setReportInterventionPlans(interventionData ?? []);
+      const reportSummary = await getAdminReportsSummary();
+      setSummary(reportSummary);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load analytics reports.');
     } finally {
@@ -81,18 +49,14 @@ function AdminReportsPage() {
   }
 
   const donationTrendRows = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const donation of reportDonations) {
-      const key = normalizeMonthKey(donation.donationDate);
-      if (!key) continue;
-      const value = donation.amount ?? donation.estimatedValue ?? 0;
-      map.set(key, (map.get(key) ?? 0) + value);
-    }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12)
-      .map(([month, totalValue]) => ({ month, label: monthLabel(month), totalValue }));
-  }, [reportDonations]);
+    return (summary?.donationTrends ?? [])
+      .map((row) => {
+        const monthKey = normalizeMonthKey(row.month) ?? row.month;
+        return { month: monthKey, label: monthLabel(monthKey), totalValue: row.totalValue ?? 0 };
+      })
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-12);
+  }, [summary]);
 
   const donationTrendMax = useMemo(
     () => Math.max(1, ...donationTrendRows.map((row) => row.totalValue)),
@@ -133,101 +97,24 @@ function AdminReportsPage() {
     : null;
 
   const residentOutcomeMetrics = useMemo(() => {
-    const avgEducationProgress = reportEducationRecords.length === 0
-      ? 0
-      : reportEducationRecords.reduce((sum, record) => sum + (record.progressPercent ?? 0), 0) / reportEducationRecords.length;
-    const avgHealthScore = reportHealthRecords.length === 0
-      ? 0
-      : reportHealthRecords.reduce((sum, record) => sum + (record.generalHealthScore ?? 0), 0) / reportHealthRecords.length;
-    const healthImprovedCount = reportHealthRecords.filter((record) => (record.generalHealthScore ?? 0) >= 3).length;
-    const healthImprovementRate = reportHealthRecords.length === 0
-      ? 0
-      : (healthImprovedCount / reportHealthRecords.length) * 100;
-    return { avgEducationProgress, avgHealthScore, healthImprovementRate };
-  }, [reportEducationRecords, reportHealthRecords]);
+    return summary?.residentOutcomeMetrics ?? { avgEducationProgress: 0, avgHealthScore: 0, healthImprovementRate: 0 };
+  }, [summary]);
 
   const safehouseComparisonRows = useMemo(() => {
-    const latestMetricBySafehouse = new Map<number, SafehouseMetric>();
-    for (const metric of reportSafehouseMetrics) {
-      if (metric.safehouseId == null) continue;
-      const current = latestMetricBySafehouse.get(metric.safehouseId);
-      const currentDate = current?.monthEnd ?? current?.monthStart ?? '';
-      const nextDate = metric.monthEnd ?? metric.monthStart ?? '';
-      if (!current || nextDate > currentDate) latestMetricBySafehouse.set(metric.safehouseId, metric);
-    }
-
-    return reportSafehouses.map((safehouse) => {
-      const metric = latestMetricBySafehouse.get(safehouse.safehouseId);
-      const occupancy = safehouse.currentOccupancy ?? metric?.activeResidents ?? 0;
-      const capacity = safehouse.capacityGirls ?? 0;
-      const occupancyRate = capacity > 0 ? (occupancy / capacity) * 100 : 0;
-      return {
-        safehouseId: safehouse.safehouseId,
-        name: safehouse.name ?? safehouse.safehouseCode ?? `Safehouse #${safehouse.safehouseId}`,
-        occupancyRate,
-        educationProgress: metric?.avgEducationProgress ?? null,
-        healthScore: metric?.avgHealthScore ?? null,
-      };
-    }).sort((a, b) => b.occupancyRate - a.occupancyRate);
-  }, [reportSafehouses, reportSafehouseMetrics]);
+    return (summary?.safehouseComparison ?? []).sort((a, b) => b.occupancyRate - a.occupancyRate);
+  }, [summary]);
 
   const reintegrationReport = useMemo(() => {
-    const statuses = reportResidents
-      .map((resident) => resident.reintegrationStatus?.trim())
-      .filter((status): status is string => Boolean(status));
-    const successStatuses = ['reintegrated', 'successful', 'independent living', 'with family', 'reunified'];
-    const successful = statuses.filter((status) => successStatuses.includes(status.toLowerCase())).length;
-    const successRate = statuses.length === 0 ? 0 : (successful / statuses.length) * 100;
-    return { assessed: statuses.length, successful, successRate };
-  }, [reportResidents]);
+    return summary?.reintegration ?? { assessed: 0, successful: 0, successRate: 0 };
+  }, [summary]);
 
   const annualAccomplishment = useMemo(() => {
-    const caringKeywords = ['care', 'shelter', 'nutrition', 'food', 'home visitation'];
-    const healingKeywords = ['healing', 'health', 'medical', 'counsel', 'therapy', 'psychological'];
-    const teachingKeywords = ['teaching', 'education', 'school', 'training', 'skills', 'livelihood'];
-    const serviceCounts = { caring: 0, healing: 0, teaching: 0 };
-    const beneficiarySets = {
-      caring: new Set<number>(),
-      healing: new Set<number>(),
-      teaching: new Set<number>(),
+    return summary?.annualAccomplishment ?? {
+      serviceCounts: { caring: 0, healing: 0, teaching: 0 },
+      beneficiaries: { caring: 0, healing: 0, teaching: 0, totalBeneficiaries: 0 },
+      outcomes: { activeCases: 0, avgEducation: 0, reintegrationRate: 0 }
     };
-
-    for (const plan of reportInterventionPlans) {
-      const text = `${plan.planCategory ?? ''} ${plan.servicesProvided ?? ''} ${plan.planDescription ?? ''}`.toLowerCase();
-      const residentId = plan.residentId ?? undefined;
-      const isCaring = caringKeywords.some((keyword) => text.includes(keyword));
-      const isHealing = healingKeywords.some((keyword) => text.includes(keyword));
-      const isTeaching = teachingKeywords.some((keyword) => text.includes(keyword));
-
-      if (isCaring) {
-        serviceCounts.caring += 1;
-        if (residentId != null) beneficiarySets.caring.add(residentId);
-      }
-      if (isHealing) {
-        serviceCounts.healing += 1;
-        if (residentId != null) beneficiarySets.healing.add(residentId);
-      }
-      if (isTeaching) {
-        serviceCounts.teaching += 1;
-        if (residentId != null) beneficiarySets.teaching.add(residentId);
-      }
-    }
-
-    return {
-      serviceCounts,
-      beneficiaries: {
-        caring: beneficiarySets.caring.size,
-        healing: beneficiarySets.healing.size,
-        teaching: beneficiarySets.teaching.size,
-        totalBeneficiaries: new Set(reportResidents.map((resident) => resident.residentId)).size
-      },
-      outcomes: {
-        activeCases: reportResidents.filter((resident) => (resident.caseStatus ?? '').toLowerCase() === 'active').length,
-        avgEducation: residentOutcomeMetrics.avgEducationProgress,
-        reintegrationRate: reintegrationReport.successRate,
-      }
-    };
-  }, [reportInterventionPlans, reportResidents, residentOutcomeMetrics.avgEducationProgress, reintegrationReport.successRate]);
+  }, [summary]);
 
   return (
     <div className="container mt-2">
