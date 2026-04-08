@@ -26,6 +26,7 @@ import IncidentsPage from "./pages/IncidentsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -47,6 +48,10 @@ function AppLayout() {
 		isRecurring: false,
 		notes: "",
 	});
+
+	useEffect(() => {
+		window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+	}, [location.pathname, location.search]);
 
 	useEffect(() => {
 		function handleOpenDonateModal() {
@@ -236,6 +241,16 @@ function AppLayout() {
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<IncidentsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/admin-dashboard"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<AdminDashboardPage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}

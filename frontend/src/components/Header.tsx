@@ -104,6 +104,9 @@ function Header() {
 										Admin
 									</button>
 									<div className="app-menu-panel">
+										<NavLink className="app-menu-item" to="/admin-dashboard" onClick={closeMobileMenu}>
+											Admin Dashboard
+										</NavLink>
 										<NavLink className="app-menu-item" to="/users" onClick={closeMobileMenu}>
 											Users
 										</NavLink>

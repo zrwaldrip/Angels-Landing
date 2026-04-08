@@ -131,6 +131,15 @@ body {
   color: inherit;
 }
 
+.app-main .policy-page {
+  padding-top: 0.35rem;
+  padding-bottom: 2.5rem;
+}
+
+.app-main .policy-page .card {
+  margin-bottom: 0.75rem;
+}
+
 .app-main .card,
 .app-main .list-group-item,
 .app-main .modal-content,
