@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   getIncidents,
   getInterventionPlans,
+  getHomeVisitations,
   getHealthRecords,
   getEducationRecords,
   createIncident,
@@ -18,17 +19,29 @@ import {
   createInterventionPlan,
   updateInterventionPlan,
   deleteInterventionPlan,
+  createHomeVisitation,
+  updateHomeVisitation,
+  deleteHomeVisitation,
   type IncidentReport,
   type InterventionPlan,
+  type HomeVisitation,
   type HealthRecord,
   type EducationRecord,
 } from '../lib/lighthouseAPI';
 
-type Tab = 'incidents' | 'interventions' | 'health' | 'education';
+type Tab = 'incidents' | 'interventions' | 'visits' | 'health' | 'education';
 
 const INCIDENT_TYPE_OPTIONS = ['Physical Abuse', 'Emotional Abuse', 'Neglect', 'Safety Concern', 'HealthIssue', 'Behavioral', 'Other'] as const;
 const SEVERITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'] as const;
 const INTERVENTION_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled'] as const;
+const VISIT_TYPE_OPTIONS = [
+  'Initial Assessment',
+  'Routine Follow-up',
+  'Reintegration Assessment',
+  'Post-placement Monitoring',
+  'Emergency',
+] as const;
+const FAMILY_COOPERATION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Limited', 'Resistant'] as const;
 const EDUCATION_LEVEL_OPTIONS = ['Elementary', 'Middle School', 'High School', 'College', 'Vocational'] as const;
 const ENROLLMENT_STATUS_OPTIONS = ['Enrolled', 'Unenrolled', 'On Leave', 'Graduated'] as const;
 const COMPLETION_STATUS_OPTIONS = ['Ongoing', 'Completed', 'Dropped Out'] as const;
@@ -40,8 +53,10 @@ function IncidentsPage() {
 
   const [incidents, setIncidents] = useState<IncidentReport[]>([]);
   const [interventions, setInterventions] = useState<InterventionPlan[]>([]);
+  const [visitations, setVisitations] = useState<HomeVisitation[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([]);
+  const [conferenceResidentFilter, setConferenceResidentFilter] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,6 +81,11 @@ function IncidentsPage() {
   const [savingInterv, setSavingInterv] = useState(false);
   const [saveIntervError, setSaveIntervError] = useState('');
 
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Partial<HomeVisitation> | null>(null);
+  const [savingVisit, setSavingVisit] = useState(false);
+  const [saveVisitError, setSaveVisitError] = useState('');
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) void loadAll();
   }, [isAuthenticated, isLoading]);
@@ -73,14 +93,16 @@ function IncidentsPage() {
   async function loadAll() {
     setLoading(true); setError('');
     try {
-      const [inc, plans, health, edu] = await Promise.all([
+      const [inc, plans, visits, health, edu] = await Promise.all([
         getIncidents(),
         getInterventionPlans(),
+        getHomeVisitations(),
         getHealthRecords(),
         getEducationRecords(),
       ]);
       setIncidents(inc);
       setInterventions(plans);
+      setVisitations(visits);
       setHealthRecords(health);
       setEducationRecords(edu);
     } catch (e) {
@@ -244,9 +266,98 @@ function IncidentsPage() {
     }
   }
 
+  function handleEditVisit(v: HomeVisitation) {
+    setEditingVisit({ ...v });
+    setSaveVisitError('');
+    setShowVisitModal(true);
+  }
+
+  function handleNewVisit() {
+    setEditingVisit({
+      socialWorker: authSession.email ?? '',
+      locationVisited: 'Home',
+      followUpNeeded: true,
+    });
+    setSaveVisitError('');
+    setShowVisitModal(true);
+  }
+
+  async function handleSaveVisit() {
+    if (!editingVisit) return;
+    setSavingVisit(true);
+    setSaveVisitError('');
+    try {
+      if (editingVisit.visitationId) {
+        await updateHomeVisitation(editingVisit.visitationId, editingVisit);
+      } else {
+        await createHomeVisitation(editingVisit);
+      }
+      setShowVisitModal(false);
+      const updated = await getHomeVisitations();
+      setVisitations(updated);
+    } catch (e) {
+      setSaveVisitError(e instanceof Error ? e.message : 'Failed to save.');
+    } finally {
+      setSavingVisit(false);
+    }
+  }
+
+  async function handleDeleteVisit(id: number) {
+    if (!confirm('Delete this home/field visit?')) return;
+    try {
+      await deleteHomeVisitation(id);
+      setVisitations(prev => prev.filter(v => v.visitationId !== id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to delete.');
+    }
+  }
+
+  function parseComparableDate(value?: string): number | null {
+    if (!value) return null;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  function formatDateLabel(value?: string): string {
+    if (!value) return 'N/A';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+  }
+
+  const selectedResidentId = conferenceResidentFilter.trim()
+    ? Number(conferenceResidentFilter.trim())
+    : undefined;
+
+  const conferenceItems = interventions
+    .filter((plan) => {
+      if (!Number.isFinite(selectedResidentId as number) && selectedResidentId !== undefined) return false;
+      if (selectedResidentId === undefined) return true;
+      return plan.residentId === selectedResidentId;
+    })
+    .map((plan) => {
+      const conferenceDate = plan.caseConferenceDate ?? plan.targetDate;
+      return {
+        ...plan,
+        conferenceDate,
+        comparableDate: parseComparableDate(conferenceDate),
+      };
+    })
+    .filter((plan) => plan.conferenceDate)
+    .sort((a, b) => {
+      if (a.comparableDate == null && b.comparableDate == null) return 0;
+      if (a.comparableDate == null) return 1;
+      if (b.comparableDate == null) return -1;
+      return a.comparableDate - b.comparableDate;
+    });
+
+  const now = Date.now();
+  const upcomingConferences = conferenceItems.filter((plan) => plan.comparableDate != null && plan.comparableDate >= now);
+  const conferenceHistory = conferenceItems.filter((plan) => plan.comparableDate != null && plan.comparableDate < now).reverse();
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'incidents', label: 'Incident Reports' },
     { key: 'interventions', label: 'Intervention Plans' },
+    { key: 'visits', label: 'Home & Field Visits' },
     { key: 'health', label: 'Health Records' },
     { key: 'education', label: 'Education Records' },
   ];
@@ -266,6 +377,11 @@ function IncidentsPage() {
         return {
           label: '+ Add Intervention',
           onClick: handleNewInterv
+        };
+      case 'visits':
+        return {
+          label: '+ Log Visit',
+          onClick: handleNewVisit
         };
       case 'health':
         return {
@@ -344,21 +460,114 @@ function IncidentsPage() {
         </div>
       ) : activeTab === 'interventions' ? (
         <>
+          <div className="card border-0 shadow-sm mb-3">
+            <div className="card-body">
+              <div className="d-flex flex-wrap align-items-end gap-3 mb-3">
+                <div>
+                  <label className="form-label small mb-1">Resident ID Filter (Conference View)</label>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="All residents"
+                    value={conferenceResidentFilter}
+                    onChange={(e) => setConferenceResidentFilter(e.target.value)}
+                  />
+                </div>
+                <div className="small text-muted pb-1">
+                  Shows case conference history and upcoming conferences for each resident.
+                </div>
+              </div>
+
+              <div className="row g-3">
+                <div className="col-lg-6">
+                  <h6 className="mb-2">Upcoming Conferences</h6>
+                  {upcomingConferences.length === 0 ? (
+                    <div className="small text-muted">No upcoming conferences found.</div>
+                  ) : (
+                    <ul className="list-group list-group-flush">
+                      {upcomingConferences.map((plan) => (
+                        <li key={`upcoming-${plan.planId}`} className="list-group-item px-0 py-2">
+                          <div className="fw-semibold">Resident #{plan.residentId ?? 'N/A'} - {plan.planCategory ?? 'Conference'}</div>
+                          <div className="small text-muted">
+                            {formatDateLabel(plan.conferenceDate)} | Status: {plan.status ?? 'Planned'}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="col-lg-6">
+                  <h6 className="mb-2">Conference History</h6>
+                  {conferenceHistory.length === 0 ? (
+                    <div className="small text-muted">No conference history found.</div>
+                  ) : (
+                    <ul className="list-group list-group-flush">
+                      {conferenceHistory.map((plan) => (
+                        <li key={`history-${plan.planId}`} className="list-group-item px-0 py-2">
+                          <div className="fw-semibold">Resident #{plan.residentId ?? 'N/A'} - {plan.planCategory ?? 'Conference'}</div>
+                          <div className="small text-muted">
+                            {formatDateLabel(plan.conferenceDate)} | Status: {plan.status ?? 'Completed'}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">
-                <tr><th>ID</th><th>Resident</th><th>Category</th><th>Status</th><th>Target Date</th><th>Services Provided</th>{isAdmin && <th>Actions</th>}</tr>
+                <tr><th>ID</th><th>Resident</th><th>Category</th><th>Status</th><th>Conference Date</th><th>Target Date</th><th>Services Provided</th>{isAdmin && <th>Actions</th>}</tr>
               </thead>
               <tbody>
                 {interventions.map((p) => (
                   <tr key={p.planId}>
                     <td>{p.planId}</td><td>{p.residentId}</td><td>{p.planCategory}</td>
                     <td><span className={`badge ${p.status === 'Completed' ? 'text-bg-success' : p.status === 'In Progress' ? 'text-bg-primary' : 'text-bg-secondary'}`}>{p.status}</span></td>
+                    <td>{formatDateLabel(p.caseConferenceDate)}</td>
                     <td>{p.targetDate}</td><td>{p.servicesProvided}</td>
                     {isAdmin && (
                       <td>
                         <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEditInterv(p)}>Edit</button>
                         <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteInterv(p.planId)}>Delete</button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : activeTab === 'visits' ? (
+        <>
+          <div className="table-responsive">
+            <table className="table table-sm table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>ID</th><th>Resident</th><th>Date</th><th>Visit Type</th><th>Location</th>
+                  <th>Home Environment Observations</th><th>Family Cooperation</th><th>Safety Concerns</th><th>Follow-up Actions</th>
+                  {isAdmin && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {visitations.map((v) => (
+                  <tr key={v.visitationId}>
+                    <td>{v.visitationId}</td>
+                    <td>{v.residentId}</td>
+                    <td>{formatDateLabel(v.visitDate)}</td>
+                    <td>{v.visitType}</td>
+                    <td>{v.locationVisited}</td>
+                    <td>{v.observations}</td>
+                    <td>{v.familyCooperationLevel}</td>
+                    <td>{v.safetyConcernsNoted ? 'Yes' : 'No'}</td>
+                    <td>{v.followUpNotes}</td>
+                    {isAdmin && (
+                      <td>
+                        <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEditVisit(v)}>Edit</button>
+                        <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteVisit(v.visitationId)}>Delete</button>
                       </td>
                     )}
                   </tr>
@@ -782,6 +991,12 @@ function IncidentsPage() {
                       value={String(editingInterv.targetDate ?? '')}
                       onChange={(e) => setEditingInterv(prev => prev ? { ...prev, targetDate: e.target.value } : prev)} />
                   </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Case Conference Date</label>
+                    <input type="date" className="form-control form-control-sm"
+                      value={String(editingInterv.caseConferenceDate ?? '')}
+                      onChange={(e) => setEditingInterv(prev => prev ? { ...prev, caseConferenceDate: e.target.value } : prev)} />
+                  </div>
                   <div className="col-12">
                     <label className="form-label small">Plan Description</label>
                     <textarea className="form-control form-control-sm" rows={2}
@@ -800,6 +1015,109 @@ function IncidentsPage() {
                 <button type="button" className="btn btn-secondary" onClick={() => setShowIntervModal(false)}>Cancel</button>
                 <button type="button" className="btn btn-primary" onClick={handleSaveInterv} disabled={savingInterv}>
                   {savingInterv ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Home/Field Visit Modal */}
+      {showVisitModal && editingVisit && (
+        <div className="modal d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">{editingVisit.visitationId ? 'Edit Visit Log' : 'Log Home/Field Visit'}</h5>
+                <button type="button" className="btn-close" onClick={() => setShowVisitModal(false)} />
+              </div>
+              <div className="modal-body">
+                {saveVisitError ? <div className="alert alert-danger">{saveVisitError}</div> : null}
+                <div className="row g-3">
+                  <div className="col-md-4">
+                    <label className="form-label small">Resident ID</label>
+                    <input type="number" className="form-control form-control-sm"
+                      value={String(editingVisit.residentId ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label small">Visit Date</label>
+                    <input type="date" className="form-control form-control-sm"
+                      value={String(editingVisit.visitDate ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, visitDate: e.target.value } : prev)} />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label small">Staff / Social Worker</label>
+                    <input type="text" className="form-control form-control-sm"
+                      value={String(editingVisit.socialWorker ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, socialWorker: e.target.value } : prev)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Visit Type</label>
+                    <select className="form-select form-select-sm"
+                      value={String(editingVisit.visitType ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, visitType: e.target.value } : prev)}>
+                      <option value="">Select visit type...</option>
+                      {VISIT_TYPE_OPTIONS.map((visitType) => <option key={visitType} value={visitType}>{visitType}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Location</label>
+                    <select className="form-select form-select-sm"
+                      value={String(editingVisit.locationVisited ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, locationVisited: e.target.value } : prev)}>
+                      <option value="">Select location...</option>
+                      <option value="Home">Home</option>
+                      <option value="Field">Field</option>
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Home Environment Observations</label>
+                    <textarea className="form-control form-control-sm" rows={2}
+                      value={String(editingVisit.observations ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, observations: e.target.value } : prev)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Family Cooperation Level</label>
+                    <select className="form-select form-select-sm"
+                      value={String(editingVisit.familyCooperationLevel ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, familyCooperationLevel: e.target.value } : prev)}>
+                      <option value="">Select cooperation level...</option>
+                      {FAMILY_COOPERATION_OPTIONS.map((level) => <option key={level} value={level}>{level}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Purpose / Context</label>
+                    <input type="text" className="form-control form-control-sm"
+                      value={String(editingVisit.purpose ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, purpose: e.target.value } : prev)} />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Follow-up Actions</label>
+                    <textarea className="form-control form-control-sm" rows={2}
+                      value={String(editingVisit.followUpNotes ?? '')}
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, followUpNotes: e.target.value } : prev)} />
+                  </div>
+                  <div className="col-12">
+                    <div className="form-check mb-2">
+                      <input id="visitSafetyConcerns" type="checkbox" className="form-check-input"
+                        checked={Boolean(editingVisit.safetyConcernsNoted)}
+                        onChange={(e) => setEditingVisit(prev => prev ? { ...prev, safetyConcernsNoted: e.target.checked } : prev)} />
+                      <label className="form-check-label small" htmlFor="visitSafetyConcerns">Safety concerns identified</label>
+                    </div>
+                    <div className="form-check">
+                      <input id="visitFollowupNeeded" type="checkbox" className="form-check-input"
+                        checked={Boolean(editingVisit.followUpNeeded)}
+                        onChange={(e) => setEditingVisit(prev => prev ? { ...prev, followUpNeeded: e.target.checked } : prev)} />
+                      <label className="form-check-label small" htmlFor="visitFollowupNeeded">Follow-up needed</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowVisitModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveVisit} disabled={savingVisit}>
+                  {savingVisit ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>
