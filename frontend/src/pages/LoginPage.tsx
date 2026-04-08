@@ -2,7 +2,8 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
-import { loginUser } from '../lib/authAPI';
+import { getAuthSession, loginUser } from '../lib/authAPI';
+import { isAllowedReturnPath, resolveRoleHome } from '../routes/roleRouting';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -25,7 +26,19 @@ function LoginPage() {
     try {
       await loginUser(email, password, rememberMe, twoFactorCode || undefined, recoveryCode || undefined);
       await refreshAuthState();
-      navigate('/residents');
+      const session = await getAuthSession();
+      if (!session.isAuthenticated) {
+        throw new Error('Sign-in did not establish a valid session. Please refresh and try again.');
+      }
+      const returnTo = searchParams.get('returnTo');
+
+      if (isAllowedReturnPath(returnTo)) {
+        navigate(returnTo, { replace: true });
+        return;
+      }
+
+      const roleHome = resolveRoleHome(session);
+      navigate(roleHome ?? '/unauthorized', { replace: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to log in.');
     } finally {

@@ -10,31 +10,67 @@ import LogoutPage from './pages/LogoutPage';
 import ManageMFAPage from './pages/ManageMFAPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import UnauthorizedPage from './pages/UnauthorizedPage';
 import ResidentsPage from './pages/ResidentsPage';
 import SafehousesPage from './pages/SafehousesPage';
 import DonationsPage from './pages/DonationsPage';
 import IncidentsPage from './pages/IncidentsPage';
 import Footer from './components/Footer.tsx';
+import ProtectedRoute from './routes/ProtectedRoute';
+import GuestOnlyRoute from './routes/GuestOnlyRoute';
+import RoleRoute from './routes/RoleRoute';
 
 function App() {
   return (
     <CookieConsentProvider>
       <AuthProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/logout" element={<LogoutPage />} />
-            <Route path="/mfa" element={<ManageMFAPage />} />
-            <Route path="/cookies" element={<CookiePolicyPage />} />
-            <Route path="/privacy" element={<PrivacyPolicyPage />} />
-            <Route path="/residents" element={<ResidentsPage />} />
-            <Route path="/safehouses" element={<SafehousesPage />} />
-            <Route path="/donations" element={<DonationsPage />} />
-            <Route path="/incidents" element={<IncidentsPage />} />
-          </Routes>
-          <Footer />
+          <div className="app-shell">
+            <main className="app-main">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<GuestOnlyRoute><LoginPage /></GuestOnlyRoute>} />
+                <Route path="/register" element={<GuestOnlyRoute><RegisterPage /></GuestOnlyRoute>} />
+                <Route path="/logout" element={<LogoutPage />} />
+                <Route path="/mfa" element={<ProtectedRoute><ManageMFAPage /></ProtectedRoute>} />
+                <Route path="/cookies" element={<CookiePolicyPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                <Route
+                  path="/residents"
+                  element={
+                    <ProtectedRoute>
+                      <RoleRoute allowedRoles={['Admin']}>
+                        <ResidentsPage />
+                      </RoleRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/safehouses"
+                  element={
+                    <ProtectedRoute>
+                      <RoleRoute allowedRoles={['Admin']}>
+                        <SafehousesPage />
+                      </RoleRoute>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/donations" element={<ProtectedRoute><DonationsPage /></ProtectedRoute>} />
+                <Route
+                  path="/incidents"
+                  element={
+                    <ProtectedRoute>
+                      <RoleRoute allowedRoles={['Admin']}>
+                        <IncidentsPage />
+                      </RoleRoute>
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
           <CookieConsentBanner />
         </Router>
       </AuthProvider>

@@ -1,7 +1,13 @@
+html,
+body {
+  min-height: 100%;
+}
+
 #root {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 10rem 1.5rem 1.5rem;
+  padding: 9.25rem 1.5rem 1.5rem;
+  min-height: 100vh;
 }
 
 body {
@@ -15,6 +21,65 @@ body {
   left: 0;
   z-index: 1030;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.app-shell {
+  min-height: calc(100vh - 9.25rem - 1.5rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1 0 auto;
+}
+
+.app-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.app-brand {
+  flex: 0 0 auto;
+}
+
+.app-main-nav,
+.app-auth-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+.app-main-nav {
+  flex: 1 1 24rem;
+}
+
+.app-auth-nav {
+  justify-content: flex-end;
+}
+
+.app-header-link {
+  color: #f6fbff;
+  text-decoration: none;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.app-header-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.app-header-link-active {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.app-status-badge {
+  white-space: nowrap;
 }
 
 .cookie-consent-banner {
@@ -70,6 +135,10 @@ body {
     padding-top: 8rem;
   }
 
+  .app-shell {
+    min-height: calc(100vh - 8rem - 1.5rem);
+  }
+
   .cookie-consent-banner {
     inset-inline: auto 2rem;
     max-width: 34rem;
@@ -79,6 +148,18 @@ body {
 
 @media (min-width: 992px) {
   #root {
-    padding-top: 7rem;
+    padding-top: 7.25rem;
+  }
+
+  .app-shell {
+    min-height: calc(100vh - 7.25rem - 1.5rem);
+  }
+
+  .app-main-nav {
+    justify-content: center;
+  }
+
+  .app-header-inner {
+    flex-wrap: nowrap;
   }
 }

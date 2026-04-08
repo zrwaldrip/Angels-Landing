@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -83,15 +82,6 @@ function IncidentsPage() {
       await deleteIncident(id);
       setIncidents(prev => prev.filter(i => i.incidentId !== id));
     } catch (e) { alert(e instanceof Error ? e.message : 'Failed to delete.'); }
-  }
-
-  if (!isLoading && !isAuthenticated) {
-    return (
-      <div className="container mt-4">
-        <Header />
-        <div className="alert alert-warning">Please <Link to="/login">sign in</Link> to view this page.</div>
-      </div>
-    );
   }
 
   const tabs: { key: Tab; label: string }[] = [
