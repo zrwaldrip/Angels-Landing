@@ -27,6 +27,7 @@ import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminReportsPage from "./pages/AdminReportsPage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -98,7 +99,7 @@ function AppLayout() {
 				if (cancelled) return;
 				setFxPreview(
 					`${amount.toFixed(2)} ${from} ≈ ${conversion.convertedAmount.toFixed(2)} ${to} ` +
-						`(1 ${from} = ${conversion.rate.toFixed(4)} ${to}, ${conversion.asOfDate})`
+						`(1 ${from} = ${conversion.rate.toFixed(4)} ${to}, ${conversion.asOfDate})`,
 				);
 			} catch (error) {
 				if (cancelled) return;
@@ -265,6 +266,16 @@ function AppLayout() {
 							</ProtectedRoute>
 						}
 					/>
+					<Route
+						path="/admin-reports"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<AdminReportsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
 				</Routes>
 
 				{showDonateModal ? (
@@ -279,7 +290,8 @@ function AppLayout() {
 									<div className="modal-body">
 										{donateError ? <div className="alert alert-danger">{donateError}</div> : null}
 										<div className="alert alert-info py-2 px-3 small">
-											This donor form records money donations only. Non-cash contributions are tracked by staff through the admin workflow.
+											This donor form records money donations only. Non-cash contributions are tracked by staff through the admin
+											workflow.
 										</div>
 										<div className="mb-2">
 											<label className="form-label">Donation Amount</label>
