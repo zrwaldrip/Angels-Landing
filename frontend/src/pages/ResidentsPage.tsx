@@ -12,8 +12,43 @@ import {
   type Safehouse,
 } from '../lib/lighthouseAPI';
 
-const SEX_OPTIONS = ['Female', 'Male', 'Other'] as const;
-const CASE_CATEGORY_OPTIONS = ['Exploitation', 'Abuse', 'Poverty', 'Abandonment', 'Health'] as const;
+const SEX_OPTIONS = ['Female'] as const;
+const CASE_STATUS_OPTIONS = ['Active', 'On Hold', 'Reintegrated', 'Transferred', 'Closed'] as const;
+const CASE_CATEGORY_OPTIONS = [
+  'Abandoned',
+  'Neglected',
+  'Physically Abused',
+  'Sexually Abused',
+  'Trafficked',
+  'Child Laborer',
+  'Street Child',
+  'Child With HIV',
+  'OSAEC',
+  'CICL',
+  'At Risk',
+  'Other',
+] as const;
+const BIRTH_STATUS_OPTIONS = ['Legitimate', 'Illegitimate', 'Unknown'] as const;
+const REFERRAL_SOURCE_OPTIONS = [
+  'WCPD',
+  'DSWD',
+  'LGU',
+  'Barangay',
+  'School',
+  'Hospital',
+  'Court',
+  'NGO',
+  'Walk-in',
+  'Other',
+] as const;
+const REINTEGRATION_TYPE_OPTIONS = [
+  'Family Reintegration',
+  'Independent Living',
+  'Transfer to Another Facility',
+  'Foster Care',
+  'Adoption',
+  'Not Yet Planned',
+] as const;
 const REINTEGRATION_STATUS_OPTIONS = ['Active', 'Pending', 'Completed', 'At Risk', 'Discontinued'] as const;
 
 function ResidentsPage() {
@@ -32,8 +67,8 @@ function ResidentsPage() {
   const [riskLevelFilter, setRiskLevelFilter] = useState('');
   const [caseStatuses, setCaseStatuses] = useState<string[]>([]);
   const [riskLevels, setRiskLevels] = useState<string[]>([]);
-  const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
   const [caseCategories, setCaseCategories] = useState<string[]>([]);
+  const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -57,6 +92,7 @@ function ResidentsPage() {
       const opts = await getResidentFilterOptions();
       setCaseStatuses(opts.caseStatuses);
       setRiskLevels(opts.riskLevels);
+      setCaseCategories(opts.caseCategories);
     } catch { /* ignore */ }
     try {
       const sh = await getSafehouses();
@@ -108,29 +144,36 @@ function ResidentsPage() {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
+  function formatYearsMonths(start: Date, end: Date) {
+    if (end < start) return '';
+
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+
+    if (end.getDate() < start.getDate()) {
+      months -= 1;
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    if (years < 0) return '';
+
+    return `${years} year(s) ${months} month(s)`;
+  }
+
   function computeAge(dateOfBirth?: string, referenceDate?: string) {
     const dob = parseDate(dateOfBirth);
     const reference = referenceDate ? parseDate(referenceDate) : new Date();
     if (!dob || !reference || reference < dob) return '';
-    let age = reference.getFullYear() - dob.getFullYear();
-    const hasHadBirthday =
-      reference.getMonth() > dob.getMonth() ||
-      (reference.getMonth() === dob.getMonth() && reference.getDate() >= dob.getDate());
-    if (!hasHadBirthday) age -= 1;
-    return age >= 0 ? String(age) : '';
+    return formatYearsMonths(dob, reference);
   }
 
   function computeLengthOfStay(dateOfAdmission?: string, dateClosed?: string) {
     const admission = parseDate(dateOfAdmission);
     const end = dateClosed ? parseDate(dateClosed) : new Date();
     if (!admission || !end || end < admission) return '';
-    const totalDays = Math.floor((end.getTime() - admission.getTime()) / (1000 * 60 * 60 * 24));
-    if (totalDays < 30) return `${totalDays} day(s)`;
-    if (totalDays < 365) return `${Math.floor(totalDays / 30)} month(s)`;
-
-    const years = Math.floor(totalDays / 365);
-    const months = Math.floor((totalDays % 365) / 30);
-    return months > 0 ? `${years} year(s) ${months} month(s)` : `${years} year(s)`;
+    return formatYearsMonths(admission, end);
   }
 
   function handleNew() {
@@ -195,21 +238,21 @@ function ResidentsPage() {
             value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <select className="form-select form-select-sm" value={caseStatusFilter}
             onChange={(e) => { setCaseStatusFilter(e.target.value); setPage(1); }}>
             <option value="">All statuses</option>
             {caseStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <select className="form-select form-select-sm" value={caseCategoryFilter}
             onChange={(e) => { setCaseCategoryFilter(e.target.value); setPage(1); }}>
             <option value="">All case categories</option>
             {caseCategories.map((category) => <option key={category} value={category}>{category}</option>)}
           </select>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <select className="form-select form-select-sm" value={safehouseFilter}
             onChange={(e) => { setSafehouseFilter(e.target.value); setPage(1); }}>
             <option value="">All safehouses</option>
@@ -220,7 +263,7 @@ function ResidentsPage() {
             ))}
           </select>
         </div>
-        <div className="col-md-3">
+        <div className="col-md-2">
           <select className="form-select form-select-sm" value={riskLevelFilter}
             onChange={(e) => { setRiskLevelFilter(e.target.value); setPage(1); }}>
             <option value="">All risk levels</option>
@@ -249,7 +292,7 @@ function ResidentsPage() {
                   <th>Social Worker</th>
                   <th>Admitted</th>
                   <th>Progress</th>
-                  <th>Checked On</th>
+                  <th className="text-center">Checked On</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
@@ -282,8 +325,8 @@ function ResidentsPage() {
                         <span className="text-muted small">Pending</span>
                       )}
                     </td>
-                    <td className="text-center">
-                      <input type="checkbox" className="form-check-input" aria-label="Checked on Resident" />
+                    <td className="text-center align-middle">
+                      <input type="checkbox" className="form-check-input d-block mx-auto mt-0" aria-label="Checked on Resident" />
                     </td>
                     {isAdmin && (
                       <td>
@@ -345,7 +388,7 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseStatus: e.target.value } : prev)}
                     >
                       <option value="">Select status...</option>
-                      {caseStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {CASE_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -356,7 +399,7 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseCategory: e.target.value } : prev)}
                     >
                       <option value="">Select category...</option>
-                      {caseCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {CASE_CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -380,11 +423,44 @@ function ResidentsPage() {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Birth Status</label>
-                    <input
-                      type="text" className="form-control form-control-sm"
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingResident.birthStatus ?? '')}
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, birthStatus: e.target.value } : prev)}
-                    />
+                    >
+                      <option value="">Select birth status...</option>
+                      {BIRTH_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Case Sub-Categories</label>
+                    <div className="row g-2">
+                      {[
+                        ['subCatTrafficked', 'Trafficked'],
+                        ['subCatPhysicalAbuse', 'Victim of Physical Abuse'],
+                        ['subCatSexualAbuse', 'Victim of Sexual Abuse'],
+                        ['subCatOrphaned', 'Orphaned'],
+                        ['subCatChildLabor', 'Child Labor'],
+                        ['subCatAtRisk', 'At Risk'],
+                        ['subCatStreetChild', 'Street Child'],
+                        ['subCatOsaec', 'OSAEC'],
+                        ['subCatCicl', 'CICL'],
+                        ['subCatChildWithHiv', 'Child with HIV']
+                      ].map(([key, label]) => (
+                        <div className="col-md-4" key={key}>
+                          <div className="form-check">
+                            <input
+                              id={key}
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={Boolean(editingResident[key])}
+                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [key]: e.target.checked } : prev)}
+                            />
+                            <label className="form-check-label small" htmlFor={key}>{label}</label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Place of Birth</label>
@@ -536,6 +612,47 @@ function ResidentsPage() {
                     </select>
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label small">Disability Type</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.pwdType ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, pwdType: e.target.value, isPwd: e.target.value.trim() !== '' } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Special Needs Diagnosis</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingResident.specialNeedsDiagnosis ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, specialNeedsDiagnosis: e.target.value, hasSpecialNeeds: e.target.value.trim() !== '' } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Family Socio-Demographic Profile</label>
+                    <div className="row g-2">
+                      {[
+                        ['familyIs4ps', '4Ps beneficiary'],
+                        ['familySoloParent', 'Solo parent household'],
+                        ['familyIndigenous', 'Indigenous group'],
+                        ['familyInformalSettler', 'Informal settler'],
+                        ['familyParentPwd', 'Parent/guardian is PWD']
+                      ].map(([key, label]) => (
+                        <div className="col-md-4" key={key}>
+                          <div className="form-check">
+                            <input
+                              id={key}
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={Boolean(editingResident[key])}
+                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [key]: e.target.checked } : prev)}
+                            />
+                            <label className="form-check-label small" htmlFor={key}>{label}</label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label small">Social Worker</label>
                     <input
                       type="text" className="form-control form-control-sm"
@@ -545,11 +662,14 @@ function ResidentsPage() {
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Referral Source</label>
-                    <input
-                      type="text" className="form-control form-control-sm"
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingResident.referralSource ?? '')}
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, referralSource: e.target.value } : prev)}
-                    />
+                    >
+                      <option value="">Select referral source...</option>
+                      {REFERRAL_SOURCE_OPTIONS.map((source) => <option key={source} value={source}>{source}</option>)}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Referring Agency / Person</label>
@@ -565,6 +685,22 @@ function ResidentsPage() {
                       type="date" className="form-control form-control-sm"
                       value={String(editingResident.dateOfAdmission ?? '')}
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateOfAdmission: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date COLB Registered</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateColbRegistered ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateColbRegistered: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date COLB Obtained</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateColbObtained ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateColbObtained: e.target.value } : prev)}
                     />
                   </div>
                   <div className="col-md-6">
@@ -600,11 +736,30 @@ function ResidentsPage() {
                     </select>
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label small">Reintegration Type</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingResident.reintegrationType ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, reintegrationType: e.target.value } : prev)}
+                    >
+                      <option value="">Select reintegration type...</option>
+                      {REINTEGRATION_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label small">Date Enrolled</label>
                     <input
                       type="date" className="form-control form-control-sm"
                       value={String(editingResident.dateEnrolled ?? '')}
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateEnrolled: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date Case Study Prepared</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingResident.dateCaseStudyPrepared ?? '')}
+                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, dateCaseStudyPrepared: e.target.value } : prev)}
                     />
                   </div>
                   <div className="col-md-6">

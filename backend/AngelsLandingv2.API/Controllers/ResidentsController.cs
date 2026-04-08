@@ -18,7 +18,8 @@ public class ResidentsController(LighthouseDbContext db) : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] string? caseStatus = null,
         [FromQuery] string? riskLevel = null,
-        [FromQuery] int? safehouseId = null)
+        [FromQuery] int? safehouseId = null,
+        [FromQuery] string? caseCategory = null)
     {
         var query = db.Residents.AsQueryable();
 
@@ -33,6 +34,9 @@ public class ResidentsController(LighthouseDbContext db) : ControllerBase
 
         if (safehouseId.HasValue)
             query = query.Where(r => r.SafehouseId == safehouseId);
+
+        if (!string.IsNullOrWhiteSpace(caseCategory))
+            query = query.Where(r => r.CaseCategory == caseCategory);
 
         var total = await query.CountAsync();
         var items = await query
@@ -86,6 +90,7 @@ public class ResidentsController(LighthouseDbContext db) : ControllerBase
     {
         var caseStatuses = await db.Residents.Select(r => r.CaseStatus).Distinct().Where(s => s != null).OrderBy(s => s).ToListAsync();
         var riskLevels = await db.Residents.Select(r => r.CurrentRiskLevel).Distinct().Where(s => s != null).OrderBy(s => s).ToListAsync();
-        return Ok(new { caseStatuses, riskLevels });
+        var caseCategories = await db.Residents.Select(r => r.CaseCategory).Distinct().Where(s => s != null).OrderBy(s => s).ToListAsync();
+        return Ok(new { caseStatuses, riskLevels, caseCategories });
     }
 }

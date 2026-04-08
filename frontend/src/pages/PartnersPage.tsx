@@ -78,6 +78,22 @@ function PartnersPage() {
     }
   }
 
+  const partnerTypeOptions = Array.from(
+    new Set([
+      ...PARTNER_TYPE_OPTIONS,
+      ...partners.map((p) => p.partnerType).filter((value): value is string => Boolean(value && value.trim())),
+      ...(editingPartner?.partnerType ? [editingPartner.partnerType] : [])
+    ])
+  );
+
+  const roleTypeOptions = Array.from(
+    new Set([
+      ...ROLE_TYPE_OPTIONS,
+      ...partners.map((p) => p.roleType).filter((value): value is string => Boolean(value && value.trim())),
+      ...(editingPartner?.roleType ? [editingPartner.roleType] : [])
+    ])
+  );
+
   return (
     <div className="container mt-4">
       <Header />
@@ -123,7 +139,7 @@ function PartnersPage() {
                     <td>{p.region}</td>
                     <td><span className={`badge ${p.status === 'Active' ? 'text-bg-success' : p.status === 'Inactive' ? 'text-bg-secondary' : 'text-bg-warning'}`}>{p.status}</span></td>
                     {isAdmin && (
-                      <td>
+                      <td className="text-nowrap">
                         <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEdit(p)}>Edit</button>
                         <button className="btn btn-outline-danger btn-sm" onClick={() => handleDelete(p.partnerId)}>Delete</button>
                       </td>
@@ -165,7 +181,7 @@ function PartnersPage() {
                       onChange={(e) => setEditingPartner(prev => prev ? { ...prev, partnerType: e.target.value } : prev)}
                     >
                       <option value="">Select type...</option>
-                      {PARTNER_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {partnerTypeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -176,7 +192,7 @@ function PartnersPage() {
                       onChange={(e) => setEditingPartner(prev => prev ? { ...prev, roleType: e.target.value } : prev)}
                     >
                       <option value="">Select role...</option>
-                      {ROLE_TYPE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      {roleTypeOptions.map((r) => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
