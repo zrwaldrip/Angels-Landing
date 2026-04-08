@@ -5,7 +5,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { CookieConsentProvider } from "./context/CookieConsentContext";
 import { useAuth } from "./context/AuthContext";
 import CookieConsentBanner from "./components/CookieConsentBanner";
+import TutorialOverlay from "./components/TutorialOverlay";
 import Footer from "./components/Footer.tsx";
+import { TutorialProvider } from "./context/TutorialContext";
 import { convertCurrency, createMyDonation } from "./lib/lighthouseAPI";
 import GuestOnlyRoute from "./routes/GuestOnlyRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -428,8 +430,11 @@ function App() {
 		<CookieConsentProvider>
 			<AuthProvider>
 				<Router>
-					<AppLayout />
-					<CookieConsentBanner />
+					<TutorialProvider>
+						<AppLayout />
+						<TutorialOverlay />
+						<CookieConsentBanner />
+					</TutorialProvider>
 				</Router>
 			</AuthProvider>
 		</CookieConsentProvider>

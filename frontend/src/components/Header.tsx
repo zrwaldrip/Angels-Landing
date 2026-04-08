@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTutorial } from "../context/TutorialContext";
 import { normalizeRoles } from "../routes/roleRouting";
 
 function Header() {
@@ -11,6 +12,7 @@ function Header() {
 	const normalizedRoles = normalizeRoles(authSession.roles);
 	const isAdmin = normalizedRoles.includes("admin");
 	const isDonor = normalizedRoles.includes("donor");
+	const { startTutorial, isOpen: isTutorialOpen, currentStep } = useTutorial();
 	const navClassName = ({ isActive }: { isActive: boolean }) => `app-header-link ${isActive ? "app-header-link-active" : ""}`;
 	const profileInitial = (authSession.email?.trim().charAt(0) || "U").toUpperCase();
 
@@ -32,6 +34,48 @@ function Header() {
 		return () => document.removeEventListener("mousedown", handlePointerDown);
 	}, []);
 
+	useEffect(() => {
+		if (!isTutorialOpen) return;
+
+		const key = currentStep?.highlightKey ?? "";
+		const operationsStepKeys = new Set([
+			"operations",
+			"operations-incidents",
+			"operations-home-visitation",
+			"operations-partners",
+			"operations-process-recordings",
+			"operations-residents",
+			"operations-safehouses"
+		]);
+		const adminStepKeys = new Set([
+			"admin",
+			"admin-dashboard",
+			"admin-campaign-analysis",
+			"admin-donations",
+			"admin-reports",
+			"admin-users"
+		]);
+
+		if (operationsStepKeys.has(key)) {
+			setOpenNavMenu("operations");
+			return;
+		}
+
+		if (adminStepKeys.has(key)) {
+			setOpenNavMenu("admin");
+			return;
+		}
+
+		setOpenNavMenu(null);
+	}, [isTutorialOpen, currentStep?.highlightKey]);
+
+	useEffect(() => {
+		if (!isTutorialOpen) return;
+		if (window.matchMedia("(max-width: 991.98px)").matches) {
+			setIsMobileMenuOpen(true);
+		}
+	}, [isTutorialOpen, currentStep?.highlightKey]);
+
 	function toggleNavMenu(menu: "operations" | "admin") {
 		setOpenNavMenu((prev) => (prev === menu ? null : menu));
 	}
@@ -41,8 +85,22 @@ function Header() {
 		window.dispatchEvent(new Event("open-donate-modal"));
 	}
 
+	function handleStartTutorial() {
+		closeMobileMenu();
+		setOpenNavMenu(null);
+		startTutorial();
+	}
+
+	function getHighlightClass(key: string) {
+		return isTutorialOpen && currentStep?.highlightKey === key ? "tutorial-highlight" : "";
+	}
+
+	function navClassWithHighlight(key: string) {
+		return ({ isActive }: { isActive: boolean }) => `${navClassName({ isActive })} ${getHighlightClass(key)}`.trim();
+	}
+
 	return (
-		<header className="app-header fixed-top">
+		<header className={`app-header fixed-top ${isTutorialOpen ? "app-header-tutorial-active" : ""}`}>
 			<div className="container-fluid app-header-container">
 				<div className="app-header-inner">
 					<NavLink to="/" className="app-brand">
@@ -63,42 +121,40 @@ function Header() {
 
 					<div className={`app-nav-shell ${isMobileMenuOpen ? "app-nav-shell-open" : ""}`}>
 						<nav className="app-main-nav" ref={navMenusRef}>
-							<NavLink className={navClassName} to="/" onClick={closeMobileMenu}>
+							<NavLink className={navClassWithHighlight("home")} data-tutorial-key="home" to="/" onClick={closeMobileMenu}>
 								Home
 							</NavLink>
-							<NavLink className={navClassName} to="/donor-impact" onClick={closeMobileMenu}>
+							<NavLink className={navClassWithHighlight("impact")} data-tutorial-key="impact" to="/donor-impact" onClick={closeMobileMenu}>
 								Impact
 							</NavLink>
 							{isAuthenticated && isDonor ? (
-								<NavLink className={navClassName} to="/donor-portal" onClick={closeMobileMenu}>
+								<NavLink className={navClassWithHighlight("donor-portal")} data-tutorial-key="donor-portal" to="/donor-portal" onClick={closeMobileMenu}>
 									Donor Portal
 								</NavLink>
 							) : null}
 
 							{isAuthenticated && isAdmin ? (
-								<div
-									className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}
-								>
-									<button type="button" className="app-menu-summary" onClick={() => toggleNavMenu("operations")}>
+								<div className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}>
+									<button type="button" data-tutorial-key="operations" className={`app-menu-summary ${getHighlightClass("operations")}`.trim()} onClick={() => toggleNavMenu("operations")}>
 										Operations
 									</button>
 									<div className="app-menu-panel">
-										<NavLink className="app-menu-item" to="/incidents" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-incidents")}`.trim()} data-tutorial-key="operations-incidents" to="/incidents" onClick={closeMobileMenu}>
 											Case Records
 										</NavLink>
-										<NavLink className="app-menu-item" to="/home-visitation-conferences" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-home-visitation")}`.trim()} data-tutorial-key="operations-home-visitation" to="/home-visitation-conferences" onClick={closeMobileMenu}>
 											Home Visitation &amp; Conferences
 										</NavLink>
-										<NavLink className="app-menu-item" to="/partners" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-partners")}`.trim()} data-tutorial-key="operations-partners" to="/partners" onClick={closeMobileMenu}>
 											Partners
 										</NavLink>
-										<NavLink className="app-menu-item" to="/process-recordings" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-process-recordings")}`.trim()} data-tutorial-key="operations-process-recordings" to="/process-recordings" onClick={closeMobileMenu}>
 											Process Recordings
 										</NavLink>
-										<NavLink className="app-menu-item" to="/residents" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-residents")}`.trim()} data-tutorial-key="operations-residents" to="/residents" onClick={closeMobileMenu}>
 											Residents
 										</NavLink>
-										<NavLink className="app-menu-item" to="/safehouses" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("operations-safehouses")}`.trim()} data-tutorial-key="operations-safehouses" to="/safehouses" onClick={closeMobileMenu}>
 											Safehouses
 										</NavLink>
 									</div>
@@ -106,26 +162,24 @@ function Header() {
 							) : null}
 
 							{isAuthenticated && isAdmin ? (
-								<div
-									className={`app-menu-dropdown ${openNavMenu === "admin" ? "app-menu-dropdown-open" : ""}`}
-								>
-									<button type="button" className="app-menu-summary" onClick={() => toggleNavMenu("admin")}>
+								<div className={`app-menu-dropdown ${openNavMenu === "admin" ? "app-menu-dropdown-open" : ""}`}>
+									<button type="button" data-tutorial-key="admin" className={`app-menu-summary ${getHighlightClass("admin")}`.trim()} onClick={() => toggleNavMenu("admin")}>
 										Admin
 									</button>
 									<div className="app-menu-panel">
-										<NavLink className="app-menu-item" to="/admin-dashboard" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("admin-dashboard")}`.trim()} data-tutorial-key="admin-dashboard" to="/admin-dashboard" onClick={closeMobileMenu}>
 											Admin Dashboard
 										</NavLink>
-										<NavLink className="app-menu-item" to="/campaign-analysis" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("admin-campaign-analysis")}`.trim()} data-tutorial-key="admin-campaign-analysis" to="/campaign-analysis" onClick={closeMobileMenu}>
 											Campaign Analysis
 										</NavLink>
-										<NavLink className="app-menu-item" to="/donations" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("admin-donations")}`.trim()} data-tutorial-key="admin-donations" to="/donations" onClick={closeMobileMenu}>
 											Donations
 										</NavLink>
-										<NavLink className="app-menu-item" to="/admin-reports" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("admin-reports")}`.trim()} data-tutorial-key="admin-reports" to="/admin-reports" onClick={closeMobileMenu}>
 											Reports &amp; Analytics
 										</NavLink>
-										<NavLink className="app-menu-item" to="/users" onClick={closeMobileMenu}>
+										<NavLink className={`app-menu-item ${getHighlightClass("admin-users")}`.trim()} data-tutorial-key="admin-users" to="/users" onClick={closeMobileMenu}>
 											Users
 										</NavLink>
 									</div>
@@ -139,18 +193,23 @@ function Header() {
 									Login
 								</NavLink>
 							) : (
-									<button type="button" className="app-donate-btn" onClick={openDonateModal}>
+									<button type="button" data-tutorial-key="donate" className={`app-donate-btn ${getHighlightClass("donate")}`.trim()} onClick={openDonateModal}>
 										Donate
 									</button>
 								)}
 
 							{isAuthenticated && !isLoading ? (
 								<details className="app-menu-dropdown app-profile-dropdown">
-									<summary className="app-profile-trigger" aria-label="Open profile menu">
+									<summary data-tutorial-key="profile" className={`app-profile-trigger ${getHighlightClass("profile")}`.trim()} aria-label="Open profile menu">
 										<span className="app-profile-avatar">{profileInitial}</span>
 									</summary>
 									<div className="app-menu-panel app-profile-panel">
 										<div className="app-profile-email">{authSession.email ?? "Signed-in user"}</div>
+										{isAdmin ? (
+											<button type="button" className="app-menu-item app-menu-item-accent text-start w-100" onClick={handleStartTutorial}>
+												Tutorial
+											</button>
+										) : null}
 										<NavLink className="app-menu-item" to="/mfa" onClick={closeMobileMenu}>
 											MFA Settings
 										</NavLink>
