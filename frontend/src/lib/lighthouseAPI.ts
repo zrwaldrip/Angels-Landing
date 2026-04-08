@@ -101,9 +101,16 @@ export interface ProcessRecording {
   notesRestricted?: string;
 }
 
+export interface ProcessRecordingListResult {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: ProcessRecording[];
+}
+
 export function getProcessRecordings(params?: Record<string, string | number>) {
   const qs = new URLSearchParams(Object.entries(params ?? {}).map(([k, v]) => [k, String(v)])).toString();
-  return apiFetch<ProcessRecording[]>(`/api/process-recordings${qs ? '?' + qs : ''}`);
+  return apiFetch<ProcessRecordingListResult>(`/api/process-recordings${qs ? '?' + qs : ''}`);
 }
 
 export function getProcessRecordingById(id: number) {

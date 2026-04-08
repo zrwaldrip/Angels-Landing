@@ -243,7 +243,9 @@ function AppLayout() {
 						path="/process-recordings"
 						element={
 							<ProtectedRoute>
-								<ProcessRecordingsPage />
+								<RoleRoute allowedRoles={["Admin"]}>
+									<ProcessRecordingsPage />
+								</RoleRoute>
 							</ProtectedRoute>
 						}
 					/>

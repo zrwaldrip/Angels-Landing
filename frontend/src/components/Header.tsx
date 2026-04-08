@@ -75,7 +75,7 @@ function Header() {
 								</NavLink>
 							) : null}
 
-							{isAuthenticated ? (
+							{isAuthenticated && isAdmin ? (
 								<NavLink className={navClassName} to="/process-recordings" onClick={closeMobileMenu}>
 									Process Recordings
 								</NavLink>
