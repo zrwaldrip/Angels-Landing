@@ -62,11 +62,6 @@ function Header() {
 								)}
 							</>
 						)}
-						{!isDonorOnly ? (
-							<NavLink className={navClassName + " text-white text-decoration-none"} to="/cookies">
-								Cookies
-							</NavLink>
-						) : null}
 					</nav>
 
 					<div className="app-auth-nav d-flex gap-3 justify-content-lg-end align-items-center flex-wrap">
