@@ -251,14 +251,46 @@ function IncidentsPage() {
     { key: 'education', label: 'Education Records' },
   ];
 
+  function getAddButtonConfig(): { label: string; onClick: () => void } {
+    switch (activeTab) {
+      case 'incidents':
+        return {
+          label: '+ Add Incident',
+          onClick: () => {
+            setEditingIncident({});
+            setSaveError('');
+            setShowModal(true);
+          }
+        };
+      case 'interventions':
+        return {
+          label: '+ Add Intervention',
+          onClick: handleNewInterv
+        };
+      case 'health':
+        return {
+          label: '+ Add Health Record',
+          onClick: handleNewHealth
+        };
+      case 'education':
+      default:
+        return {
+          label: '+ Add Education Record',
+          onClick: handleNewEdu
+        };
+    }
+  }
+
+  const addButton = getAddButtonConfig();
+
   return (
     <div className="container mt-4">
       <Header />
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="h4 mb-0">Case Records</h2>
-        {isAdmin && activeTab === 'incidents' && (
-          <button className="btn btn-primary btn-sm" onClick={() => { setEditingIncident({}); setSaveError(''); setShowModal(true); }}>
-            + Add Incident
+        {isAdmin && (
+          <button className="btn btn-primary btn-sm" onClick={addButton.onClick}>
+            {addButton.label}
           </button>
         )}
       </div>
@@ -312,11 +344,6 @@ function IncidentsPage() {
         </div>
       ) : activeTab === 'interventions' ? (
         <>
-          {isAdmin && (
-            <div className="mb-3">
-              <button className="btn btn-primary btn-sm" onClick={handleNewInterv}>+ Add Intervention</button>
-            </div>
-          )}
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">
@@ -342,11 +369,6 @@ function IncidentsPage() {
         </>
       ) : activeTab === 'health' ? (
         <>
-          {isAdmin && (
-            <div className="mb-3">
-              <button className="btn btn-primary btn-sm" onClick={handleNewHealth}>+ Add Health Record</button>
-            </div>
-          )}
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">
@@ -378,11 +400,6 @@ function IncidentsPage() {
         </>
       ) : (
         <>
-          {isAdmin && (
-            <div className="mb-3">
-              <button className="btn btn-primary btn-sm" onClick={handleNewEdu}>+ Add Education Record</button>
-            </div>
-          )}
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">

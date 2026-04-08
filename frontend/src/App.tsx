@@ -36,7 +36,7 @@ function AppLayout() {
 	const navigate = useNavigate();
 	const { authSession, isAuthenticated, isLoading } = useAuth();
 	const normalizedRoles = normalizeRoles(authSession.roles);
-	const isDonor = normalizedRoles.includes("donor");
+	const canOpenDonateModal = isAuthenticated;
 	const isLandingRoute = location.pathname === "/";
 	const [showDonateModal, setShowDonateModal] = useState(false);
 	const [donating, setDonating] = useState(false);
@@ -58,7 +58,7 @@ function AppLayout() {
 
 	useEffect(() => {
 		function handleOpenDonateModal() {
-			if (!isLoading && isAuthenticated && isDonor) {
+			if (!isLoading && canOpenDonateModal) {
 				setDonateError("");
 				setFxError("");
 				setShowDonateModal(true);
@@ -67,17 +67,17 @@ function AppLayout() {
 
 		window.addEventListener("open-donate-modal", handleOpenDonateModal);
 		return () => window.removeEventListener("open-donate-modal", handleOpenDonateModal);
-	}, [isAuthenticated, isDonor, isLoading]);
+	}, [canOpenDonateModal, isLoading]);
 
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
 		if (params.get("donate") !== "1") return;
-		if (!isLoading && isAuthenticated && isDonor) {
+		if (!isLoading && canOpenDonateModal) {
 			setShowDonateModal(true);
 		}
 		params.delete("donate");
 		navigate({ pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" }, { replace: true });
-	}, [isAuthenticated, isDonor, isLoading, location.pathname, location.search, navigate]);
+	}, [canOpenDonateModal, isLoading, location.pathname, location.search, navigate]);
 
 	useEffect(() => {
 		const amountText = donationForm.amount.trim();
