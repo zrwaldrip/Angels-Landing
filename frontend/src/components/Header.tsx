@@ -138,11 +138,11 @@ function Header() {
 								<NavLink className={navClassName} to="/login" onClick={closeMobileMenu}>
 									Login
 								</NavLink>
-							) : isDonor ? (
+							) : (
 									<button type="button" className="app-donate-btn" onClick={openDonateModal}>
 										Donate
 									</button>
-								) : null}
+								)}
 
 							{isAuthenticated && !isLoading ? (
 								<details className="app-menu-dropdown app-profile-dropdown">
