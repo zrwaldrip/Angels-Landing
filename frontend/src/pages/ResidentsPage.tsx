@@ -176,7 +176,7 @@ function ResidentsPage() {
                   <th>Social Worker</th>
                   <th>Admitted</th>
                   <th>Progress</th>
-                  <th>Checked On</th>
+                  <th className="text-center">Checked On</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
@@ -209,8 +209,8 @@ function ResidentsPage() {
                         <span className="text-muted small">Pending</span>
                       )}
                     </td>
-                    <td className="text-center">
-                      <input type="checkbox" className="form-check-input" aria-label="Checked on Resident" />
+                    <td className="text-center align-middle">
+                      <input type="checkbox" className="form-check-input d-block mx-auto mt-0" aria-label="Checked on Resident" />
                     </td>
                     {isAdmin && (
                       <td>

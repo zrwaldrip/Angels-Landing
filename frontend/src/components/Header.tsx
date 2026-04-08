@@ -75,12 +75,6 @@ function Header() {
 								</NavLink>
 							) : null}
 
-							{isAuthenticated ? (
-								<NavLink className={navClassName} to="/process-recordings" onClick={closeMobileMenu}>
-									Process Recordings
-								</NavLink>
-							) : null}
-
 							{isAuthenticated && isAdmin ? (
 								<div
 									className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}
@@ -89,17 +83,20 @@ function Header() {
 										Operations
 									</button>
 									<div className="app-menu-panel">
+										<NavLink className="app-menu-item" to="/incidents" onClick={closeMobileMenu}>
+											Case Records
+										</NavLink>
+										<NavLink className="app-menu-item" to="/partners" onClick={closeMobileMenu}>
+											Partners
+										</NavLink>
+										<NavLink className="app-menu-item" to="/process-recordings" onClick={closeMobileMenu}>
+											Process Recordings
+										</NavLink>
 										<NavLink className="app-menu-item" to="/residents" onClick={closeMobileMenu}>
 											Residents
 										</NavLink>
 										<NavLink className="app-menu-item" to="/safehouses" onClick={closeMobileMenu}>
 											Safehouses
-										</NavLink>
-										<NavLink className="app-menu-item" to="/partners" onClick={closeMobileMenu}>
-											Partners
-										</NavLink>
-										<NavLink className="app-menu-item" to="/incidents" onClick={closeMobileMenu}>
-											Case Records
 										</NavLink>
 									</div>
 								</div>
@@ -116,6 +113,9 @@ function Header() {
 										<NavLink className="app-menu-item" to="/admin-dashboard" onClick={closeMobileMenu}>
 											Admin Dashboard
 										</NavLink>
+										<NavLink className="app-menu-item" to="/campaign-analysis" onClick={closeMobileMenu}>
+											Campaign Analysis
+										</NavLink>
 										<NavLink className="app-menu-item" to="/donations" onClick={closeMobileMenu}>
 											Donations
 										</NavLink>
@@ -124,9 +124,6 @@ function Header() {
 										</NavLink>
 										<NavLink className="app-menu-item" to="/users" onClick={closeMobileMenu}>
 											Users
-										</NavLink>
-										<NavLink className="app-menu-item" to="/campaign-analysis" onClick={closeMobileMenu}>
-											Campaign Analysis
 										</NavLink>
 									</div>
 								</div>
