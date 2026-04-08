@@ -10,14 +10,49 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AngelsLandingv2.API.Migrations
 {
     [DbContext(typeof(LighthouseDbContext))]
-    [Migration("20260407204148_RebuildSqliteMigrate")]
-    partial class RebuildSqliteMigrate
+    [Migration("20260408052115_AddCampaignsTable")]
+    partial class AddCampaignsTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+
+            modelBuilder.Entity("AngelsLandingv2.API.Data.Models.Campaign", b =>
+                {
+                    b.Property<int>("CampaignId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CampaignName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("CompositeScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("DonorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("MeanValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("MlLastCalculated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Rank")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("TotalValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Verdict")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CampaignId");
+
+                    b.ToTable("Campaigns");
+                });
 
             modelBuilder.Entity("AngelsLandingv2.API.Data.Models.Donation", b =>
                 {

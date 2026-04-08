@@ -5,11 +5,31 @@
 namespace AngelsLandingv2.API.Migrations
 {
     /// <inheritdoc />
-    public partial class RebuildSqliteMigrate : Migration
+    public partial class AddCampaignsTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Campaigns",
+                columns: table => new
+                {
+                    CampaignId = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CampaignName = table.Column<string>(type: "TEXT", nullable: true),
+                    TotalValue = table.Column<double>(type: "REAL", nullable: true),
+                    DonorCount = table.Column<int>(type: "INTEGER", nullable: true),
+                    MeanValue = table.Column<double>(type: "REAL", nullable: true),
+                    CompositeScore = table.Column<double>(type: "REAL", nullable: true),
+                    Rank = table.Column<int>(type: "INTEGER", nullable: true),
+                    Verdict = table.Column<string>(type: "TEXT", nullable: true),
+                    MlLastCalculated = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Campaigns", x => x.CampaignId);
+                });
+
             migrationBuilder.CreateTable(
                 name: "DonationAllocations",
                 columns: table => new
@@ -463,6 +483,9 @@ namespace AngelsLandingv2.API.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Campaigns");
+
             migrationBuilder.DropTable(
                 name: "DonationAllocations");
 

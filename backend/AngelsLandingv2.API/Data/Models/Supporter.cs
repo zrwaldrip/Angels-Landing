@@ -20,4 +20,6 @@ public class Supporter
     public string? CreatedAt { get; set; }
     public string? FirstDonationDate { get; set; }
     public string? AcquisitionChannel { get; set; }
+    public double? PropensityScore { get; set; }
+    public string? PropensityLastCalculated { get; set; }
 }

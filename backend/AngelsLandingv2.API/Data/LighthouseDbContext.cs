@@ -24,4 +24,5 @@ public class LighthouseDbContext : DbContext
     public DbSet<HealthWellbeingRecord> HealthWellbeingRecords => Set<HealthWellbeingRecord>();
     public DbSet<PublicImpactSnapshot> PublicImpactSnapshots => Set<PublicImpactSnapshot>();
     public DbSet<SocialMediaPost> SocialMediaPosts => Set<SocialMediaPost>();
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
 }

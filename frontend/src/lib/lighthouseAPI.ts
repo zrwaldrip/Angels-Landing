@@ -376,3 +376,31 @@ export interface Partner {
 export function getPartners() {
   return apiFetch<Partner[]>('/api/partners');
 }
+
+// ─── Campaigns ────────────────────────────────────────────────────────────────
+export interface Campaign {
+  campaignId: number;
+  campaignName?: string;
+  totalValue?: number;
+  donorCount?: number;
+  meanValue?: number;
+  compositeScore?: number;
+  rank?: number;
+  verdict?: string;
+  mlLastCalculated?: string;
+}
+
+export interface CampaignChannelBreakdown {
+  campaign: string;
+  channel: string;
+  totalValue?: number;
+  donorCount?: number;
+}
+
+export function getCampaigns() {
+  return apiFetch<Campaign[]>('/api/campaigns');
+}
+
+export function getCampaignChannelBreakdown() {
+  return apiFetch<CampaignChannelBreakdown[]>('/api/campaigns/channel-breakdown');
+}
