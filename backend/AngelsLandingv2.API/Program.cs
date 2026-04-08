@@ -202,7 +202,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = needsCrossSiteAuthCookies ? SameSiteMode.None : SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.SlidingExpiration = true;
 });
@@ -246,12 +248,14 @@ if (app.Environment.IsDevelopment())
 }
 
 if (!app.Environment.IsDevelopment())
+{
     app.UseHsts();
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
 app.UseManualCors(allowAnyOrigin, corsOrigins);
 app.UseSecurityHeaders();
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

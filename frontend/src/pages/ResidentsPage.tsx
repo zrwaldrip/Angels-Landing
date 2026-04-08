@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -111,15 +110,6 @@ function ResidentsPage() {
   }
 
   const totalPages = Math.ceil(total / pageSize);
-
-  if (!isLoading && !isAuthenticated) {
-    return (
-      <div className="container mt-4">
-        <Header />
-        <div className="alert alert-warning">Please <Link to="/login">sign in</Link> to view residents.</div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mt-4">

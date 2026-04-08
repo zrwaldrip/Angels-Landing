@@ -16,6 +16,41 @@ namespace AngelsLandingv2.API.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
+            modelBuilder.Entity("AngelsLandingv2.API.Data.Models.Campaign", b =>
+                {
+                    b.Property<int>("CampaignId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CampaignName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("CompositeScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("DonorCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("MeanValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("MlLastCalculated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Rank")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("TotalValue")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Verdict")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CampaignId");
+
+                    b.ToTable("Campaigns");
+                });
+
             modelBuilder.Entity("AngelsLandingv2.API.Data.Models.Donation", b =>
                 {
                     b.Property<int>("DonationId")
@@ -920,6 +955,12 @@ namespace AngelsLandingv2.API.Migrations
 
                     b.Property<string>("Phone")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("PropensityLastCalculated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("PropensityScore")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Region")
                         .HasColumnType("TEXT");

@@ -42,7 +42,10 @@ export interface AdminUser {
 }
 
 export async function getAuthSession(): Promise<AuthSession> {
-  const response = await fetch(`${apiBaseUrl}/api/auth/me`, { credentials: 'include' });
+  const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+    credentials: 'include',
+    cache: 'no-store',
+  });
   if (!response.ok) throw new Error('Unable to load auth session.');
   return response.json();
 }
@@ -88,6 +91,7 @@ export async function logoutUser(): Promise<void> {
   const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error(await readApiError(response, 'Unable to log out.'));
 }
