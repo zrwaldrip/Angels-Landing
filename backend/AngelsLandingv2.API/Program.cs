@@ -71,14 +71,27 @@ static bool IsSqliteConnectionString(string conn) =>
 
 static async Task EnsureSqliteColumnExistsAsync(DbContext db, string tableName, string columnName, string columnTypeDefinition)
 {
+    // Check existence first via PRAGMA so we never attempt ALTER TABLE on an existing column.
+    // The old try/catch approach worked but caused EF Core to log a noisy red [20102] command
+    // failure on every startup for each column that was already present.
+    var conn = (SqliteConnection)db.Database.GetDbConnection();
+    var wasOpen = conn.State == System.Data.ConnectionState.Open;
+    if (!wasOpen) await conn.OpenAsync();
     try
     {
-        await db.Database.ExecuteSqlRawAsync(
-            $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {columnTypeDefinition};");
+        using var checkCmd = conn.CreateCommand();
+        checkCmd.CommandText = $"SELECT COUNT(*) FROM pragma_table_info(\"{tableName}\") WHERE name = \"{columnName}\";";
+        var count = (long)(await checkCmd.ExecuteScalarAsync() ?? 0L);
+        if (count == 0)
+        {
+            using var alterCmd = conn.CreateCommand();
+            alterCmd.CommandText = $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {columnTypeDefinition};";
+            await alterCmd.ExecuteNonQueryAsync();
+        }
     }
-    catch (SqliteException ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+    finally
     {
-        // Column already exists in this SQLite file.
+        if (!wasOpen) conn.Close();
     }
 }
 
