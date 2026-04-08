@@ -86,6 +86,9 @@ function Header() {
 										<NavLink className="app-menu-item" to="/incidents" onClick={closeMobileMenu}>
 											Case Records
 										</NavLink>
+										<NavLink className="app-menu-item" to="/home-visitation-conferences" onClick={closeMobileMenu}>
+											Home Visitation &amp; Conferences
+										</NavLink>
 										<NavLink className="app-menu-item" to="/partners" onClick={closeMobileMenu}>
 											Partners
 										</NavLink>

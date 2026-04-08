@@ -67,7 +67,7 @@ export function deleteResident(id: number) {
 }
 
 export function getResidentFilterOptions() {
-  return apiFetch<{ caseStatuses: string[]; riskLevels: string[] }>('/api/residents/filter-options');
+  return apiFetch<{ caseStatuses: string[]; riskLevels: string[]; caseCategories: string[] }>('/api/residents/filter-options');
 }
 
 // ─── Process Recordings ──────────────────────────────────────────────────────
@@ -258,6 +258,32 @@ export interface DonorImpactSummary {
   };
 }
 
+export interface AdminReportsSummary {
+  donationTrends: Array<{ month: string; totalValue: number }>;
+  residentOutcomeMetrics: {
+    avgEducationProgress: number;
+    avgHealthScore: number;
+    healthImprovementRate: number;
+  };
+  safehouseComparison: Array<{
+    safehouseId: number;
+    name: string;
+    occupancyRate: number;
+    educationProgress: number | null;
+    healthScore: number | null;
+  }>;
+  reintegration: {
+    assessed: number;
+    successful: number;
+    successRate: number;
+  };
+  annualAccomplishment: {
+    serviceCounts: { caring: number; healing: number; teaching: number };
+    beneficiaries: { caring: number; healing: number; teaching: number; totalBeneficiaries: number };
+    outcomes: { activeCases: number; avgEducation: number; reintegrationRate: number };
+  };
+}
+
 export function getDonations(params?: Record<string, string | number>) {
   const qs = new URLSearchParams(Object.entries(params ?? {}).map(([k, v]) => [k, String(v)])).toString();
   return apiFetch<DonationListResult>(`/api/donations${qs ? '?' + qs : ''}`);
@@ -279,6 +305,10 @@ export function convertCurrency(from: 'USD' | 'PHP', to: 'USD' | 'PHP', amount: 
 
 export function getDonorImpactSummary() {
   return apiFetch<DonorImpactSummary>('/api/donor-impact/summary');
+}
+
+export function getAdminReportsSummary() {
+  return apiFetch<AdminReportsSummary>('/api/admin-reports/summary');
 }
 
 export function createDonation(d: Partial<Donation>) {
@@ -429,6 +459,7 @@ export interface InterventionPlan {
   servicesProvided?: string;
   status?: string;
   targetDate?: string;
+  caseConferenceDate?: string;
 }
 
 export function getInterventionPlans(residentId?: number) {
@@ -446,6 +477,41 @@ export function updateInterventionPlan(id: number, p: Partial<InterventionPlan>)
 
 export function deleteInterventionPlan(id: number) {
   return apiFetch<void>(`/api/intervention-plans/${id}`, { method: 'DELETE' });
+}
+
+// ─── Home Visitations ─────────────────────────────────────────────────────────
+export interface HomeVisitation {
+  visitationId: number;
+  residentId?: number;
+  visitDate?: string;
+  socialWorker?: string;
+  visitType?: string;
+  locationVisited?: string;
+  familyMembersPresent?: string;
+  purpose?: string;
+  observations?: string;
+  familyCooperationLevel?: string;
+  safetyConcernsNoted?: boolean;
+  followUpNeeded?: boolean;
+  followUpNotes?: string;
+  visitOutcome?: string;
+}
+
+export function getHomeVisitations(residentId?: number) {
+  const qs = residentId ? `?residentId=${residentId}` : '';
+  return apiFetch<HomeVisitation[]>(`/api/home-visitations${qs}`);
+}
+
+export function createHomeVisitation(v: Partial<HomeVisitation>) {
+  return apiFetch<HomeVisitation>('/api/home-visitations', { method: 'POST', body: JSON.stringify(v) });
+}
+
+export function updateHomeVisitation(id: number, v: Partial<HomeVisitation>) {
+  return apiFetch<void>(`/api/home-visitations/${id}`, { method: 'PUT', body: JSON.stringify(v) });
+}
+
+export function deleteHomeVisitation(id: number) {
+  return apiFetch<void>(`/api/home-visitations/${id}`, { method: 'DELETE' });
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────

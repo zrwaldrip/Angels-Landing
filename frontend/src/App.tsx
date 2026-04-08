@@ -31,6 +31,7 @@ import UserManagementPage from "./pages/UserManagementPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
 import CampaignAnalysisPage from "./pages/CampaignAnalysisPage";
+import HomeVisitationCaseConferencePage from "./pages/HomeVisitationCaseConferencePage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -245,6 +246,16 @@ function AppLayout() {
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<ProcessRecordingsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/home-visitation-conferences"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<HomeVisitationCaseConferencePage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}
