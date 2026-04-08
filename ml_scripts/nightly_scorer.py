@@ -14,9 +14,19 @@ THRESHOLD = 0.4  # Lowered from 0.5 to prioritize recall (catching stalling resi
 
 
 def fetch_table(supabase: Client, table: str) -> pd.DataFrame:
-    """Fetch all rows from a Supabase table as a DataFrame."""
-    resp = supabase.table(table).select("*").execute()
-    return pd.DataFrame(resp.data) if resp.data else pd.DataFrame()
+    """Fetch all rows from a Supabase table using pagination."""
+    all_data = []
+    start = 0
+    limit = 1000
+    while True:
+        resp = supabase.table(table).select("*").range(start, start + limit - 1).execute()
+        if not resp.data:
+            break
+        all_data.extend(resp.data)
+        if len(resp.data) < limit:
+            break
+        start += limit
+    return pd.DataFrame(all_data) if all_data else pd.DataFrame()
 
 
 def build_features(residents_df: pd.DataFrame, supabase: Client) -> pd.DataFrame:

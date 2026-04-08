@@ -248,6 +248,9 @@ using (var scope = app.Services.CreateScope())
         await lighthouseDb.Database.EnsureCreatedAsync();
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Residents", "MlPredictionStatus", "TEXT NULL");
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Residents", "MlLastCalculated", "TEXT NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "RecurringRate", "REAL NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "TopChannel", "TEXT NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "MlrSignificant", "INTEGER NULL");
     }
     else
         Console.WriteLine("Bypassing Lighthouse MigrateAsync to prevent Azure Crash.");

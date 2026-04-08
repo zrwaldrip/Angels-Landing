@@ -82,6 +82,7 @@ export default function CampaignAnalysisPage() {
   const { data: channelData, channels } = pivotChannels(breakdown);
 
   const topCampaign   = campaigns[0];
+  const topRecurringCampaign = [...campaigns].sort((a,b) => (b.recurringRate || 0) - (a.recurringRate || 0))[0];
   const totalRaised   = campaigns.reduce((s, c) => s + (c.totalValue ?? 0), 0);
   const totalDonors   = campaigns.reduce((s, c) => s + (c.donorCount ?? 0), 0);
   const movingCount   = campaigns.filter(c => c.verdict === 'Moving the needle').length;
@@ -128,6 +129,30 @@ export default function CampaignAnalysisPage() {
 
       {!loading && campaigns.length > 0 && (
         <>
+          {/* ── Staff Recommendations ── */}
+          <div className="card border-0 shadow-sm mb-4 border-start border-primary border-4 bg-light">
+            <div className="card-body">
+              <h5 className="card-title fw-bold text-primary mb-3">
+                <i className="bi bi-lightbulb-fill me-2"></i>Staff Recommendations
+              </h5>
+              <ul className="mb-0">
+                {topCampaign?.topChannel && (
+                  <li>
+                    Run <strong>{topCampaign.campaignName}</strong> through <strong>{topCampaign.topChannel}</strong> — that's historically your highest-value combination.
+                  </li>
+                )}
+                {topRecurringCampaign?.recurringRate != null && topRecurringCampaign.recurringRate > 0 && (
+                  <li className="mt-2">
+                    <strong>{topRecurringCampaign.campaignName}</strong> generates your best recurring donor rate ({(topRecurringCampaign.recurringRate * 100).toFixed(1)}%) — prioritize it to build long-term support.
+                  </li>
+                )}
+                <li className="mt-2">
+                  Focus on strategies marked as <strong>"Moving the needle"</strong> — our pipeline confirms their lift is statistically significant versus baseline donations.
+                </li>
+              </ul>
+            </div>
+          </div>
+
           {/* ── Summary cards ── */}
           <div className="row g-3 mb-4">
             <div className="col-sm-6 col-lg-3">
@@ -258,8 +283,10 @@ export default function CampaignAnalysisPage() {
                       <th className="text-end">Total Value</th>
                       <th className="text-end">Donors</th>
                       <th className="text-end">Avg Donation</th>
+                      <th className="text-end">Recurring Rate</th>
                       <th className="text-end">Score</th>
                       <th>Verdict</th>
+                      <th>Sig. Lift</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -271,9 +298,15 @@ export default function CampaignAnalysisPage() {
                         <td className="text-end">{fmt(c.donorCount)}</td>
                         <td className="text-end">₱{fmt(c.meanValue, 2)}</td>
                         <td className="text-end">
+                          {c.recurringRate != null ? `${(c.recurringRate * 100).toFixed(1)}%` : '—'}
+                        </td>
+                        <td className="text-end">
                           <span className="fw-semibold">{(c.compositeScore ?? 0).toFixed(3)}</span>
                         </td>
                         <td>{verdictBadge(c.verdict)}</td>
+                        <td>
+                          {c.mlrSignificant ? <span className="badge bg-primary">Yes</span> : <span className="text-muted small">No</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
