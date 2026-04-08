@@ -176,10 +176,7 @@ function DonorPortalPage() {
       <Header />
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="h4 mb-0">Donor Portal</h2>
-        <div className="d-flex align-items-center gap-2">
-          <button className="btn btn-primary btn-sm" onClick={openDonateModal}>Donate</button>
-          <span className="text-muted small">{authSession.email ?? authSession.userName}</span>
-        </div>
+        <button className="btn donor-portal-donate-btn" onClick={openDonateModal}>Donate Now</button>
       </div>
 
       <p className="text-muted">This page shows donations associated with your supporter profile.</p>

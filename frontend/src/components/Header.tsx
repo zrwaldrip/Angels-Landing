@@ -36,6 +36,11 @@ function Header() {
 		setOpenNavMenu((prev) => (prev === menu ? null : menu));
 	}
 
+	function openDonateModal() {
+		closeMobileMenu();
+		window.dispatchEvent(new Event("open-donate-modal"));
+	}
+
 	return (
 		<header className="app-header fixed-top">
 			<div className="container-fluid app-header-container">
@@ -119,9 +124,9 @@ function Header() {
 									Login
 								</NavLink>
 							) : isDonor ? (
-									<NavLink className="app-donate-btn" to="/donor-portal?donate=1" onClick={closeMobileMenu}>
+									<button type="button" className="app-donate-btn" onClick={openDonateModal}>
 										Donate
-									</NavLink>
+									</button>
 								) : null}
 
 							{isAuthenticated && !isLoading ? (
