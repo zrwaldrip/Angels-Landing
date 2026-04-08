@@ -70,6 +70,46 @@ export function getResidentFilterOptions() {
   return apiFetch<{ caseStatuses: string[]; riskLevels: string[] }>('/api/residents/filter-options');
 }
 
+// ─── Process Recordings ──────────────────────────────────────────────────────
+export interface ProcessRecording {
+  recordingId: number;
+  residentId?: number;
+  sessionDate?: string;
+  socialWorker?: string;
+  sessionType?: string;
+  sessionDurationMinutes?: number;
+  emotionalStateObserved?: string;
+  emotionalStateEnd?: string;
+  sessionNarrative?: string;
+  interventionsApplied?: string;
+  followUpActions?: string;
+  progressNoted?: boolean;
+  concernsFlagged?: boolean;
+  referralMade?: boolean;
+  notesRestricted?: string;
+}
+
+export function getProcessRecordings(params?: Record<string, string | number>) {
+  const qs = new URLSearchParams(Object.entries(params ?? {}).map(([k, v]) => [k, String(v)])).toString();
+  return apiFetch<ProcessRecording[]>(`/api/process-recordings${qs ? '?' + qs : ''}`);
+}
+
+export function getProcessRecordingById(id: number) {
+  return apiFetch<ProcessRecording>(`/api/process-recordings/${id}`);
+}
+
+export function createProcessRecording(recording: Partial<ProcessRecording>) {
+  return apiFetch<ProcessRecording>('/api/process-recordings', { method: 'POST', body: JSON.stringify(recording) });
+}
+
+export function updateProcessRecording(id: number, recording: Partial<ProcessRecording>) {
+  return apiFetch<void>(`/api/process-recordings/${id}`, { method: 'PUT', body: JSON.stringify(recording) });
+}
+
+export function deleteProcessRecording(id: number) {
+  return apiFetch<void>(`/api/process-recordings/${id}`, { method: 'DELETE' });
+}
+
 // ─── Safehouses ───────────────────────────────────────────────────────────────
 export interface Safehouse {
   safehouseId: number;
