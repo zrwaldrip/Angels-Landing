@@ -36,6 +36,9 @@ export interface Resident {
   currentRiskLevel?: string;
   reintegrationStatus?: string;
   dateOfAdmission?: string;
+  ageUponAdmission?: string;
+  presentAge?: string;
+  lengthOfStay?: string;
   dateEnrolled?: string;
   dateClosed?: string;
   mlPredictionStatus?: string;
