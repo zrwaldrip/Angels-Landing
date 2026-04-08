@@ -1,6 +1,7 @@
 using System.Reflection;
 using Npgsql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using AngelsLandingv2.API.Data;
 using Microsoft.AspNetCore.Identity;
 using AngelsLandingv2.API.Infrastructure;
@@ -32,10 +33,11 @@ if (corsOrigins.Count == 0 && !string.IsNullOrWhiteSpace(frontendUrl))
 if (corsOrigins.Count == 0)
     corsOrigins.Add(DefaultFrontendUrl);
 
-// If this API is configured with CORS origins, auth is expected to flow from a separate SPA origin.
-// Use cross-site cookie settings so browser credentialed fetches can carry the auth cookie.
+// Cross-site auth cookies (SameSite=None) are only safe when requests are over HTTPS.
+// In local HTTP development, using None causes the browser to reject the cookie unless Secure=true.
 var needsCrossSiteAuthCookies =
-    allowAnyOrigin || corsOrigins.Count > 0;
+    allowAnyOrigin ||
+    corsOrigins.Exists(static o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -65,6 +67,19 @@ static string EnsureAzureWritableSqlite(string? configuredConnectionString, stri
 
 static bool IsSqliteConnectionString(string conn) =>
     conn.TrimStart().StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
+
+static async Task EnsureSqliteColumnExistsAsync(DbContext db, string tableName, string columnName, string columnTypeDefinition)
+{
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {columnTypeDefinition};");
+    }
+    catch (SqliteException ex) when (ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+    {
+        // Column already exists in this SQLite file.
+    }
+}
 
 static string ParseSqlitePathFromConnectionString(string conn)
 {
@@ -229,7 +244,11 @@ using (var scope = app.Services.CreateScope())
     // Lighthouse data DB
     var lighthouseDb = scope.ServiceProvider.GetRequiredService<LighthouseDbContext>();
     if (IsSqliteConnectionString(lighthouseConn))
+    {
         await lighthouseDb.Database.EnsureCreatedAsync();
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "Residents", "MlPredictionStatus", "TEXT NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "Residents", "MlLastCalculated", "TEXT NULL");
+    }
     else
         Console.WriteLine("Bypassing Lighthouse MigrateAsync to prevent Azure Crash.");
 
