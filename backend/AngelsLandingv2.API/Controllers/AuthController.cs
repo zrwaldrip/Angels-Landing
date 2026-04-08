@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -140,18 +141,38 @@ public class AuthController(
         }
 
         var user = await userManager.GetUserAsync(User);
-        var roles = user is null
-            ? Array.Empty<string>()
-            : (await userManager.GetRolesAsync(user))
+        var identityName = User.Identity?.Name;
+        if (user is null && !string.IsNullOrWhiteSpace(identityName))
+        {
+            user = await userManager.FindByNameAsync(identityName)
+                ?? await userManager.FindByEmailAsync(identityName);
+        }
+
+        var roles = user is not null
+            ? (await userManager.GetRolesAsync(user))
+                .Distinct()
+                .OrderBy(role => role)
+                .ToArray()
+            : User.Claims
+                .Where(claim => claim.Type == ClaimTypes.Role || claim.Type.Equals("role", StringComparison.OrdinalIgnoreCase))
+                .Select(claim => claim.Value)
                 .Distinct()
                 .OrderBy(role => role)
                 .ToArray();
 
+        var email = user?.Email
+            ?? User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Email)?.Value
+            ?? identityName;
+
+        var userName = user?.UserName
+            ?? identityName
+            ?? email;
+
         return Ok(new
         {
             isAuthenticated = true,
-            userName = user?.UserName ?? User.Identity?.Name,
-            email = user?.Email,
+            userName,
+            email,
             roles
         });
     }
@@ -166,8 +187,35 @@ public class AuthController(
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        await HttpContext.SignOutAsync(IdentityConstants.TwoFactorRememberMeScheme);
+        await HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
         await signInManager.SignOutAsync();
+
+        ExpireIdentityCookie(".AspNetCore.Identity.Application");
+        ExpireIdentityCookie(".AspNetCore.Identity.External");
+        ExpireIdentityCookie(".AspNetCore.Identity.TwoFactorRememberMe");
+        ExpireIdentityCookie(".AspNetCore.Identity.TwoFactorUserId");
+
+        HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
         return Ok(new { message = "Logout successful." });
+    }
+
+    private void ExpireIdentityCookie(string cookieName)
+    {
+        if (!Request.Cookies.ContainsKey(cookieName))
+            return;
+
+        Response.Cookies.Append(cookieName, string.Empty, new CookieOptions
+        {
+            Expires = DateTimeOffset.UnixEpoch,
+            MaxAge = TimeSpan.Zero,
+            Path = "/",
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None
+        });
     }
 
     private string BuildFrontendErrorUrl(string errorMessage)

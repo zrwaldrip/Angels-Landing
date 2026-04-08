@@ -1,5 +1,4 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
@@ -96,11 +95,6 @@ function ManageMfaPage() {
                 Enroll an authenticator app, confirm setup with a TOTP code, and generate recovery codes.
               </p>
               {isLoading ? <p>Checking session...</p> : null}
-              {!isLoading && !isAuthenticated ? (
-                <div className="alert alert-warning" role="alert">
-                  Sign in first, then return to the <Link to="/mfa">MFA page</Link> to configure your authenticator app.
-                </div>
-              ) : null}
               {errorMessage ? <div className="alert alert-danger" role="alert">{errorMessage}</div> : null}
               {successMessage ? <div className="alert alert-success" role="alert">{successMessage}</div> : null}
               {isAuthenticated && twoFactorStatus ? (

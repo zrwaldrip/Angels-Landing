@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { logoutUser } from '../lib/authAPI';
+import { getAuthSession, logoutUser } from '../lib/authAPI';
 import { useAuth } from '../context/AuthContext';
 
 function LogoutPage() {
+  const navigate = useNavigate();
   const [message, setMessage] = useState('Signing you out...');
   const [errorMessage, setErrorMessage] = useState('');
   const { refreshAuthState } = useAuth();
@@ -14,8 +15,15 @@ function LogoutPage() {
     async function runLogout() {
       try {
         await logoutUser();
+        const postLogoutSession = await getAuthSession();
+        if (postLogoutSession.isAuthenticated) {
+          throw new Error('Sign-out was requested, but your session is still active.');
+        }
         await refreshAuthState();
-        if (isMounted) setMessage('You are now signed out.');
+        if (isMounted) {
+          setMessage('You are now signed out.');
+          navigate('/login', { replace: true });
+        }
       } catch (error) {
         if (isMounted) {
           setErrorMessage(error instanceof Error ? error.message : 'Unable to log out.');
@@ -25,7 +33,7 @@ function LogoutPage() {
     }
     void runLogout();
     return () => { isMounted = false; };
-  }, [refreshAuthState]);
+  }, [navigate, refreshAuthState]);
 
   return (
     <div className="container mt-4">
