@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { getAuthSession, loginUser } from "../lib/authAPI";
+import { mockCredentialHints, useMockBackend } from "../lib/mockBackend";
 import { isAllowedReturnPath, resolveRoleHome } from "../routes/roleRouting";
 
 function LoginPage() {
@@ -58,6 +59,19 @@ function LoginPage() {
 								Sign in to the Angels' Landing portal. If MFA is enabled for your account, include either an authenticator code or a recovery
 								code.
 							</p>
+							{useMockBackend ? (
+								<div className="alert alert-info small" role="alert">
+									<div className="fw-semibold mb-1">Mock mode is active</div>
+									<div className="mb-1">Use one of these dummy credentials:</div>
+									<ul className="mb-0 ps-3">
+										{mockCredentialHints.map((cred) => (
+											<li key={cred.email}>
+												{cred.email} / {cred.password}
+											</li>
+										))}
+									</ul>
+								</div>
+							) : null}
 							<form onSubmit={handleSubmit}>
 								<div className="mb-3">
 									<label className="form-label" htmlFor="email">

@@ -1,6 +1,12 @@
+import { mockApiFetch, useMockBackend } from './mockBackend';
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  if (useMockBackend) {
+    return (await mockApiFetch(path, options)) as T;
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -358,6 +364,48 @@ export interface InterventionPlan {
 export function getInterventionPlans(residentId?: number) {
   const qs = residentId ? `?residentId=${residentId}` : '';
   return apiFetch<InterventionPlan[]>(`/api/intervention-plans${qs}`);
+}
+
+// ─── Process Recordings ──────────────────────────────────────────────────────
+export interface ProcessRecording {
+  recordingId: number;
+  residentId?: number;
+  sessionDate?: string;
+  socialWorker?: string;
+  sessionType?: string;
+  sessionDurationMinutes?: number;
+  emotionalStateObserved?: string;
+  emotionalStateEnd?: string;
+  sessionNarrative?: string;
+  interventionsApplied?: string;
+  followUpActions?: string;
+  progressNoted?: boolean;
+  concernsFlagged?: boolean;
+  referralMade?: boolean;
+  notesRestricted?: string;
+}
+
+export function getProcessRecordings(residentId?: number) {
+  const qs = residentId ? `?residentId=${residentId}` : '';
+  return apiFetch<ProcessRecording[]>(`/api/process-recordings${qs}`);
+}
+
+export function createProcessRecording(recording: Partial<ProcessRecording>) {
+  return apiFetch<ProcessRecording>('/api/process-recordings', {
+    method: 'POST',
+    body: JSON.stringify(recording),
+  });
+}
+
+export function updateProcessRecording(id: number, recording: Partial<ProcessRecording>) {
+  return apiFetch<void>(`/api/process-recordings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(recording),
+  });
+}
+
+export function deleteProcessRecording(id: number) {
+  return apiFetch<void>(`/api/process-recordings/${id}`, { method: 'DELETE' });
 }
 
 // ─── Partners ─────────────────────────────────────────────────────────────────

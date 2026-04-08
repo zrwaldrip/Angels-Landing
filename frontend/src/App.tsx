@@ -19,6 +19,7 @@ import ResidentsPage from "./pages/ResidentsPage";
 import SafehousesPage from "./pages/SafehousesPage";
 import DonationsPage from "./pages/DonationsPage";
 import IncidentsPage from "./pages/IncidentsPage";
+import ProcessRecordingsPage from "./pages/ProcessRecordingsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
@@ -116,6 +117,16 @@ function App() {
 										</ProtectedRoute>
 									}
 								/>
+									<Route
+										path="/process-recordings"
+										element={
+											<ProtectedRoute>
+												<RoleRoute allowedRoles={["Admin"]}>
+													<ProcessRecordingsPage />
+												</RoleRoute>
+											</ProtectedRoute>
+										}
+									/>
 								<Route
 									path="/users"
 									element={

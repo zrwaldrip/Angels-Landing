@@ -1,5 +1,19 @@
 import type { AuthSession } from '../types/AuthSession';
 import type { TwoFactorStatus } from '../types/TwoFactorStatus';
+import {
+  mockDeleteAdminUser,
+  mockDisableTwoFactor,
+  mockEnableTwoFactor,
+  mockGetAdminUsers,
+  mockGetAuthSession,
+  mockGetTwoFactorStatus,
+  mockLoginUser,
+  mockLogoutUser,
+  mockRegisterUser,
+  mockResetRecoveryCodes,
+  mockUpdateAdminUser,
+  useMockBackend,
+} from './mockBackend';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
 
@@ -42,6 +56,7 @@ export interface AdminUser {
 }
 
 export async function getAuthSession(): Promise<AuthSession> {
+  if (useMockBackend) return mockGetAuthSession();
   const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
     credentials: 'include',
     cache: 'no-store',
@@ -51,6 +66,7 @@ export async function getAuthSession(): Promise<AuthSession> {
 }
 
 export async function registerUser(email: string, password: string): Promise<void> {
+  if (useMockBackend) return mockRegisterUser(email, password);
   const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -67,6 +83,14 @@ export async function loginUser(
   twoFactorCode?: string,
   twoFactorRecoveryCode?: string
 ): Promise<void> {
+  if (useMockBackend) {
+    if (twoFactorCode || twoFactorRecoveryCode) {
+      // Mock mode accepts credentials and ignores TOTP/recovery verification.
+    }
+    void rememberMe;
+    return mockLoginUser(email, password);
+  }
+
   const searchParams = new URLSearchParams();
   if (rememberMe) searchParams.set('useCookies', 'true');
   else searchParams.set('useSessionCookies', 'true');
@@ -88,6 +112,7 @@ export async function loginUser(
 }
 
 export async function logoutUser(): Promise<void> {
+  if (useMockBackend) return mockLogoutUser();
   const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
@@ -97,22 +122,27 @@ export async function logoutUser(): Promise<void> {
 }
 
 export async function getTwoFactorStatus(): Promise<TwoFactorStatus> {
+  if (useMockBackend) return mockGetTwoFactorStatus();
   return postTwoFactorRequest({});
 }
 
 export async function enableTwoFactor(twoFactorCode: string): Promise<TwoFactorStatus> {
+  if (useMockBackend) return mockEnableTwoFactor(twoFactorCode);
   return postTwoFactorRequest({ enable: true, twoFactorCode, resetRecoveryCodes: true });
 }
 
 export async function disableTwoFactor(): Promise<TwoFactorStatus> {
+  if (useMockBackend) return mockDisableTwoFactor();
   return postTwoFactorRequest({ enable: false });
 }
 
 export async function resetRecoveryCodes(): Promise<TwoFactorStatus> {
+  if (useMockBackend) return mockResetRecoveryCodes();
   return postTwoFactorRequest({ resetRecoveryCodes: true });
 }
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
+  if (useMockBackend) return mockGetAdminUsers();
   const response = await fetch(`${apiBaseUrl}/api/admin/users`, { credentials: 'include' });
   if (!response.ok) throw new Error(await readApiError(response, 'Unable to load users.'));
   return response.json();
@@ -122,6 +152,7 @@ export async function updateAdminUser(
   userId: string,
   payload: { roles?: string[]; emailConfirmed?: boolean; lockoutEnabled?: boolean }
 ): Promise<AdminUser> {
+  if (useMockBackend) return mockUpdateAdminUser(userId, payload);
   const response = await fetch(`${apiBaseUrl}/api/admin/users/${encodeURIComponent(userId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -133,6 +164,7 @@ export async function updateAdminUser(
 }
 
 export async function deleteAdminUser(userId: string): Promise<void> {
+  if (useMockBackend) return mockDeleteAdminUser(userId);
   const response = await fetch(`${apiBaseUrl}/api/admin/users/${encodeURIComponent(userId)}`, {
     method: 'DELETE',
     credentials: 'include',
