@@ -17,6 +17,13 @@ import {
 
 type Tab = 'incidents' | 'interventions' | 'health' | 'education';
 
+const INCIDENT_TYPE_OPTIONS = ['Physical Abuse', 'Emotional Abuse', 'Neglect', 'Safety Concern', 'HealthIssue', 'Behavioral', 'Other'] as const;
+const SEVERITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'] as const;
+const INTERVENTION_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled'] as const;
+const EDUCATION_LEVEL_OPTIONS = ['Elementary', 'Middle School', 'High School', 'College', 'Vocational'] as const;
+const ENROLLMENT_STATUS_OPTIONS = ['Enrolled', 'Unenrolled', 'On Leave', 'Graduated'] as const;
+const COMPLETION_STATUS_OPTIONS = ['Ongoing', 'Completed', 'Dropped Out'] as const;
+
 function IncidentsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
@@ -223,21 +230,106 @@ function IncidentsPage() {
               <div className="modal-body">
                 {saveError ? <div className="alert alert-danger">{saveError}</div> : null}
                 <div className="row g-3">
-                  {[
-                    ['residentId', 'Resident ID'], ['safehouseId', 'Safehouse ID'],
-                    ['incidentDate', 'Date'], ['incidentType', 'Type'],
-                    ['severity', 'Severity'], ['reportedBy', 'Reported By'],
-                    ['description', 'Description'], ['responseTaken', 'Response Taken'],
-                  ].map(([field, label]) => (
-                    <div className="col-md-6" key={field}>
-                      <label className="form-label small">{label}</label>
+                  <div className="col-md-6">
+                    <label className="form-label small">Resident ID</label>
+                    <input
+                      type="number" className="form-control form-control-sm"
+                      value={String(editingIncident.residentId ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Safehouse ID</label>
+                    <input
+                      type="number" className="form-control form-control-sm"
+                      value={String(editingIncident.safehouseId ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, safehouseId: Number(e.target.value) || undefined } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Date</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingIncident.incidentDate ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, incidentDate: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Type</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingIncident.incidentType ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, incidentType: e.target.value } : prev)}
+                    >
+                      <option value="">Select incident type...</option>
+                      {INCIDENT_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Severity</label>
+                    <select
+                      className="form-select form-select-sm"
+                      value={String(editingIncident.severity ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, severity: e.target.value } : prev)}
+                    >
+                      <option value="">Select severity...</option>
+                      {SEVERITY_OPTIONS.map((sev) => <option key={sev} value={sev}>{sev}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Reported By</label>
+                    <input
+                      type="text" className="form-control form-control-sm"
+                      value={String(editingIncident.reportedBy ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, reportedBy: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Description</label>
+                    <textarea
+                      className="form-control form-control-sm" rows={2}
+                      value={String(editingIncident.description ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, description: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small">Response Taken</label>
+                    <textarea
+                      className="form-control form-control-sm" rows={2}
+                      value={String(editingIncident.responseTaken ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, responseTaken: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Resolution Date</label>
+                    <input
+                      type="date" className="form-control form-control-sm"
+                      value={String(editingIncident.resolutionDate ?? '')}
+                      onChange={(e) => setEditingIncident(prev => prev ? { ...prev, resolutionDate: e.target.value } : prev)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-check mt-4">
                       <input
-                        type="text" className="form-control form-control-sm"
-                        value={String(editingIncident[field as keyof IncidentReport] ?? '')}
-                        onChange={(e) => setEditingIncident(prev => prev ? { ...prev, [field]: e.target.value } : prev)}
+                        id="resolved"
+                        type="checkbox" className="form-check-input"
+                        checked={Boolean(editingIncident.resolved)}
+                        onChange={(e) => setEditingIncident(prev => prev ? { ...prev, resolved: e.target.checked } : prev)}
                       />
+                      <label className="form-check-label small" htmlFor="resolved">Resolved</label>
                     </div>
-                  ))}
+                  </div>
+                  <div className="col-12">
+                    <div className="form-check">
+                      <input
+                        id="followUp"
+                        type="checkbox" className="form-check-input"
+                        checked={Boolean(editingIncident.followUpRequired)}
+                        onChange={(e) => setEditingIncident(prev => prev ? { ...prev, followUpRequired: e.target.checked } : prev)}
+                      />
+                      <label className="form-check-label small" htmlFor="followUp">Follow-up Required</label>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
