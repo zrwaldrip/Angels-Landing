@@ -24,6 +24,7 @@ import SafehousesPage from "./pages/SafehousesPage";
 import DonationsPage from "./pages/DonationsPage";
 import PartnersPage from "./pages/PartnersPage";
 import IncidentsPage from "./pages/IncidentsPage";
+import ProcessRecordingsPage from "./pages/ProcessRecordingsPage";
 import DonorPortalPage from "./pages/DonorPortalPage";
 import DonorImpactPage from "./pages/DonorImpactPage";
 import UserManagementPage from "./pages/UserManagementPage";
@@ -229,6 +230,14 @@ function AppLayout() {
 								<RoleRoute allowedRoles={["Admin"]}>
 									<PartnersPage />
 								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/process-recordings"
+						element={
+							<ProtectedRoute>
+								<ProcessRecordingsPage />
 							</ProtectedRoute>
 						}
 					/>

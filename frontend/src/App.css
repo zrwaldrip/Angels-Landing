@@ -258,6 +258,31 @@ body {
   color: #dbf8f1;
 }
 
+.process-recordings-page .text-muted {
+  color: rgba(232, 240, 255, 0.9) !important;
+}
+
+.process-recordings-page .small.text-muted {
+  color: rgba(236, 243, 255, 0.94) !important;
+}
+
+.process-recordings-page .process-recording-body {
+  color: rgba(247, 250, 255, 0.98);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.process-recordings-page .card-header .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(1.5em + 0.5rem + 2px);
+  padding: 0.25rem 0.5rem;
+  line-height: 1.5;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
 .app-main .alert-secondary {
   background: rgba(37, 40, 58, 0.6);
   border-color: rgba(0, 113, 93, 0.32);
