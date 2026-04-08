@@ -41,6 +41,10 @@ body {
 	backdrop-filter: blur(8px);
 }
 
+.app-header-tutorial-active {
+	z-index: 1210;
+}
+
 .app-header-container {
 	max-width: 1160px;
 	margin: 0 auto;
@@ -525,6 +529,16 @@ body {
 	font-size: 0.95rem;
 }
 
+button.app-menu-item {
+	width: 100%;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	cursor: pointer;
+	color: #eef4ff;
+	font: inherit;
+}
+
 .app-menu-item:hover {
 	background: rgba(0, 113, 93, 0.26);
 	color: #ffffff;
@@ -537,6 +551,95 @@ body {
 .app-menu-item-danger:hover {
 	background: rgba(246, 80, 36, 0.26);
 	color: #fff0ea;
+}
+
+.app-menu-item-accent {
+	color: #82c8bb;
+}
+
+.app-menu-item.app-menu-item-accent,
+button.app-menu-item.app-menu-item-accent {
+	color: #82c8bb;
+}
+
+.app-menu-item-accent:hover {
+	color: #a3ddd2;
+}
+
+.tutorial-highlight {
+	position: relative;
+	z-index: 1250;
+	outline: 2px solid rgba(122, 255, 223, 0.98);
+	outline-offset: 2px;
+	border-radius: 0.45rem;
+	box-shadow:
+		0 0 0 4px rgba(122, 255, 223, 0.28),
+		0 0 24px rgba(122, 255, 223, 0.42);
+	filter: brightness(1.32) saturate(1.28);
+	opacity: 1 !important;
+}
+
+a.tutorial-highlight,
+button.tutorial-highlight,
+summary.tutorial-highlight {
+	color: #ffffff !important;
+	text-shadow: 0 0 10px rgba(169, 255, 235, 0.66);
+}
+
+.app-menu-item.tutorial-highlight {
+	background: #88ffe2 !important;
+	color: #082b22 !important;
+	font-weight: 700;
+	text-shadow: none !important;
+	border-radius: 0.5rem;
+	box-shadow:
+		0 0 0 2px rgba(122, 255, 223, 0.45),
+		0 0 18px rgba(122, 255, 223, 0.45);
+}
+
+.app-header-link.tutorial-highlight,
+.app-menu-summary.tutorial-highlight {
+	background: rgba(136, 255, 226, 0.22) !important;
+	color: #ffffff !important;
+	font-weight: 700;
+	border-radius: 0.5rem;
+	padding-inline: 0.35rem;
+}
+
+.app-donate-btn.tutorial-highlight {
+	background: #88ffe2 !important;
+	color: #053027 !important;
+	border-color: #88ffe2 !important;
+	font-weight: 800;
+	text-shadow: none !important;
+	box-shadow:
+		0 0 0 2px rgba(122, 255, 223, 0.45),
+		0 0 22px rgba(122, 255, 223, 0.45);
+}
+
+.app-profile-trigger.tutorial-highlight .app-profile-avatar {
+	background: #88ffe2 !important;
+	color: #053027 !important;
+	border-color: #88ffe2 !important;
+	box-shadow:
+		0 0 0 2px rgba(122, 255, 223, 0.45),
+		0 0 18px rgba(122, 255, 223, 0.45);
+}
+
+.tutorial-dim-backdrop {
+	background: rgba(1, 5, 14, 0.72);
+	z-index: 1095;
+}
+
+.tutorial-dim-cutout {
+	z-index: 1095;
+	border-radius: 0.65rem;
+	pointer-events: none;
+	box-shadow: 0 0 0 9999px rgba(1, 5, 14, 0.72);
+}
+
+.tutorial-popup {
+	z-index: 1300;
 }
 
 .app-donate-btn {

@@ -1,7 +1,10 @@
 import os
+import joblib
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import LabelEncoder
 from datetime import datetime
 from supabase import create_client, Client
 
@@ -12,6 +15,21 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 # Campaign verdict thresholds (mirrored from campaign_analysis.ipynb)
 VERDICT_HIGH = 0.6
 VERDICT_MID  = 0.3
+
+# Path to the pkl artifact exported by campaign_analysis.ipynb
+# Matches the pattern used by nightly_scorer.py / propensity_scorer.py
+MODEL_PATH = "models/campaign_effectiveness_model.pkl"
+
+# Human-readable names for decision tree features (fallback only)
+FEATURE_DISPLAY_NAMES = {
+    'campaign_name_enc':      'Campaign Name',
+    'channel_source_enc':     'Channel Source',
+    'donation_type_enc':      'Donation Type',
+    'acquisition_channel_enc':'Acquisition Channel',
+    'is_recurring':           'Is Recurring',
+    'month':                  'Month of Year',
+    'year':                   'Year',
+}
 
 
 def fetch_table(supabase: Client, table: str) -> pd.DataFrame:
@@ -65,7 +83,7 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
         )
 
     # --- New Metrics ---
-    # 1. Top Channel 
+    # 1. Top Channel
     if 'acquisition_channel' in df.columns:
         channel_revenue = df.groupby(['campaign_name', 'acquisition_channel'])['estimated_value'].sum().reset_index()
         top_channels = channel_revenue.sort_values('estimated_value', ascending=False).drop_duplicates('campaign_name')
@@ -125,6 +143,109 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
     return campaign_summary
 
 
+def build_feature_importances(donations_df: pd.DataFrame, supporters_df: pd.DataFrame) -> list[dict]:
+    """
+    Extract feature importances from the pkl artifact exported by campaign_analysis.ipynb.
+    Falls back to retraining a fresh decision tree if the pkl doesn't exist yet.
+
+    The pkl artifact is a dict: {'model': sklearn model, 'feature_names': list[str], 'model_name': str}
+    This matches the pattern used by nightly_scorer.py and propensity_scorer.py.
+
+    Returns a list of dicts: [{"Feature": str, "Importance": float}, ...]
+    """
+    # ── Try loading the pkl artifact first ────────────────────────────────────
+    if os.path.exists(MODEL_PATH):
+        try:
+            artifact = joblib.load(MODEL_PATH)
+            model         = artifact['model']
+            feature_names = artifact['feature_names']
+            model_name    = artifact.get('model_name', 'unknown')
+
+            if not hasattr(model, 'feature_importances_'):
+                print(f"  Loaded model '{model_name}' has no feature_importances_ (likely LinearRegression). "
+                      "Falling back to retrain.")
+            else:
+                print(f"  Loaded pkl artifact: '{model_name}' with {len(feature_names)} features.")
+                importances = [
+                    {
+                        'Feature':    FEATURE_DISPLAY_NAMES.get(col, col),
+                        'Importance': round(float(imp), 6),
+                    }
+                    for col, imp in zip(feature_names, model.feature_importances_)
+                ]
+                importances.sort(key=lambda x: x['Importance'], reverse=True)
+                return importances
+        except Exception as e:
+            print(f"  Warning: could not load pkl artifact ({e}). Falling back to retrain.")
+    else:
+        print(f"  No pkl found at '{MODEL_PATH}'. "
+              "Run campaign_analysis.ipynb to generate it. Retraining from live data as fallback.")
+
+    # ── Fallback: retrain decision tree from live data ────────────────────────
+    if donations_df.empty:
+        return []
+
+    df = donations_df.copy()
+
+    df.columns = [c[0].lower() + c[1:] for c in df.columns]
+    df.rename(columns=lambda c: ''.join(['_' + ch.lower() if ch.isupper() else ch for ch in c]).lstrip('_'),
+              inplace=True)
+
+    if not supporters_df.empty:
+        sup = supporters_df.copy()
+        sup.columns = [c[0].lower() + c[1:] for c in sup.columns]
+        sup.rename(columns=lambda c: ''.join(['_' + ch.lower() if ch.isupper() else ch for ch in c]).lstrip('_'),
+                   inplace=True)
+        df = df.merge(sup[['supporter_id', 'acquisition_channel']], on='supporter_id', how='left')
+
+    df = df.dropna(subset=['estimated_value'])
+
+    if 'donation_date' in df.columns:
+        df['donation_date'] = pd.to_datetime(df['donation_date'], errors='coerce')
+        df['month'] = df['donation_date'].dt.month.fillna(0).astype(int)
+        df['year']  = df['donation_date'].dt.year.fillna(0).astype(int)
+
+    cat_cols = ['campaign_name', 'channel_source', 'donation_type', 'acquisition_channel']
+    for col in cat_cols:
+        if col in df.columns:
+            le = LabelEncoder()
+            df[col + '_enc'] = le.fit_transform(df[col].fillna('Unknown').astype(str))
+
+    candidate_features = [
+        'campaign_name_enc', 'channel_source_enc', 'donation_type_enc',
+        'acquisition_channel_enc', 'is_recurring', 'month', 'year'
+    ]
+    feature_cols = [c for c in candidate_features if c in df.columns]
+
+    if not feature_cols or len(df) < 10:
+        print("  Not enough data to retrain. Skipping feature importances.")
+        return []
+
+    if 'is_recurring' in df.columns:
+        df['is_recurring'] = df['is_recurring'].fillna(False).astype(int)
+
+    X = df[feature_cols].fillna(0)
+    y = df['estimated_value']
+
+    try:
+        tree = DecisionTreeRegressor(max_depth=4, min_samples_leaf=5, random_state=42)
+        tree.fit(X, y)
+        print("  Retrained decision tree as fallback.")
+    except Exception as e:
+        print(f"  Fallback retrain failed: {e}")
+        return []
+
+    importances = [
+        {
+            'Feature':    FEATURE_DISPLAY_NAMES.get(col, col),
+            'Importance': round(float(imp), 6),
+        }
+        for col, imp in zip(feature_cols, tree.feature_importances_)
+    ]
+    importances.sort(key=lambda x: x['Importance'], reverse=True)
+    return importances
+
+
 def run_scorer():
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("ERROR: Missing SUPABASE_URL or SUPABASE_KEY environment variables.")
@@ -137,6 +258,7 @@ def run_scorer():
     supporters_df  = fetch_table(supabase, "Supporters")
     print(f"  Donations: {len(donations_df)} rows | Supporters: {len(supporters_df)} rows")
 
+    # ── Campaign scores ────────────────────────────────────────────────────────
     scores_df = build_campaign_scores(donations_df, supporters_df)
     if scores_df.empty:
         print("No campaign scores produced. Exiting.")
@@ -171,6 +293,30 @@ def run_scorer():
         upserted += 1
 
     print(f"\nFinished. Upserted {upserted} campaign scores into Campaigns table.")
+
+    # ── Decision Tree Feature Importances ──────────────────────────────────────
+    print("\nComputing decision tree feature importances...")
+    importances = build_feature_importances(donations_df, supporters_df)
+
+    if importances:
+        # Clear old importances and write fresh ones
+        try:
+            supabase.table("FeatureImportances").delete().gte("Id", 0).execute()
+        except Exception as e:
+            print(f"  Warning: could not clear old importances: {e}")
+
+        for item in importances:
+            supabase.table("FeatureImportances").insert({
+                "Feature":      item['Feature'],
+                "Importance":   item['Importance'],
+                "CalculatedAt": now,
+            }).execute()
+
+        print(f"  Wrote {len(importances)} feature importances:")
+        for item in importances:
+            print(f"    {item['Feature']:<30} {item['Importance']:.4f}")
+    else:
+        print("  No feature importances produced (insufficient data).")
 
 
 if __name__ == '__main__':
