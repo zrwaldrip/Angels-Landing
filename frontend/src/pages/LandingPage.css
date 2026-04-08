@@ -28,7 +28,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #9cd3ff;
+  color: #64e6cd;
 }
 
 .landing-hero h1 {
@@ -74,26 +74,27 @@
 }
 
 .landing-btn-primary {
-  color: #07214b;
-  background: #d6e9ff;
-  box-shadow: 0 12px 32px rgba(24, 107, 230, 0.32);
+  color: #effffb;
+  background: rgb(0, 113, 93);
+  box-shadow: 0 12px 32px rgba(0, 70, 58, 0.35);
 }
 
 .landing-btn-primary:hover {
-  color: #051a3d;
-  box-shadow: 0 16px 34px rgba(24, 107, 230, 0.4);
+  color: #ffffff;
+  background: #00876f;
+  box-shadow: 0 16px 34px rgba(0, 70, 58, 0.44);
 }
 
 .landing-btn-secondary {
   color: #eaf2ff;
-  border-color: rgba(195, 216, 255, 0.6);
-  background: rgba(12, 27, 56, 0.5);
+  border-color: rgba(0, 113, 93, 0.55);
+  background: rgba(37, 40, 58, 0.6);
   backdrop-filter: blur(3px);
 }
 
 .landing-btn-secondary:hover {
   color: #ffffff;
-  background: rgba(15, 35, 70, 0.72);
+  background: rgba(0, 113, 93, 0.4);
 }
 
 .landing-btn-donate {
@@ -102,16 +103,16 @@
   padding: 0.95rem 1.8rem;
   font-size: 1.08rem;
   font-weight: 750;
-  color: #071d40;
-  background: #f0f7ff;
-  border-color: rgba(213, 231, 255, 0.95);
-  box-shadow: 0 16px 34px rgba(10, 35, 76, 0.42);
+  color: #fff9f7 !important;
+  background: rgb(246, 80, 36);
+  border-color: rgba(246, 80, 36, 0.95);
+  box-shadow: 0 16px 34px rgba(109, 38, 18, 0.45);
 }
 
 .landing-btn-donate:hover {
-  color: #031126;
-  background: #ffffff;
-  box-shadow: 0 18px 36px rgba(10, 35, 76, 0.5);
+  color: #ffffff !important;
+  background: #ff6a3d;
+  box-shadow: 0 18px 36px rgba(109, 38, 18, 0.52);
 }
 
 .landing-pillars {
@@ -122,10 +123,10 @@
 }
 
 .landing-card {
-  border: 1px solid rgba(175, 202, 255, 0.25);
+  border: 1px solid rgba(0, 113, 93, 0.3);
   border-radius: 1rem;
   padding: 1.4rem 1.25rem 1.3rem;
-  background: rgba(9, 24, 47, 0.56);
+  background: rgba(37, 40, 58, 0.62);
   box-shadow: 0 14px 35px rgba(3, 8, 18, 0.28);
   backdrop-filter: blur(4px);
 }
@@ -144,8 +145,8 @@
 }
 
 .landing-page .app-header {
-  background: rgba(9, 27, 56, 0.68) !important;
-  border-bottom: 1px solid rgba(173, 200, 255, 0.2);
+  background: rgba(37, 40, 58, 0.74) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 10px 34px rgba(2, 6, 14, 0.35);
   backdrop-filter: blur(7px);
 }
@@ -160,9 +161,9 @@
 }
 
 .landing-page .app-donate-btn {
-  color: #05224f;
-  border-color: rgba(227, 239, 255, 0.8);
-  background: #d9eaff;
+  color: #f1fffc;
+  border-color: rgba(0, 113, 93, 0.9);
+  background: rgb(0, 113, 93);
 }
 
 @media (max-width: 960px) {
