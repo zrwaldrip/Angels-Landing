@@ -195,7 +195,6 @@ function DonorPortalPage() {
                 <tr>
                   <th>Donation ID</th>
                   <th>Date</th>
-                  <th>Type</th>
                   <th>Amount</th>
                   <th>Currency</th>
                   <th>Campaign</th>
@@ -205,14 +204,13 @@ function DonorPortalPage() {
               <tbody>
                 {donations.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center text-muted py-4">No donations found for your account.</td>
+                    <td colSpan={6} className="text-center text-muted py-4">No donations found for your account.</td>
                   </tr>
                 ) : (
                   donations.map((d) => (
                     <tr key={d.donationId}>
                       <td>{d.donationId}</td>
                       <td>{d.donationDate}</td>
-                      <td>{d.donationType}</td>
                       <td>{d.amount != null ? d.amount.toFixed(2) : d.estimatedValue?.toFixed(2)}</td>
                       <td>{d.currencyCode}</td>
                       <td>{d.campaignName}</td>

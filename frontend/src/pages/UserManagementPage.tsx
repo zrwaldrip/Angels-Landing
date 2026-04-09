@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,14 @@ function UserManagementPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [selectedAccessLevels, setSelectedAccessLevels] = useState<string[]>([]);
+  const [selectedEmailConfirmed, setSelectedEmailConfirmed] = useState<string[]>([]);
+  const [selectedLockout, setSelectedLockout] = useState<string[]>([]);
+  const [selectedMfa, setSelectedMfa] = useState<string[]>([]);
+  const [sortKey, setSortKey] = useState<'email' | 'userName' | 'roles' | 'emailConfirmed' | 'lockoutEnabled' | 'twoFactorEnabled'>('email');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -43,6 +51,10 @@ function UserManagementPage() {
 
   function getAccessLevel(user: AdminUser): 'Admin' | 'Donor' {
     return user.roles.includes('Admin') ? 'Admin' : 'Donor';
+  }
+
+  function toggleSelection(setter: (updater: (prev: string[]) => string[]) => void, value: string) {
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
   }
 
   function setAccessLevel(level: 'Admin' | 'Donor') {
@@ -103,14 +115,77 @@ function UserManagementPage() {
     );
   }
 
-  const normalizedSearch = search.trim().toLowerCase();
-  const visibleUsers = normalizedSearch.length === 0
-    ? users
-    : users.filter((u) =>
-        (u.email ?? '').toLowerCase().includes(normalizedSearch) ||
-        (u.userName ?? '').toLowerCase().includes(normalizedSearch) ||
-        u.roles.some((role) => role.toLowerCase().includes(normalizedSearch))
-      );
+  const filteredUsers = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+    return users.filter((user) => {
+      const searchMatch = normalizedSearch.length === 0
+        || (user.email ?? '').toLowerCase().includes(normalizedSearch)
+        || (user.userName ?? '').toLowerCase().includes(normalizedSearch)
+        || user.roles.some((role) => role.toLowerCase().includes(normalizedSearch));
+      const accessLevel = getAccessLevel(user);
+      const accessMatch = selectedAccessLevels.length === 0 || selectedAccessLevels.includes(accessLevel);
+      const emailConfirmedBucket = user.emailConfirmed ? 'yes' : 'no';
+      const emailConfirmedMatch = selectedEmailConfirmed.length === 0 || selectedEmailConfirmed.includes(emailConfirmedBucket);
+      const lockoutBucket = user.lockoutEnabled ? 'yes' : 'no';
+      const lockoutMatch = selectedLockout.length === 0 || selectedLockout.includes(lockoutBucket);
+      const mfaBucket = user.twoFactorEnabled ? 'enabled' : 'disabled';
+      const mfaMatch = selectedMfa.length === 0 || selectedMfa.includes(mfaBucket);
+      return searchMatch && accessMatch && emailConfirmedMatch && lockoutMatch && mfaMatch;
+    });
+  }, [users, search, selectedAccessLevels, selectedEmailConfirmed, selectedLockout, selectedMfa]);
+
+  const sortedUsers = useMemo(() => {
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    return [...filteredUsers].sort((a, b) => {
+      let av: string | number = '';
+      let bv: string | number = '';
+      switch (sortKey) {
+        case 'email':
+          av = String(a.email ?? '').toLowerCase(); bv = String(b.email ?? '').toLowerCase(); break;
+        case 'userName':
+          av = String(a.userName ?? '').toLowerCase(); bv = String(b.userName ?? '').toLowerCase(); break;
+        case 'roles':
+          av = a.roles.join(', ').toLowerCase(); bv = b.roles.join(', ').toLowerCase(); break;
+        case 'emailConfirmed':
+          av = a.emailConfirmed ? 1 : 0; bv = b.emailConfirmed ? 1 : 0; break;
+        case 'lockoutEnabled':
+          av = a.lockoutEnabled ? 1 : 0; bv = b.lockoutEnabled ? 1 : 0; break;
+        case 'twoFactorEnabled':
+          av = a.twoFactorEnabled ? 1 : 0; bv = b.twoFactorEnabled ? 1 : 0; break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [filteredUsers, sortDirection, sortKey]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
+  const pagedUsers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedUsers.slice(start, start + pageSize);
+  }, [sortedUsers, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedAccessLevels, selectedEmailConfirmed, selectedLockout, selectedMfa, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  function toggleSort(key: typeof sortKey) {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortKey(key);
+    setSortDirection('asc');
+  }
+
+  function sortIndicator(key: typeof sortKey) {
+    if (sortKey !== key) return '';
+    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
 
   return (
     <div className="container mt-4 user-management-page">
@@ -118,13 +193,6 @@ function UserManagementPage() {
       <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">User Management</h2>
         <div className="d-flex gap-2 mobile-page-actions">
-          <input
-            type="search"
-            className="form-control form-control-sm"
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
           <button className="btn btn-outline-secondary btn-sm" onClick={() => void loadUsers()} disabled={loadingUsers}>
             Refresh
           </button>
@@ -136,21 +204,100 @@ function UserManagementPage() {
       {loadingUsers ? (
         <div className="text-center py-4"><div className="spinner-border text-primary" role="status" /></div>
       ) : (
+        <div className="row g-3">
+          <div className="col-lg-3">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6 className="mb-3">Filters</h6>
+                <label className="form-label small mb-1">Search</label>
+                <input
+                  type="search"
+                  className="form-control form-control-sm mb-3"
+                  placeholder="Email, username, role..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+
+                <div className="small text-muted fw-semibold mb-1">Access Level</div>
+                <div className="mb-3">
+                  {['Admin', 'Donor'].map((level) => (
+                    <div className="form-check" key={level}>
+                      <input className="form-check-input" type="checkbox" id={`access-${level}`} checked={selectedAccessLevels.includes(level)} onChange={() => toggleSelection(setSelectedAccessLevels, level)} />
+                      <label className="form-check-label small" htmlFor={`access-${level}`}>{level}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">Email Confirmed</div>
+                <div className="mb-3">
+                  {[
+                    { key: 'yes', label: 'Yes' },
+                    { key: 'no', label: 'No' },
+                  ].map((option) => (
+                    <div className="form-check" key={option.key}>
+                      <input className="form-check-input" type="checkbox" id={`email-confirmed-${option.key}`} checked={selectedEmailConfirmed.includes(option.key)} onChange={() => toggleSelection(setSelectedEmailConfirmed, option.key)} />
+                      <label className="form-check-label small" htmlFor={`email-confirmed-${option.key}`}>{option.label}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">Lockout Enabled</div>
+                <div className="mb-3">
+                  {[
+                    { key: 'yes', label: 'Yes' },
+                    { key: 'no', label: 'No' },
+                  ].map((option) => (
+                    <div className="form-check" key={option.key}>
+                      <input className="form-check-input" type="checkbox" id={`lockout-${option.key}`} checked={selectedLockout.includes(option.key)} onChange={() => toggleSelection(setSelectedLockout, option.key)} />
+                      <label className="form-check-label small" htmlFor={`lockout-${option.key}`}>{option.label}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">MFA</div>
+                <div className="mb-3">
+                  {[
+                    { key: 'enabled', label: 'Enabled' },
+                    { key: 'disabled', label: 'Disabled' },
+                  ].map((option) => (
+                    <div className="form-check" key={option.key}>
+                      <input className="form-check-input" type="checkbox" id={`mfa-${option.key}`} checked={selectedMfa.includes(option.key)} onChange={() => toggleSelection(setSelectedMfa, option.key)} />
+                      <label className="form-check-label small" htmlFor={`mfa-${option.key}`}>{option.label}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => {
+                    setSearch('');
+                    setSelectedAccessLevels([]);
+                    setSelectedEmailConfirmed([]);
+                    setSelectedLockout([]);
+                    setSelectedMfa([]);
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="col-lg-9">
         <div className="table-responsive">
           <table className="table table-sm table-hover">
             <thead className="table-light">
               <tr>
-                <th>Email</th>
-                <th>User Name</th>
-                <th>Roles</th>
-                <th>Email Confirmed</th>
-                <th>Lockout Enabled</th>
-                <th>MFA</th>
+                <th role="button" onClick={() => toggleSort('email')}>Email{sortIndicator('email')}</th>
+                <th role="button" onClick={() => toggleSort('userName')}>User Name{sortIndicator('userName')}</th>
+                <th role="button" onClick={() => toggleSort('roles')}>Roles{sortIndicator('roles')}</th>
+                <th role="button" onClick={() => toggleSort('emailConfirmed')}>Email Confirmed{sortIndicator('emailConfirmed')}</th>
+                <th role="button" onClick={() => toggleSort('lockoutEnabled')}>Lockout Enabled{sortIndicator('lockoutEnabled')}</th>
+                <th role="button" onClick={() => toggleSort('twoFactorEnabled')}>MFA{sortIndicator('twoFactorEnabled')}</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {visibleUsers.map((user) => (
+              {pagedUsers.map((user) => (
                 <tr key={user.id}>
                   <td>{user.email ?? '—'}</td>
                   <td>{user.userName ?? '—'}</td>
@@ -172,6 +319,22 @@ function UserManagementPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="d-flex justify-content-between align-items-center gap-2 mt-2 mb-4 flex-wrap">
+          <small className="text-muted">{sortedUsers.length} users total</small>
+          <div className="d-flex align-items-center gap-2">
+            <label className="small text-muted mb-0">Per page</label>
+            <select className="form-select form-select-sm" style={{ width: 90 }} value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))}>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+            <button className="btn btn-outline-secondary btn-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
+            <span className="small text-muted">Page {page} of {totalPages}</span>
+            <button className="btn btn-outline-secondary btn-sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </div>
+        </div>
+          </div>
         </div>
       )}
 

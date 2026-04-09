@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { getSafehouses, getSafehouseMetrics, createSafehouse, updateSafehouse, deleteSafehouse, createSafehouseMetric, updateSafehouseMetric, deleteSafehouseMetric, type Safehouse, type SafehouseMetric } from '../lib/lighthouseAPI';
@@ -23,6 +23,10 @@ function SafehousesPage() {
   const [editingMetric, setEditingMetric] = useState<Partial<SafehouseMetric> | null>(null);
   const [savingMetric, setSavingMetric] = useState(false);
   const [saveMetricError, setSaveMetricError] = useState('');
+  const [metricSearch, setMetricSearch] = useState('');
+  const [metricIncidentFilters, setMetricIncidentFilters] = useState<string[]>([]);
+  const [metricSortKey, setMetricSortKey] = useState<'monthStart' | 'activeResidents' | 'avgHealthScore' | 'avgEducationProgress' | 'processRecordingCount' | 'homeVisitationCount' | 'incidentCount'>('monthStart');
+  const [metricSortDirection, setMetricSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void load();
@@ -131,6 +135,64 @@ function SafehousesPage() {
     }
   }
 
+  function toggleSelection(setter: (updater: (prev: string[]) => string[]) => void, value: string) {
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  }
+
+  const filteredMetrics = useMemo(() => {
+    const query = metricSearch.trim().toLowerCase();
+    return metrics.filter((metric) => {
+      const searchMatch = !query || [
+        metric.monthStart,
+        String(metric.activeResidents ?? ''),
+        String(metric.processRecordingCount ?? ''),
+      ].some((value) => String(value ?? '').toLowerCase().includes(query));
+      const incidentBucket = (metric.incidentCount ?? 0) > 0 ? 'hasIncidents' : 'noIncidents';
+      const incidentMatch = metricIncidentFilters.length === 0 || metricIncidentFilters.includes(incidentBucket);
+      return searchMatch && incidentMatch;
+    });
+  }, [metrics, metricSearch, metricIncidentFilters]);
+  const sortedMetrics = useMemo(() => {
+    const dir = metricSortDirection === 'asc' ? 1 : -1;
+    return [...filteredMetrics].sort((a, b) => {
+      let av: string | number = '';
+      let bv: string | number = '';
+      switch (metricSortKey) {
+        case 'monthStart':
+          av = Date.parse(String(a.monthStart ?? '')) || 0; bv = Date.parse(String(b.monthStart ?? '')) || 0; break;
+        case 'activeResidents':
+          av = a.activeResidents ?? 0; bv = b.activeResidents ?? 0; break;
+        case 'avgHealthScore':
+          av = a.avgHealthScore ?? 0; bv = b.avgHealthScore ?? 0; break;
+        case 'avgEducationProgress':
+          av = a.avgEducationProgress ?? 0; bv = b.avgEducationProgress ?? 0; break;
+        case 'processRecordingCount':
+          av = a.processRecordingCount ?? 0; bv = b.processRecordingCount ?? 0; break;
+        case 'homeVisitationCount':
+          av = a.homeVisitationCount ?? 0; bv = b.homeVisitationCount ?? 0; break;
+        case 'incidentCount':
+          av = a.incidentCount ?? 0; bv = b.incidentCount ?? 0; break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [filteredMetrics, metricSortDirection, metricSortKey]);
+
+  function toggleMetricSort(key: typeof metricSortKey) {
+    if (metricSortKey === key) {
+      setMetricSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setMetricSortKey(key);
+    setMetricSortDirection('asc');
+  }
+
+  function metricSortIndicator(key: typeof metricSortKey) {
+    if (metricSortKey !== key) return '';
+    return metricSortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
+
   return (
     <div className="container mt-4">
       <Header />
@@ -208,22 +270,48 @@ function SafehousesPage() {
               <button className="btn btn-primary btn-sm ms-2" onClick={handleNewMetric}>+ Add Metric</button>
             )}
           </h3>
+          <div className="row g-3">
+            <div className="col-lg-3">
+              <div className="card shadow-sm">
+                <div className="card-body">
+                  <h6 className="mb-3">Metric Filters</h6>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm mb-3"
+                    placeholder="Search month or counts..."
+                    value={metricSearch}
+                    onChange={(e) => setMetricSearch(e.target.value)}
+                  />
+                  <div className="small text-muted fw-semibold mb-1">Incident Presence</div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="checkbox" id="metric-has-incidents" checked={metricIncidentFilters.includes('hasIncidents')} onChange={() => toggleSelection(setMetricIncidentFilters, 'hasIncidents')} />
+                    <label className="form-check-label small" htmlFor="metric-has-incidents">Has incidents</label>
+                  </div>
+                  <div className="form-check mb-3">
+                    <input className="form-check-input" type="checkbox" id="metric-no-incidents" checked={metricIncidentFilters.includes('noIncidents')} onChange={() => toggleSelection(setMetricIncidentFilters, 'noIncidents')} />
+                    <label className="form-check-label small" htmlFor="metric-no-incidents">No incidents</label>
+                  </div>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={() => { setMetricSearch(''); setMetricIncidentFilters([]); }}>Clear Filters</button>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-9">
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">
                 <tr>
-                  <th>Month</th>
-                  <th>Active Residents</th>
-                  <th>Avg Health</th>
-                  <th>Avg Education</th>
-                  <th>Process Recordings</th>
-                  <th>Home Visitations</th>
-                  <th>Incidents</th>
+                  <th role="button" onClick={() => toggleMetricSort('monthStart')}>Month{metricSortIndicator('monthStart')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('activeResidents')}>Active Residents{metricSortIndicator('activeResidents')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('avgHealthScore')}>Avg Health{metricSortIndicator('avgHealthScore')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('avgEducationProgress')}>Avg Education{metricSortIndicator('avgEducationProgress')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('processRecordingCount')}>Process Recordings{metricSortIndicator('processRecordingCount')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('homeVisitationCount')}>Home Visitations{metricSortIndicator('homeVisitationCount')}</th>
+                  <th role="button" onClick={() => toggleMetricSort('incidentCount')}>Incidents{metricSortIndicator('incidentCount')}</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {metrics.map((m) => (
+                {sortedMetrics.map((m) => (
                   <tr key={m.metricId}>
                     <td>{m.monthStart}</td>
                     <td>{m.activeResidents}</td>
@@ -242,6 +330,8 @@ function SafehousesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+            </div>
           </div>
         </div>
       )}

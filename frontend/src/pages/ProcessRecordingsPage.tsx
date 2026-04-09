@@ -35,6 +35,7 @@ function ProcessRecordingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [residents, setResidents] = useState<Resident[]>([]);
   const [residentSearch, setResidentSearch] = useState('');
+  const [sessionTypeFilter, setSessionTypeFilter] = useState('all');
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
   const [recordings, setRecordings] = useState<ProcessRecording[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -147,11 +148,31 @@ function ProcessRecordingsPage() {
   }, [residentSearch, residents, selectedResidentId]);
 
   const selectedResident = residents.find((resident) => resident.residentId === selectedResidentId) ?? null;
-  const totalPages = Math.max(1, Math.ceil(totalRecordings / pageSize));
 
   const sortedRecordings = useMemo(() => {
     return [...recordings].sort((a, b) => safeDateSortValue(a.sessionDate) - safeDateSortValue(b.sessionDate));
   }, [recordings]);
+  const sessionTypeOptions = useMemo(
+    () => Array.from(new Set(recordings.map((recording) => recording.sessionType).filter(Boolean) as string[])).sort(),
+    [recordings]
+  );
+  const filteredRecordings = useMemo(
+    () => sortedRecordings.filter((recording) => sessionTypeFilter === 'all' || (recording.sessionType ?? '') === sessionTypeFilter),
+    [sortedRecordings, sessionTypeFilter]
+  );
+  const filteredTotalPages = Math.max(1, Math.ceil(filteredRecordings.length / pageSize));
+  const pagedRecordings = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRecordings.slice(start, start + pageSize);
+  }, [filteredRecordings, currentPage, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sessionTypeFilter]);
+
+  useEffect(() => {
+    if (currentPage > filteredTotalPages) setCurrentPage(filteredTotalPages);
+  }, [currentPage, filteredTotalPages]);
 
   function changeResident(residentId: number | null) {
     setSelectedResidentId(residentId);
@@ -279,6 +300,19 @@ function ProcessRecordingsPage() {
                 ))}
               </select>
             </div>
+            <div className="col-md-4">
+              <label className="form-label small">Session Type</label>
+              <select
+                className="form-select form-select-sm"
+                value={sessionTypeFilter}
+                onChange={(e) => setSessionTypeFilter(e.target.value)}
+              >
+                <option value="all">All session types</option>
+                {sessionTypeOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -297,13 +331,13 @@ function ProcessRecordingsPage() {
         <div className="text-center py-4"><div className="spinner-border text-primary" role="status" /></div>
       ) : selectedResidentId == null ? (
         <div className="alert alert-secondary">Choose a resident to view the full counseling session history.</div>
-      ) : sortedRecordings.length === 0 ? (
+      ) : filteredRecordings.length === 0 ? (
         <div className="alert alert-warning">No process recordings found for this resident.</div>
       ) : (
         <>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="small text-muted">
-              Showing {sortedRecordings.length} of {totalRecordings} records
+              Showing {pagedRecordings.length} of {filteredRecordings.length} filtered records ({totalRecordings} total)
             </div>
             <div className="d-flex align-items-center gap-2">
               <button
@@ -313,11 +347,11 @@ function ProcessRecordingsPage() {
               >
                 Previous
               </button>
-              <span className="small text-muted">Page {currentPage} of {totalPages}</span>
+              <span className="small text-muted">Page {currentPage} of {filteredTotalPages}</span>
               <button
                 className="btn btn-outline-secondary btn-sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages || loadingRecordings}
+                onClick={() => setCurrentPage((p) => Math.min(filteredTotalPages, p + 1))}
+                disabled={currentPage >= filteredTotalPages || loadingRecordings}
               >
                 Next
               </button>
@@ -325,7 +359,7 @@ function ProcessRecordingsPage() {
           </div>
 
           <div className="vstack gap-3">
-            {sortedRecordings.map((recording) => (
+            {pagedRecordings.map((recording) => (
             <div className="card shadow-sm" key={recording.recordingId}>
               <div className="card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
                 <div className="flex-shrink-0">
