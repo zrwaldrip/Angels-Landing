@@ -35,6 +35,9 @@ function ProcessRecordingsPage() {
   const [residentSearch, setResidentSearch] = useState('');
   const [selectedResidentId, setSelectedResidentId] = useState<number | null>(null);
   const [recordings, setRecordings] = useState<ProcessRecording[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalRecordings, setTotalRecordings] = useState(0);
   const [loadingResidents, setLoadingResidents] = useState(true);
   const [loadingRecordings, setLoadingRecordings] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +54,15 @@ function ProcessRecordingsPage() {
   useEffect(() => {
     if (!residents.length) return;
     const residentIdParam = searchParams.get('residentId');
+    const pageParam = searchParams.get('page');
+
+    if (pageParam) {
+      const parsedPage = Number(pageParam);
+      if (Number.isFinite(parsedPage) && parsedPage > 0) {
+        setCurrentPage(parsedPage);
+      }
+    }
+
     if (residentIdParam) {
       const parsed = Number(residentIdParam);
       if (Number.isFinite(parsed)) {
@@ -67,11 +79,12 @@ function ProcessRecordingsPage() {
   useEffect(() => {
     if (selectedResidentId == null) {
       setRecordings([]);
+      setTotalRecordings(0);
       return;
     }
-    void loadRecordings(selectedResidentId);
-    setSearchParams({ residentId: String(selectedResidentId) }, { replace: true });
-  }, [selectedResidentId, setSearchParams]);
+    void loadRecordings(selectedResidentId, currentPage);
+    setSearchParams({ residentId: String(selectedResidentId), page: String(currentPage) }, { replace: true });
+  }, [selectedResidentId, currentPage, setSearchParams]);
 
   async function loadResidents() {
     setLoadingResidents(true);
@@ -86,12 +99,13 @@ function ProcessRecordingsPage() {
     }
   }
 
-  async function loadRecordings(residentId: number) {
+  async function loadRecordings(residentId: number, page: number) {
     setLoadingRecordings(true);
     setError('');
     try {
-      const data = await getProcessRecordings({ residentId });
-      setRecordings(data);
+      const data = await getProcessRecordings({ residentId, page, pageSize });
+      setRecordings(data.items);
+      setTotalRecordings(data.total);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load process recordings.');
     } finally {
@@ -116,10 +130,16 @@ function ProcessRecordingsPage() {
   }, [residentSearch, residents, selectedResidentId]);
 
   const selectedResident = residents.find((resident) => resident.residentId === selectedResidentId) ?? null;
+  const totalPages = Math.max(1, Math.ceil(totalRecordings / pageSize));
 
   const sortedRecordings = useMemo(() => {
     return [...recordings].sort((a, b) => safeDateSortValue(a.sessionDate) - safeDateSortValue(b.sessionDate));
   }, [recordings]);
+
+  function changeResident(residentId: number | null) {
+    setSelectedResidentId(residentId);
+    setCurrentPage(1);
+  }
 
   function handleNew() {
     setEditingRecording({
@@ -168,7 +188,7 @@ function ProcessRecordingsPage() {
 
       setShowModal(false);
       if (selectedResidentId != null) {
-        await loadRecordings(selectedResidentId);
+        await loadRecordings(selectedResidentId, currentPage);
       }
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Failed to save process recording.');
@@ -182,7 +202,11 @@ function ProcessRecordingsPage() {
     try {
       await deleteProcessRecording(id);
       if (selectedResidentId != null) {
-        await loadRecordings(selectedResidentId);
+        const nextTotal = Math.max(0, totalRecordings - 1);
+        const nextTotalPages = Math.max(1, Math.ceil(nextTotal / pageSize));
+        const nextPage = Math.min(currentPage, nextTotalPages);
+        setCurrentPage(nextPage);
+        await loadRecordings(selectedResidentId, nextPage);
       }
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete.');
@@ -226,7 +250,7 @@ function ProcessRecordingsPage() {
               <select
                 className="form-select form-select-sm"
                 value={String(selectedResidentId ?? '')}
-                onChange={(e) => setSelectedResidentId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) => changeResident(e.target.value ? Number(e.target.value) : null)}
                 disabled={loadingResidents}
               >
                 <option value="">Select a resident...</option>
@@ -259,8 +283,32 @@ function ProcessRecordingsPage() {
       ) : sortedRecordings.length === 0 ? (
         <div className="alert alert-warning">No process recordings found for this resident.</div>
       ) : (
-        <div className="vstack gap-3">
-          {sortedRecordings.map((recording) => (
+        <>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="small text-muted">
+              Showing {sortedRecordings.length} of {totalRecordings} records
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1 || loadingRecordings}
+              >
+                Previous
+              </button>
+              <span className="small text-muted">Page {currentPage} of {totalPages}</span>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages || loadingRecordings}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          <div className="vstack gap-3">
+            {sortedRecordings.map((recording) => (
             <div className="card shadow-sm" key={recording.recordingId}>
               <div className="card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
                 <div className="flex-shrink-0">
@@ -317,8 +365,9 @@ function ProcessRecordingsPage() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showModal && editingRecording && (

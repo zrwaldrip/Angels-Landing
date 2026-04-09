@@ -138,6 +138,12 @@ function Header() {
 							) : null}
 
 							{isAuthenticated && isAdmin ? (
+								<NavLink className={navClassName} to="/process-recordings" onClick={closeMobileMenu}>
+									Process Recordings
+								</NavLink>
+							) : null}
+
+							{isAuthenticated && isAdmin ? (
 								<div className={`app-menu-dropdown ${openNavMenu === "operations" ? "app-menu-dropdown-open" : ""}`}>
 									<button type="button" data-tutorial-key="operations" className={`app-menu-summary ${getHighlightClass("operations")}`.trim()} onClick={() => toggleNavMenu("operations")}>
 										Operations
