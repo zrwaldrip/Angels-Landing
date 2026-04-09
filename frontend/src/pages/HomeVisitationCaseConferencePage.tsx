@@ -7,16 +7,21 @@ import {
   deleteInterventionPlan,
   getHomeVisitations,
   getInterventionPlans,
+  getResidents,
   updateHomeVisitation,
   updateInterventionPlan,
   type HomeVisitation,
   type InterventionPlan,
+  type Resident,
 } from '../lib/lighthouseAPI';
 
 type Tab = 'visitations' | 'conferences';
 
-const VISIT_TYPES = ['Initial Assessment', 'Routine Follow-up', 'Reintegration Assessment', 'Post-placement Monitoring', 'Emergency'] as const;
-const COOP_LEVELS = ['Low', 'Moderate', 'High'] as const;
+const VISIT_TYPES = ['Initial Assessment', 'Routine Follow-Up', 'Reintegration Assessment', 'Post-Placement Monitoring', 'Emergency'] as const;
+const COOP_LEVELS = ['Highly Cooperative', 'Cooperative', 'Neutral', 'Uncooperative'] as const;
+const VISIT_OUTCOMES = ['Favorable', 'Needs Improvement', 'Unfavorable', 'Inconclusive'] as const;
+const PLAN_CATEGORIES = ['Safety', 'Psychosocial', 'Education', 'Physical Health', 'Legal', 'Reintegration'] as const;
+const PLAN_STATUSES = ['Open', 'In Progress', 'Achieved', 'On Hold', 'Closed'] as const;
 
 function isRecordObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -37,6 +42,7 @@ export default function HomeVisitationCaseConferencePage() {
   const [error, setError] = useState('');
   const [visitations, setVisitations] = useState<HomeVisitation[]>([]);
   const [plans, setPlans] = useState<InterventionPlan[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
 
   const [showVisitationModal, setShowVisitationModal] = useState(false);
   const [editingVisitation, setEditingVisitation] = useState<Partial<HomeVisitation> | null>(null);
@@ -52,7 +58,7 @@ export default function HomeVisitationCaseConferencePage() {
     setLoading(true);
     setError('');
     try {
-      const [visitationData, planData] = await Promise.all([getHomeVisitations(), getInterventionPlans()]);
+      const [visitationData, planData, residentData] = await Promise.all([getHomeVisitations(), getInterventionPlans(), getResidents({ page: 1, pageSize: 1000 })]);
       const rawVisitations = Array.isArray(visitationData)
         ? visitationData
         : Array.isArray((visitationData as { items?: HomeVisitation[] })?.items)
@@ -68,6 +74,7 @@ export default function HomeVisitationCaseConferencePage() {
 
       setVisitations(normalizedVisitations);
       setPlans(normalizedPlans);
+      setResidents(residentData.items);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load home visitation and case conference records.');
     } finally {
@@ -464,13 +471,22 @@ export default function HomeVisitationCaseConferencePage() {
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-md-6"><label className="form-label small">Visit Date</label><input type="date" className="form-control form-control-sm" value={String(editingVisitation.visitDate ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, visitDate: e.target.value } : prev)} /></div>
-                  <div className="col-md-6"><label className="form-label small">Resident ID</label><input type="number" className="form-control form-control-sm" value={String(editingVisitation.residentId ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} /></div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm" value={String(editingVisitation.residentId ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => <option key={r.residentId} value={r.residentId}>{r.residentId} — {r.internalCode ?? 'No code'}</option>)}
+                    </select>
+                  </div>
                   <div className="col-md-6"><label className="form-label small">Social Worker</label><input type="text" className="form-control form-control-sm" value={String(editingVisitation.socialWorker ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, socialWorker: e.target.value } : prev)} /></div>
                   <div className="col-md-6"><label className="form-label small">Visit Type</label><select className="form-select form-select-sm" value={String(editingVisitation.visitType ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, visitType: e.target.value } : prev)}><option value="">Select type...</option>{VISIT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}</select></div>
                   <div className="col-md-6"><label className="form-label small">Family Cooperation Level</label><select className="form-select form-select-sm" value={String(editingVisitation.familyCooperationLevel ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, familyCooperationLevel: e.target.value } : prev)}><option value="">Select level...</option>{COOP_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}</select></div>
+                  <div className="col-md-6"><label className="form-label small">Visit Outcome</label><select className="form-select form-select-sm" value={String(editingVisitation.visitOutcome ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, visitOutcome: e.target.value } : prev)}><option value="">Select outcome...</option>{VISIT_OUTCOMES.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
+                  <div className="col-md-6"><label className="form-label small">Location Visited</label><input type="text" className="form-control form-control-sm" value={String(editingVisitation.locationVisited ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, locationVisited: e.target.value } : prev)} /></div>
+                  <div className="col-md-6"><label className="form-label small">Family Members Present</label><input type="text" className="form-control form-control-sm" value={String(editingVisitation.familyMembersPresent ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, familyMembersPresent: e.target.value } : prev)} /></div>
                   <div className="col-md-6"><label className="form-label small">Purpose</label><input type="text" className="form-control form-control-sm" value={String(editingVisitation.purpose ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, purpose: e.target.value } : prev)} /></div>
                   <div className="col-12"><label className="form-label small">Home Environment / Observations</label><textarea className="form-control form-control-sm" rows={3} value={String(editingVisitation.observations ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, observations: e.target.value } : prev)} /></div>
-                  <div className="col-12"><label className="form-label small">Follow-up Actions</label><textarea className="form-control form-control-sm" rows={2} value={String(editingVisitation.followUpNotes ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, followUpNotes: e.target.value } : prev)} /></div>
+                  <div className="col-12"><label className="form-label small">Follow-up Notes</label><textarea className="form-control form-control-sm" rows={2} value={String(editingVisitation.followUpNotes ?? '')} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, followUpNotes: e.target.value } : prev)} /></div>
                   <div className="col-md-6"><div className="form-check mt-2"><input id="safetyConcernsNoted" type="checkbox" className="form-check-input" checked={Boolean(editingVisitation.safetyConcernsNoted)} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, safetyConcernsNoted: e.target.checked } : prev)} /><label className="form-check-label" htmlFor="safetyConcernsNoted">Safety concerns noted</label></div></div>
                   <div className="col-md-6"><div className="form-check mt-2"><input id="followUpNeeded" type="checkbox" className="form-check-input" checked={Boolean(editingVisitation.followUpNeeded)} onChange={(e) => setEditingVisitation((prev) => prev ? { ...prev, followUpNeeded: e.target.checked } : prev)} /><label className="form-check-label" htmlFor="followUpNeeded">Follow-up needed</label></div></div>
                 </div>
@@ -495,10 +511,29 @@ export default function HomeVisitationCaseConferencePage() {
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-md-6"><label className="form-label small">Conference Date</label><input type="date" className="form-control form-control-sm" value={String(editingConference.caseConferenceDate ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, caseConferenceDate: e.target.value, targetDate: e.target.value } : prev)} /></div>
-                  <div className="col-md-6"><label className="form-label small">Resident ID</label><input type="number" className="form-control form-control-sm" value={String(editingConference.residentId ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} /></div>
-                  <div className="col-md-6"><label className="form-label small">Status</label><input type="text" className="form-control form-control-sm" value={String(editingConference.status ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, status: e.target.value } : prev)} /></div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm" value={String(editingConference.residentId ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => <option key={r.residentId} value={r.residentId}>{r.residentId} — {r.internalCode ?? 'No code'}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Plan Category</label>
+                    <select className="form-select form-select-sm" value={String(editingConference.planCategory ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, planCategory: e.target.value } : prev)}>
+                      <option value="">Select category...</option>
+                      {PLAN_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small">Status</label>
+                    <select className="form-select form-select-sm" value={String(editingConference.status ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, status: e.target.value } : prev)}>
+                      <option value="">Select status...</option>
+                      {PLAN_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
                   <div className="col-12"><label className="form-label small">Summary / Observations</label><textarea className="form-control form-control-sm" rows={3} value={String(editingConference.planDescription ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, planDescription: e.target.value } : prev)} /></div>
-                  <div className="col-12"><label className="form-label small">Follow-up Actions</label><textarea className="form-control form-control-sm" rows={2} value={String(editingConference.servicesProvided ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, servicesProvided: e.target.value } : prev)} /></div>
+                  <div className="col-12"><label className="form-label small">Services Provided / Follow-up Actions</label><textarea className="form-control form-control-sm" rows={2} value={String(editingConference.servicesProvided ?? '')} onChange={(e) => setEditingConference((prev) => prev ? { ...prev, servicesProvided: e.target.value } : prev)} /></div>
                 </div>
               </div>
               <div className="modal-footer">
