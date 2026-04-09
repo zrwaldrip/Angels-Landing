@@ -18,15 +18,19 @@ function LoginPage() {
 	const [errorMessage, setErrorMessage] = useState(searchParams.get("externalError") ?? "");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	async function waitForEstablishedSession(maxAttempts = 5, delayMs = 220) {
+	async function waitForEstablishedSession(maxAttempts = 12, delayMs = 300) {
 		let lastSession = await getAuthSession();
 		if (lastSession.isAuthenticated) return lastSession;
 
 		for (let attempt = 1; attempt < maxAttempts; attempt += 1) {
 			await new Promise((resolve) => window.setTimeout(resolve, delayMs));
-			await refreshAuthState();
-			lastSession = await getAuthSession();
-			if (lastSession.isAuthenticated) return lastSession;
+			try {
+				await refreshAuthState();
+				lastSession = await getAuthSession();
+				if (lastSession.isAuthenticated) return lastSession;
+			} catch {
+				// Keep retrying: Safari can lag a bit before auth cookies are visible cross-origin.
+			}
 		}
 
 		return lastSession;
