@@ -202,6 +202,8 @@ export function deleteSafehouseMetric(id: number) {
 export interface Donation {
   donationId: number;
   supporterId?: number;
+  ownerEmail?: string;
+  ownerSubject?: string;
   donationType?: string;
   donationDate?: string;
   isRecurring?: boolean;

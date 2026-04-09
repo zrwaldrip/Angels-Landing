@@ -7,6 +7,8 @@ public class Donation
     [Key]
     public int DonationId { get; set; }
     public int? SupporterId { get; set; }
+    public string? OwnerEmail { get; set; }
+    public string? OwnerSubject { get; set; }
     public string? DonationType { get; set; }
     public string? DonationDate { get; set; }
     public bool? IsRecurring { get; set; }

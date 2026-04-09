@@ -71,6 +71,7 @@ public class DonationsController(
         var email = User.FindFirstValue(ClaimTypes.Email);
         if (string.IsNullOrWhiteSpace(email))
             return Unauthorized(new { message = "Signed-in account does not include an email claim." });
+        var ownerSubject = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var supporterIds = await db.Supporters
@@ -79,7 +80,10 @@ public class DonationsController(
             .ToListAsync();
 
         var query = db.Donations
-            .Where(d => d.SupporterId.HasValue && supporterIds.Contains(d.SupporterId.Value));
+            .Where(d =>
+                (!string.IsNullOrWhiteSpace(ownerSubject) && d.OwnerSubject == ownerSubject) ||
+                (d.OwnerEmail != null && d.OwnerEmail.Trim().ToLower() == normalizedEmail) ||
+                (d.SupporterId.HasValue && supporterIds.Contains(d.SupporterId.Value)));
 
         var total = await query.CountAsync();
         var items = await query
@@ -115,63 +119,18 @@ public class DonationsController(
             return Unauthorized(new { message = "Signed-in account does not include an email claim." });
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
+        var ownerSubject = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var supporterId = await db.Supporters
             .Where(s => s.Email != null && s.Email.Trim().ToLower() == normalizedEmail)
             .OrderBy(s => s.SupporterId)
             .Select(s => (int?)s.SupporterId)
             .FirstOrDefaultAsync();
 
-        if (!supporterId.HasValue)
-        {
-            var displayName = User.FindFirstValue(ClaimTypes.Name);
-            if (string.IsNullOrWhiteSpace(displayName))
-            {
-                var atIndex = email.IndexOf('@');
-                displayName = atIndex > 0 ? email[..atIndex] : email;
-            }
-
-            var firstName = displayName;
-            var lastName = "Supporter";
-            var nameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (nameParts.Length > 1)
-            {
-                firstName = nameParts[0];
-                lastName = string.Join(' ', nameParts.Skip(1));
-            }
-
-            var newSupporter = new Supporter
-            {
-                SupporterType = "Individual",
-                DisplayName = displayName,
-                FirstName = string.IsNullOrWhiteSpace(firstName) ? "Donor" : firstName,
-                LastName = string.IsNullOrWhiteSpace(lastName) ? "Supporter" : lastName,
-                Region = "Unknown",
-                Country = "Philippines",
-                Email = email,
-                Status = "Active",
-                CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd"),
-                AcquisitionChannel = "Direct"
-            };
-
-            try
-            {
-                db.Supporters.Add(newSupporter);
-                await db.SaveChangesAsync();
-                supporterId = newSupporter.SupporterId;
-            }
-            catch (DbUpdateException ex)
-            {
-                logger.LogError(ex, "Failed creating supporter record for email {Email}", email);
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    message = "Unable to create supporter profile for this account. Please contact support."
-                });
-            }
-        }
-
         var draft = new Donation
         {
-            SupporterId = supporterId.Value,
+            SupporterId = supporterId,
+            OwnerEmail = email.Trim(),
+            OwnerSubject = ownerSubject,
             DonationType = "Monetary",
             IsRecurring = request.IsRecurring,
             CampaignName = request.CampaignName,
@@ -184,6 +143,7 @@ public class DonationsController(
             draft,
             forceDirectChannel: true,
             forceTodayDate: true,
+            requireSupporter: false,
             HttpContext.RequestAborted);
         if (normalizeResult.error is not null) return normalizeResult.error;
         var donation = normalizeResult.donation!;
@@ -195,7 +155,7 @@ public class DonationsController(
         }
         catch (DbUpdateException ex)
         {
-            logger.LogError(ex, "Failed creating donation for supporterId {SupporterId}", supporterId.Value);
+            logger.LogError(ex, "Failed creating donation for supporterId {SupporterId} ownerEmail {OwnerEmail}", supporterId, email);
             return StatusCode(StatusCodes.Status500InternalServerError, new
             {
                 message = "Unable to save donation at this time. Please try again."
@@ -220,6 +180,7 @@ public class DonationsController(
             donation,
             forceDirectChannel: false,
             forceTodayDate: false,
+            requireSupporter: true,
             HttpContext.RequestAborted);
         if (normalizeResult.error is not null) return normalizeResult.error;
 
@@ -238,6 +199,7 @@ public class DonationsController(
             donation,
             forceDirectChannel: false,
             forceTodayDate: false,
+            requireSupporter: true,
             HttpContext.RequestAborted);
         if (normalizeResult.error is not null) return normalizeResult.error;
 
@@ -261,9 +223,10 @@ public class DonationsController(
         Donation input,
         bool forceDirectChannel,
         bool forceTodayDate,
+        bool requireSupporter,
         CancellationToken cancellationToken)
     {
-        if (!input.SupporterId.HasValue || input.SupporterId.Value <= 0)
+        if (requireSupporter && (!input.SupporterId.HasValue || input.SupporterId.Value <= 0))
             return (null, BadRequest(new { message = "Supporter is required." }));
 
         var donationType = input.DonationType?.Trim();
@@ -288,6 +251,8 @@ public class DonationsController(
         {
             DonationId = input.DonationId,
             SupporterId = input.SupporterId,
+            OwnerEmail = string.IsNullOrWhiteSpace(input.OwnerEmail) ? null : input.OwnerEmail.Trim(),
+            OwnerSubject = string.IsNullOrWhiteSpace(input.OwnerSubject) ? null : input.OwnerSubject.Trim(),
             DonationType = donationType,
             DonationDate = donationDate,
             IsRecurring = input.IsRecurring,
