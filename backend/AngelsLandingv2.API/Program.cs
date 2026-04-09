@@ -34,11 +34,35 @@ if (corsOrigins.Count == 0 && !string.IsNullOrWhiteSpace(frontendUrl))
 if (corsOrigins.Count == 0)
     corsOrigins.Add(DefaultFrontendUrl);
 
+var authCookieModeRaw = builder.Configuration["AuthCookies:Mode"]?.Trim().ToLowerInvariant();
+var forceSameSiteCookies =
+    string.Equals(authCookieModeRaw, "same-site", StringComparison.Ordinal) ||
+    string.Equals(authCookieModeRaw, "samesite", StringComparison.Ordinal) ||
+    string.Equals(authCookieModeRaw, "same_site", StringComparison.Ordinal);
+var forceCrossSiteCookies =
+    string.Equals(authCookieModeRaw, "cross-site", StringComparison.Ordinal) ||
+    string.Equals(authCookieModeRaw, "crosssite", StringComparison.Ordinal) ||
+    string.Equals(authCookieModeRaw, "cross_site", StringComparison.Ordinal);
+var authCookieRequireHttps = builder.Configuration.GetValue<bool?>("AuthCookies:RequireHttps")
+    ?? !builder.Environment.IsDevelopment();
+
 // Cross-site auth cookies (SameSite=None) are only safe when requests are over HTTPS.
 // In local HTTP development, using None causes the browser to reject the cookie unless Secure=true.
 var needsCrossSiteAuthCookies =
-    allowAnyOrigin ||
-    corsOrigins.Exists(static o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+    forceCrossSiteCookies
+    || (!forceSameSiteCookies && (allowAnyOrigin || corsOrigins.Exists(static o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase))));
+
+if (needsCrossSiteAuthCookies)
+{
+    authCookieRequireHttps = true;
+    var hasNonHttpsAllowedOrigin = corsOrigins.Exists(static o => !o.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+    if (hasNonHttpsAllowedOrigin)
+    {
+        Console.Error.WriteLine(
+            "WARNING: Auth cookies are configured for cross-site usage but one or more allowed CORS origins are not HTTPS. " +
+            "Safari and other browsers may reject cross-site auth cookies.");
+    }
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -234,9 +258,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = needsCrossSiteAuthCookies ? SameSiteMode.None : SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-        ? CookieSecurePolicy.SameAsRequest
-        : CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = authCookieRequireHttps
+        ? CookieSecurePolicy.Always
+        : CookieSecurePolicy.SameAsRequest;
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
     options.SlidingExpiration = true;
 });

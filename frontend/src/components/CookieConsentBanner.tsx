@@ -14,6 +14,9 @@ function CookieConsentBanner() {
           Angels' Landing uses essential cookies for sign-in and security features.
         </p>
         <p className="mb-0">
+          Your acknowledgement is saved in essential browser storage/cookies.
+        </p>
+        <p className="mb-0">
           We are not using analytics or marketing cookies. Read the{' '}
           <Link to="/cookies">cookie policy</Link> for full details.
         </p>
