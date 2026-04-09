@@ -194,7 +194,7 @@ def run_scorer():
             continue
 
         prob = float(model.predict_proba(row)[0][1])
-        label = "Stalling" if prob >= THRESHOLD else "Progressing"
+        label = "Stalling" if prob >= THRESHOLD else "OK"
 
         supabase.table("Residents").update({
             "MlPredictionStatus": label,

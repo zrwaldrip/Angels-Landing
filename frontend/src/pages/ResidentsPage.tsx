@@ -440,7 +440,7 @@ function ResidentsPage() {
                     <td>
                       {r.mlPredictionStatus ? (
                         <span className={`badge ${r.mlPredictionStatus === 'Stalling' ? 'text-bg-danger' : 'text-bg-primary'} bg-opacity-75`}>
-                          {r.mlPredictionStatus}
+                          {r.mlPredictionStatus === 'Progressing' ? 'OK' : r.mlPredictionStatus}
                         </span>
                       ) : (
                         <span className="text-muted small">Pending</span>
