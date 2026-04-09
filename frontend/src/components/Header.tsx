@@ -8,6 +8,7 @@ function Header() {
 	const { authSession, isAuthenticated, isLoading } = useAuth();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [openNavMenu, setOpenNavMenu] = useState<"operations" | "admin" | null>(null);
+	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 	const navMenusRef = useRef<HTMLDivElement | null>(null);
 	const normalizedRoles = normalizeRoles(authSession.roles);
 	const isAdmin = normalizedRoles.includes("admin");
@@ -19,6 +20,7 @@ function Header() {
 	function closeMobileMenu() {
 		setIsMobileMenuOpen(false);
 		setOpenNavMenu(null);
+		setIsProfileMenuOpen(false);
 	}
 
 	useEffect(() => {
@@ -36,6 +38,7 @@ function Header() {
 
 	useEffect(() => {
 		if (!isTutorialOpen) return;
+		setIsProfileMenuOpen(false);
 
 		const key = currentStep?.highlightKey ?? "";
 		const operationsStepKeys = new Set([
@@ -88,6 +91,7 @@ function Header() {
 	function handleStartTutorial() {
 		closeMobileMenu();
 		setOpenNavMenu(null);
+		setIsProfileMenuOpen(false);
 		startTutorial();
 	}
 
@@ -199,7 +203,11 @@ function Header() {
 								)}
 
 							{isAuthenticated && !isLoading ? (
-								<details className="app-menu-dropdown app-profile-dropdown">
+								<details
+									className="app-menu-dropdown app-profile-dropdown"
+									open={isProfileMenuOpen}
+									onToggle={(event) => setIsProfileMenuOpen(event.currentTarget.open)}
+								>
 									<summary data-tutorial-key="profile" className={`app-profile-trigger ${getHighlightClass("profile")}`.trim()} aria-label="Open profile menu">
 										<span className="app-profile-avatar">{profileInitial}</span>
 									</summary>
