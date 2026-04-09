@@ -13,6 +13,10 @@ MODEL_PATH   = "models/propensity_to_donate_pipeline.pkl"
 RESCORE_AFTER_DAYS = 7
 
 
+def _use_joblib_only() -> bool:
+    return os.environ.get("ML_USE_JOBLIB_ONLY", "").strip().lower() in ("1", "true", "yes")
+
+
 def fetch_table(supabase: Client, table: str) -> pd.DataFrame:
     all_data = []
     start = 0
@@ -71,8 +75,25 @@ def run_scorer():
         raise SystemExit(1)
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    model = joblib.load(MODEL_PATH)
-    print(f"Loaded model from {MODEL_PATH}")
+
+    model = None
+    if _use_joblib_only():
+        print("ML_USE_JOBLIB_ONLY set: loading committed joblib artifact.")
+    else:
+        from propensity_train import train_pipeline_from_supabase
+
+        model = train_pipeline_from_supabase(supabase)
+        if model is not None:
+            print("Using propensity pipeline trained from Supabase this run.")
+        else:
+            print("Propensity training unavailable; falling back to committed joblib.")
+
+    if model is None:
+        if not os.path.isfile(MODEL_PATH):
+            print(f"ERROR: Model not found at {MODEL_PATH}")
+            raise SystemExit(1)
+        model = joblib.load(MODEL_PATH)
+        print(f"Loaded model from {MODEL_PATH}")
 
     # Fetch supporters that need re-scoring
     seven_days_ago = (datetime.now() - timedelta(days=RESCORE_AFTER_DAYS)).strftime("%Y-%m-%dT%H:%M:%S")

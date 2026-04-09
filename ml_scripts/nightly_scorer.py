@@ -182,18 +182,41 @@ def build_features(residents_df: pd.DataFrame, supabase: Client) -> pd.DataFrame
     return model_df
 
 
+def _use_joblib_only() -> bool:
+    return os.environ.get("ML_USE_JOBLIB_ONLY", "").strip().lower() in ("1", "true", "yes")
+
+
 def run_scorer():
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("ERROR: Missing SUPABASE_URL or SUPABASE_KEY environment variables.")
         raise SystemExit(1)
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    model = joblib.load(MODEL_PATH)
-    threshold = load_stall_threshold()
-    print(f"Loaded model from {MODEL_PATH}")
+
+    model = None
+    threshold = DEFAULT_THRESHOLD
+    if _use_joblib_only():
+        print("ML_USE_JOBLIB_ONLY set: loading committed joblib artifact.")
+    else:
+        from resident_progress_train import train_and_calibrate_from_supabase
+
+        trained = train_and_calibrate_from_supabase(supabase)
+        if trained is not None:
+            model, threshold = trained
+            print("Using resident classifier trained from Supabase this run.")
+        else:
+            print("Training from Supabase unavailable; falling back to committed joblib.")
+
+    if model is None:
+        if not os.path.isfile(MODEL_PATH):
+            print(f"ERROR: Model not found at {MODEL_PATH}")
+            raise SystemExit(1)
+        model = joblib.load(MODEL_PATH)
+        threshold = load_stall_threshold()
+        print(f"Loaded model from {MODEL_PATH}")
     print(
         f"Decision threshold P(Stalling) >= {threshold} "
-        f"(from {THRESHOLD_META_PATH} or default {DEFAULT_THRESHOLD})"
+        f"(from training or {THRESHOLD_META_PATH} or default {DEFAULT_THRESHOLD})"
     )
 
     # Fetch active residents; score every active resident each run

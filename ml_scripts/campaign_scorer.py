@@ -1,5 +1,4 @@
 import os
-import joblib
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
@@ -16,11 +15,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 VERDICT_HIGH = 0.6
 VERDICT_MID  = 0.3
 
-# Path to the pkl artifact exported by campaign_analysis.ipynb
-# Matches the pattern used by nightly_scorer.py / propensity_scorer.py
-MODEL_PATH = "models/campaign_effectiveness_model.pkl"
-
-# Human-readable names for decision tree features (fallback only)
+# Human-readable names for decision tree features (trained from Supabase each run)
 FEATURE_DISPLAY_NAMES = {
     'campaign_name_enc':      'Campaign Name',
     'channel_source_enc':     'Channel Source',
@@ -145,43 +140,11 @@ def build_campaign_scores(donations_df: pd.DataFrame, supporters_df: pd.DataFram
 
 def build_feature_importances(donations_df: pd.DataFrame, supporters_df: pd.DataFrame) -> list[dict]:
     """
-    Extract feature importances from the pkl artifact exported by campaign_analysis.ipynb.
-    Falls back to retraining a fresh decision tree if the pkl doesn't exist yet.
-
-    The pkl artifact is a dict: {'model': sklearn model, 'feature_names': list[str], 'model_name': str}
-    This matches the pattern used by nightly_scorer.py and propensity_scorer.py.
+    Train a decision tree regressor on live Supabase donation rows and return
+    feature importances (same structure as campaign_analysis.ipynb fallback).
 
     Returns a list of dicts: [{"Feature": str, "Importance": float}, ...]
     """
-    # ── Try loading the pkl artifact first ────────────────────────────────────
-    if os.path.exists(MODEL_PATH):
-        try:
-            artifact = joblib.load(MODEL_PATH)
-            model         = artifact['model']
-            feature_names = artifact['feature_names']
-            model_name    = artifact.get('model_name', 'unknown')
-
-            if not hasattr(model, 'feature_importances_'):
-                print(f"  Loaded model '{model_name}' has no feature_importances_ (likely LinearRegression). "
-                      "Falling back to retrain.")
-            else:
-                print(f"  Loaded pkl artifact: '{model_name}' with {len(feature_names)} features.")
-                importances = [
-                    {
-                        'Feature':    FEATURE_DISPLAY_NAMES.get(col, col),
-                        'Importance': round(float(imp), 6),
-                    }
-                    for col, imp in zip(feature_names, model.feature_importances_)
-                ]
-                importances.sort(key=lambda x: x['Importance'], reverse=True)
-                return importances
-        except Exception as e:
-            print(f"  Warning: could not load pkl artifact ({e}). Falling back to retrain.")
-    else:
-        print(f"  No pkl found at '{MODEL_PATH}'. "
-              "Run campaign_analysis.ipynb to generate it. Retraining from live data as fallback.")
-
-    # ── Fallback: retrain decision tree from live data ────────────────────────
     if donations_df.empty:
         return []
 
@@ -218,7 +181,7 @@ def build_feature_importances(donations_df: pd.DataFrame, supporters_df: pd.Data
     feature_cols = [c for c in candidate_features if c in df.columns]
 
     if not feature_cols or len(df) < 10:
-        print("  Not enough data to retrain. Skipping feature importances.")
+        print("  Not enough data to train decision tree. Skipping feature importances.")
         return []
 
     if 'is_recurring' in df.columns:
@@ -230,9 +193,9 @@ def build_feature_importances(donations_df: pd.DataFrame, supporters_df: pd.Data
     try:
         tree = DecisionTreeRegressor(max_depth=4, min_samples_leaf=5, random_state=42)
         tree.fit(X, y)
-        print("  Retrained decision tree as fallback.")
+        print("  Trained decision tree from Supabase donation history.")
     except Exception as e:
-        print(f"  Fallback retrain failed: {e}")
+        print(f"  Decision tree training failed: {e}")
         return []
 
     importances = [
