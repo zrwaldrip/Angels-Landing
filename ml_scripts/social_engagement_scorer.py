@@ -29,6 +29,10 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 MODEL_PATH = os.environ.get("SOCIAL_ENGAGEMENT_MODEL_PATH", os.path.join(_REPO_ROOT, "models", "social_engagement_predictor.pkl"))
 
 
+def _use_joblib_only() -> bool:
+    return os.environ.get("ML_USE_JOBLIB_ONLY", "").strip().lower() in ("1", "true", "yes")
+
+
 def fetch_all_posts(supabase):
     all_data = []
     start = 0
@@ -49,13 +53,6 @@ def run():
         print("ERROR: SUPABASE_URL and SUPABASE_KEY required.")
         raise SystemExit(1)
 
-    if not os.path.isfile(MODEL_PATH):
-        print(f"ERROR: Model not found: {MODEL_PATH}")
-        raise SystemExit(1)
-
-    pipe = joblib.load(MODEL_PATH)
-    print(f"Loaded model from {MODEL_PATH}")
-
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     records = fetch_all_posts(supabase)
     if not records:
@@ -65,6 +62,23 @@ def run():
     raw_df = supabase_records_to_dataframe(records)
     if "engagement_rate" not in raw_df.columns:
         raw_df["engagement_rate"] = 0.0
+
+    pipe = None
+    if not _use_joblib_only():
+        from train_social_engagement import fit_engagement_pipeline_from_dataframe
+
+        pipe = fit_engagement_pipeline_from_dataframe(raw_df)
+        if pipe is not None:
+            print("Using social engagement model trained from Supabase this run.")
+        else:
+            print("Social training unavailable; falling back to committed joblib.")
+
+    if pipe is None:
+        if not os.path.isfile(MODEL_PATH):
+            print(f"ERROR: Model not found: {MODEL_PATH}")
+            raise SystemExit(1)
+        pipe = joblib.load(MODEL_PATH)
+        print(f"Loaded model from {MODEL_PATH}")
 
     X, post_ids = features_for_prediction(raw_df)
     preds = pipe.predict(X)
