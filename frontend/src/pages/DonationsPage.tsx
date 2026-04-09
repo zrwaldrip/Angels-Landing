@@ -6,6 +6,7 @@ import { getDonations, getSupporters, createDonation, updateDonation, deleteDona
 const DONATION_TYPE_OPTIONS = ["Monetary", "InKind", "Time", "Skills", "SocialMedia"] as const;
 const CHANNEL_OPTIONS = ["Campaign", "Event", "Direct", "SocialMedia", "PartnerReferral"] as const;
 const CAMPAIGN_OPTIONS = ["", "Year-End Hope", "GivingTuesday", "Summer of Safety", "Back to School"] as const;
+const IMPACT_UNIT_OPTIONS = ["pesos", "items", "hours", "campaigns"] as const;
 
 function isMonetaryType(type: string | undefined) {
 	return type === "Monetary";
@@ -713,6 +714,17 @@ function DonationsPage() {
 												Recurring donation
 											</label>
 										</div>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small">Impact Unit</label>
+										<select
+											className="form-select form-select-sm"
+											value={String(editingDonation.impactUnit ?? "")}
+											onChange={(e) => setEditingDonation((prev) => (prev ? { ...prev, impactUnit: e.target.value || undefined } : prev))}
+										>
+											<option value="">Select unit...</option>
+											{IMPACT_UNIT_OPTIONS.map((u) => <option key={u} value={u}>{u}</option>)}
+										</select>
 									</div>
 									<div className="col-12">
 										<label className="form-label small">Notes</label>

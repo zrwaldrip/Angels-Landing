@@ -14,7 +14,7 @@ import {
 } from '../lib/lighthouseAPI';
 
 const SESSION_TYPE_OPTIONS = ['Individual', 'Group'] as const;
-const EMOTIONAL_STATE_OPTIONS = ['Anxious', 'Calm', 'Guarded', 'Hopeful', 'Sad', 'Angry', 'Withdrawn', 'Overwhelmed', 'Euthymic', 'Other'] as const;
+const EMOTIONAL_STATE_OPTIONS = ['Calm', 'Anxious', 'Sad', 'Angry', 'Hopeful', 'Withdrawn', 'Happy', 'Distressed'] as const;
 
 function toDateInputValue(value?: string) {
   if (!value) return '';
@@ -487,25 +487,25 @@ function ProcessRecordingsPage() {
                   </div>
                   <div className="col-md-4">
                     <label className="form-label small">Emotional State Observed</label>
-                    <input
-                      list="emotional-states"
-                      type="text"
-                      className="form-control form-control-sm"
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingRecording.emotionalStateObserved ?? '')}
                       onChange={(e) => setEditingRecording(prev => prev ? { ...prev, emotionalStateObserved: e.target.value } : prev)}
-                    />
-                    <datalist id="emotional-states">
-                      {EMOTIONAL_STATE_OPTIONS.map((state) => <option key={state} value={state} />)}
-                    </datalist>
+                    >
+                      <option value="">Select state...</option>
+                      {EMOTIONAL_STATE_OPTIONS.map((state) => <option key={state} value={state}>{state}</option>)}
+                    </select>
                   </div>
                   <div className="col-md-4">
                     <label className="form-label small">Emotional State at End</label>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingRecording.emotionalStateEnd ?? '')}
                       onChange={(e) => setEditingRecording(prev => prev ? { ...prev, emotionalStateEnd: e.target.value } : prev)}
-                    />
+                    >
+                      <option value="">Select state...</option>
+                      {EMOTIONAL_STATE_OPTIONS.map((state) => <option key={state} value={state}>{state}</option>)}
+                    </select>
                   </div>
                   <div className="col-12">
                     <label className="form-label small">Session Narrative</label>
