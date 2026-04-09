@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { normalizeRoles } from '../routes/roleRouting';
 import {
   createProcessRecording,
   deleteProcessRecording,
@@ -28,7 +29,8 @@ function safeDateSortValue(value?: string) {
 
 function ProcessRecordingsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
-  const isAdmin = authSession.roles.includes('Admin');
+  const normalizedRoles = normalizeRoles(authSession.roles);
+  const isAdmin = normalizedRoles.includes('admin');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -104,10 +106,25 @@ function ProcessRecordingsPage() {
     setError('');
     try {
       const data = await getProcessRecordings({ residentId, page, pageSize });
-      setRecordings(data.items);
-      setTotalRecordings(data.total);
+      // API currently returns a plain array for process recordings (not a paged object).
+      // Keep this defensive to prevent runtime crashes if response shape changes.
+      const rawItems = Array.isArray(data)
+        ? data
+        : Array.isArray((data as { items?: ProcessRecording[] })?.items)
+          ? (data as { items: ProcessRecording[] }).items
+          : [];
+      const total = Array.isArray(data)
+        ? data.length
+        : typeof (data as { total?: number })?.total === 'number'
+          ? (data as { total: number }).total
+          : rawItems.length;
+
+      setRecordings(rawItems);
+      setTotalRecordings(total);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load process recordings.');
+      setRecordings([]);
+      setTotalRecordings(0);
     } finally {
       setLoadingRecordings(false);
     }

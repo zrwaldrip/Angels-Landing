@@ -15,7 +15,7 @@ function formatPercent(value: number) {
 
 function DonorImpactPage() {
 	const { isAuthenticated } = useAuth();
-	const donateLink = isAuthenticated ? "/donor-portal?donate=1" : "/login";
+	const donateLink = "/login";
 
 	const [summary, setSummary] = useState<DonorImpactSummary | null>(null);
 	const [loadingSummary, setLoadingSummary] = useState(true);
@@ -36,6 +36,10 @@ function DonorImpactPage() {
 		} finally {
 			setLoadingSummary(false);
 		}
+	}
+
+	function handleDonateClick() {
+		window.dispatchEvent(new Event("open-donate-modal"));
 	}
 
 	return (
@@ -64,9 +68,15 @@ function DonorImpactPage() {
 								becomes measurable progress for real people.
 							</p>
 							<div className="impact-hero-actions mt-3">
-								<Link to={donateLink} className="btn btn-primary donor-impact-mobile-donate-btn">
-									Donate Now
-								</Link>
+								{isAuthenticated ? (
+									<button type="button" className="btn btn-primary donor-impact-mobile-donate-btn" onClick={handleDonateClick}>
+										Donate Now
+									</button>
+								) : (
+									<Link to={donateLink} className="btn btn-primary donor-impact-mobile-donate-btn">
+										Donate Now
+									</Link>
+								)}
 							</div>
 						</div>
 					</section>
