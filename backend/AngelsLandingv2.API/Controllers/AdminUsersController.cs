@@ -87,11 +87,13 @@ public class AdminUsersController(
             if (normalizedRoles.Any(role => !AllowedManagedRoles.Contains(role)))
                 return BadRequest(new { message = "Only Admin and Donor roles are allowed in this view." });
 
-            // Admin users must also keep donor privileges.
-            if (normalizedRoles.Contains(AuthRoles.Admin, StringComparer.OrdinalIgnoreCase) &&
-                !normalizedRoles.Contains(AuthRoles.Donor, StringComparer.OrdinalIgnoreCase))
+            // Admin role implicitly includes donor privileges in app authorization.
+            // Keep persisted roles canonical: Admin-only accounts should not also store Donor.
+            if (normalizedRoles.Contains(AuthRoles.Admin, StringComparer.OrdinalIgnoreCase))
             {
-                normalizedRoles = [.. normalizedRoles, AuthRoles.Donor];
+                normalizedRoles = normalizedRoles
+                    .Where(role => !string.Equals(role, AuthRoles.Donor, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
             }
 
             foreach (var role in normalizedRoles)
