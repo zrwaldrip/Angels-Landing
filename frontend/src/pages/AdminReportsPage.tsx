@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import {
   getAdminReportsSummary,
-  type AdminReportsSummary
+  getSocialEngagementInsights,
+  type AdminReportsSummary,
+  type SocialEngagementFactor,
+  type SocialEngagementInsights
 } from '../lib/lighthouseAPI';
 
 function normalizeMonthKey(dateText: string | undefined) {
@@ -25,10 +28,110 @@ function progressVariant(percent: number) {
   return 'bg-danger';
 }
 
+/** Statistical confidence tier from p-value (explanatory model only). */
+function factorConfidenceTier(pValue: number | undefined | null): string {
+  if (pValue == null || Number.isNaN(pValue)) return '—';
+  if (pValue < 0.01) return 'Strong';
+  if (pValue < 0.05) return 'Moderate';
+  return 'Weak / uncertain';
+}
+
+const SOCIAL_FACTOR_TOP_N = 5;
+
+/** Top N factors by rank order within positive vs negative coefficient groups. */
+function splitFactorsHigherLower(factors: SocialEngagementFactor[] | undefined): {
+  higher: SocialEngagementFactor[];
+  lower: SocialEngagementFactor[];
+} {
+  const list = (factors ?? []).filter(
+    (f) => f.coefficient != null && !Number.isNaN(f.coefficient)
+  );
+  const byRank = (a: SocialEngagementFactor, b: SocialEngagementFactor) =>
+    (a.rankOrder ?? Number.MAX_SAFE_INTEGER) - (b.rankOrder ?? Number.MAX_SAFE_INTEGER);
+  return {
+    higher: list.filter((f) => (f.coefficient as number) > 0).sort(byRank).slice(0, SOCIAL_FACTOR_TOP_N),
+    lower: list.filter((f) => (f.coefficient as number) < 0).sort(byRank).slice(0, SOCIAL_FACTOR_TOP_N)
+  };
+}
+
+function SocialEngagementFactorTable({
+  title,
+  subtitle,
+  rows,
+  emptyText,
+  className = 'mb-3'
+}: {
+  title: string;
+  subtitle?: string;
+  rows: SocialEngagementFactor[];
+  emptyText: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <h6 className="h6 mb-1">{title}</h6>
+      {subtitle ? <p className="small text-muted mb-2">{subtitle}</p> : null}
+      {rows.length === 0 ? (
+        <p className="text-muted small mb-0">{emptyText}</p>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Factor</th>
+                <th>Confidence (statistical)</th>
+                <th className="text-end small text-muted">Model detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((f) => {
+                const tier = factorConfidenceTier(f.pValue ?? null);
+                return (
+                  <tr key={`${f.rankOrder}-${f.factorKey ?? ''}-${String(f.coefficient)}`}>
+                    <td>{f.rankOrder ?? ''}</td>
+                    <td>{f.displayName ?? f.factorKey}</td>
+                    <td>{tier}</td>
+                    <td className="text-end small text-muted text-nowrap">
+                      coef {f.coefficient != null ? f.coefficient.toFixed(4) : '—'}, p{' '}
+                      {f.pValue != null ? f.pValue.toFixed(4) : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SocialEngagementFactorPair({ factors }: { factors: SocialEngagementFactor[] }) {
+  const { higher, lower } = splitFactorsHigherLower(factors);
+  return (
+    <>
+      <SocialEngagementFactorTable
+        title={`Top ${SOCIAL_FACTOR_TOP_N}: associated with higher engagement (vs. baseline)`}
+        rows={higher}
+        emptyText="No factors with a positive association appear in this snapshot."
+      />
+      <SocialEngagementFactorTable
+        title={`Top ${SOCIAL_FACTOR_TOP_N}: associated with lower engagement (vs. baseline)`}
+        rows={lower}
+        emptyText="No factors with a negative association appear in this snapshot."
+        className="mb-0"
+      />
+    </>
+  );
+}
+
 function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState<AdminReportsSummary | null>(null);
+  const [social, setSocial] = useState<SocialEngagementInsights | null>(null);
+  const [socialError, setSocialError] = useState('');
   const [hoveredTrendPointIndex, setHoveredTrendPointIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -38,11 +141,19 @@ function AdminReportsPage() {
   async function loadReportsData() {
     setLoading(true);
     setError('');
+    setSocialError('');
     try {
       const reportSummary = await getAdminReportsSummary();
       setSummary(reportSummary);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load analytics reports.');
+    }
+    try {
+      const socialInsights = await getSocialEngagementInsights();
+      setSocial(socialInsights);
+    } catch (e) {
+      setSocial(null);
+      setSocialError(e instanceof Error ? e.message : 'Social engagement insights unavailable.');
     } finally {
       setLoading(false);
     }
@@ -313,6 +424,101 @@ function AdminReportsPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="border rounded p-3 mb-4">
+                <h4 className="h6 mb-2">Social posts: what relates to engagement</h4>
+                <p className="text-muted small mb-2">
+                  Past posts were analyzed to spot patterns in engagement. Forecasts are estimates based on history—they are
+                  not guarantees for future posts.
+                </p>
+                <ul className="small text-muted mb-3 ps-3">
+                  <li>This highlights <strong>associations</strong> in historical data, not proof that changing one thing will change results.</li>
+                  <li>Use it to guide questions and experiments, not as the only input to content decisions.</li>
+                  <li>
+                    Predictions use the same kinds of post details as the analysis; unusual campaigns or platform changes may
+                    differ.
+                  </li>
+                </ul>
+                <details className="small mb-3">
+                  <summary className="text-primary" style={{ cursor: 'pointer' }}>
+                    How to read the &quot;patterns&quot; table
+                  </summary>
+                  <div className="mt-2 ps-1 text-muted border-start border-2 ps-2">
+                    <p className="mb-2">
+                      For categories (platform, sentiment, post type, etc.), each row compares that option to a{' '}
+                      <strong>baseline</strong> category that is not shown. A negative direction does not mean &quot;bad&quot;—it
+                      means <strong>lower typical engagement than that baseline</strong>, after accounting for other factors in
+                      the model.
+                    </p>
+                    <p className="mb-0">
+                      &quot;Confidence&quot; is a statistical shorthand (how unlikely the pattern is to be pure chance)—not
+                      certainty about what will happen next time.
+                    </p>
+                  </div>
+                </details>
+                {socialError ? <div className="alert alert-warning py-2 small">{socialError}</div> : null}
+                {!social ? (
+                  <p className="text-muted small mb-0">Loading social insights…</p>
+                ) : (
+                  <>
+                    {social.caveats ? <p className="small text-muted border-start border-3 ps-2 mb-3">{social.caveats}</p> : null}
+                    <div className="small mb-3">
+                      {social.olsR2 != null ? (
+                        <p className="mb-1">
+                          <strong>How much past variation we can describe with these patterns:</strong> roughly{' '}
+                          <strong>{(social.olsR2 * 100).toFixed(0)}%</strong> of how engagement differed across posts in the
+                          historical data.
+                        </p>
+                      ) : null}
+                      {social.predictiveMaeHoldout != null ? (
+                        <p className="mb-1 text-muted">
+                          <strong>Typical forecast gap on held-out posts:</strong> about ±{social.predictiveMaeHoldout.toFixed(3)}{' '}
+                          on the engagement rate scale (typically 0–1).
+                        </p>
+                      ) : null}
+                      {social.predictiveR2Holdout != null && social.olsR2 != null ? (
+                        <p className="mb-1 text-muted">
+                          The forest model&apos;s fit on a held-out slice is about{' '}
+                          <strong>{(social.predictiveR2Holdout * 100).toFixed(0)}%</strong> (higher means forecasts tracked
+                          actual engagement more closely on that test set).
+                        </p>
+                      ) : null}
+                    </div>
+                    <details className="small mb-3">
+                      <summary className="text-muted" style={{ cursor: 'pointer' }}>
+                        Technical details (R², MAE, timestamps)
+                      </summary>
+                      <div className="row g-2 text-muted mt-2">
+                        {social.olsR2 != null ? <div className="col-auto">Pattern model R²: {social.olsR2.toFixed(3)}</div> : null}
+                        {social.olsAdjR2 != null ? (
+                          <div className="col-auto">Adjusted R²: {social.olsAdjR2.toFixed(3)}</div>
+                        ) : null}
+                        {social.predictiveR2Holdout != null ? (
+                          <div className="col-auto">Forecast model R² (holdout): {social.predictiveR2Holdout.toFixed(3)}</div>
+                        ) : null}
+                        {social.predictiveMaeHoldout != null ? (
+                          <div className="col-auto">MAE (holdout): {social.predictiveMaeHoldout.toFixed(4)}</div>
+                        ) : null}
+                        {social.computedAt ? (
+                          <div className="col-12">Insights last updated: {social.computedAt}</div>
+                        ) : null}
+                      </div>
+                    </details>
+                    <h5 className="h6">Patterns in past posts</h5>
+                    <p className="small text-muted mb-3">
+                      Each list shows up to five factors from the explanatory model, chosen by importance rank within
+                      factors that point toward higher or lower engagement compared to the baseline category.
+                    </p>
+                    {(social.factors ?? []).length === 0 ? (
+                      <p className="text-muted small">
+                        No pattern rows loaded yet—run the training notebooks or seed the database with insights.
+                      </p>
+                    ) : (
+                      <SocialEngagementFactorPair factors={social.factors ?? []} />
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="border rounded p-3">

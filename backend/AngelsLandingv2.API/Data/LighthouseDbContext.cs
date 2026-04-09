@@ -34,4 +34,5 @@ public class LighthouseDbContext : DbContext
     public DbSet<SocialMediaPost> SocialMediaPosts => Set<SocialMediaPost>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<CampaignFeatureImportance> FeatureImportances => Set<CampaignFeatureImportance>();
+    public DbSet<SocialEngagementInsight> SocialEngagementInsights => Set<SocialEngagementInsight>();
 }

@@ -1,0 +1,285 @@
+{
+  "modelVersion": "ols_explanatory_v1",
+  "computedAt": "2026-04-09T05:24:09Z",
+  "caveats": "Coefficients are associational (observational posts), not proof of causation. Interpret as conditional associations after controlling for other modeled fields.",
+  "olsR2": 0.2644177833231117,
+  "olsAdjR2": 0.228257208635244,
+  "factors": [
+    {
+      "factorKey": "has_call_to_action",
+      "displayName": "has call to action",
+      "coefficient": 0.015534637002384942,
+      "pValue": 5.368724529045256e-06,
+      "rankOrder": 1
+    },
+    {
+      "factorKey": "platform_Instagram",
+      "displayName": "platform Instagram",
+      "coefficient": 0.013689030879023309,
+      "pValue": 0.011992190785312575,
+      "rankOrder": 2
+    },
+    {
+      "factorKey": "platform_YouTube",
+      "displayName": "platform YouTube",
+      "coefficient": 0.013220080523783612,
+      "pValue": 0.0805896087065917,
+      "rankOrder": 3
+    },
+    {
+      "factorKey": "platform_LinkedIn",
+      "displayName": "platform LinkedIn",
+      "coefficient": 0.01276552668634275,
+      "pValue": 0.06025579667113904,
+      "rankOrder": 4
+    },
+    {
+      "factorKey": "call_to_action_type_ShareStory",
+      "displayName": "call to action type ShareStory",
+      "coefficient": 0.012239226485093789,
+      "pValue": 0.002761899514118828,
+      "rankOrder": 5
+    },
+    {
+      "factorKey": "is_boosted",
+      "displayName": "is boosted",
+      "coefficient": -0.010506828291516456,
+      "pValue": 0.029527487268173738,
+      "rankOrder": 6
+    },
+    {
+      "factorKey": "content_topic_CampaignLaunch",
+      "displayName": "content topic CampaignLaunch",
+      "coefficient": 0.010501176803052625,
+      "pValue": 0.1834900766969805,
+      "rankOrder": 7
+    },
+    {
+      "factorKey": "content_topic_Gratitude",
+      "displayName": "content topic Gratitude",
+      "coefficient": -0.008937866414758135,
+      "pValue": 0.243224763092832,
+      "rankOrder": 8
+    },
+    {
+      "factorKey": "platform_Twitter",
+      "displayName": "platform Twitter",
+      "coefficient": 0.008703374550206226,
+      "pValue": 0.15528447091523803,
+      "rankOrder": 9
+    },
+    {
+      "factorKey": "platform_TikTok",
+      "displayName": "platform TikTok",
+      "coefficient": 0.00862900873600438,
+      "pValue": 0.2725704653162473,
+      "rankOrder": 10
+    },
+    {
+      "factorKey": "day_of_week_Tuesday",
+      "displayName": "day of week Tuesday",
+      "coefficient": -0.007817066164429379,
+      "pValue": 0.20799684466604584,
+      "rankOrder": 11
+    },
+    {
+      "factorKey": "call_to_action_type_SignUp",
+      "displayName": "call to action type SignUp",
+      "coefficient": 0.006370063454196467,
+      "pValue": 0.11868777065676986,
+      "rankOrder": 12
+    },
+    {
+      "factorKey": "post_type_FundraisingAppeal",
+      "displayName": "post type FundraisingAppeal",
+      "coefficient": 0.00630969579992785,
+      "pValue": 0.3416165138969463,
+      "rankOrder": 13
+    },
+    {
+      "factorKey": "day_of_week_Thursday",
+      "displayName": "day of week Thursday",
+      "coefficient": -0.005795226962459787,
+      "pValue": 0.3688766260060122,
+      "rankOrder": 14
+    },
+    {
+      "factorKey": "media_type_Reel",
+      "displayName": "media type Reel",
+      "coefficient": -0.005530425397262093,
+      "pValue": 0.47612761908455403,
+      "rankOrder": 15
+    },
+    {
+      "factorKey": "content_topic_Health",
+      "displayName": "content topic Health",
+      "coefficient": 0.005419377895480025,
+      "pValue": 0.47493711687975615,
+      "rankOrder": 16
+    },
+    {
+      "factorKey": "day_of_week_Monday",
+      "displayName": "day of week Monday",
+      "coefficient": -0.005340133319510367,
+      "pValue": 0.41486470603477377,
+      "rankOrder": 17
+    },
+    {
+      "factorKey": "content_topic_Education",
+      "displayName": "content topic Education",
+      "coefficient": -0.004297094817092879,
+      "pValue": 0.542255136731072,
+      "rankOrder": 18
+    },
+    {
+      "factorKey": "day_of_week_Wednesday",
+      "displayName": "day of week Wednesday",
+      "coefficient": -0.004193386096751009,
+      "pValue": 0.5156407414589186,
+      "rankOrder": 19
+    },
+    {
+      "factorKey": "post_hour",
+      "displayName": "post hour",
+      "coefficient": 0.003963567364918637,
+      "pValue": 3.165557492097982e-41,
+      "rankOrder": 20
+    },
+    {
+      "factorKey": "post_type_EducationalContent",
+      "displayName": "post type EducationalContent",
+      "coefficient": -0.0033190285358005167,
+      "pValue": 0.6198999349533857,
+      "rankOrder": 21
+    },
+    {
+      "factorKey": "media_type_Text",
+      "displayName": "media type Text",
+      "coefficient": -0.00306250627618182,
+      "pValue": 0.6555333801943551,
+      "rankOrder": 22
+    },
+    {
+      "factorKey": "media_type_Video",
+      "displayName": "media type Video",
+      "coefficient": -0.00268083085979495,
+      "pValue": 0.6808890946478054,
+      "rankOrder": 23
+    },
+    {
+      "factorKey": "content_topic_DonorImpact",
+      "displayName": "content topic DonorImpact",
+      "coefficient": 0.002421530954946252,
+      "pValue": 0.7352527050172369,
+      "rankOrder": 24
+    },
+    {
+      "factorKey": "num_hashtags",
+      "displayName": "num hashtags",
+      "coefficient": -0.0020430746858416176,
+      "pValue": 0.1800088635573071,
+      "rankOrder": 25
+    },
+    {
+      "factorKey": "post_type_ImpactStory",
+      "displayName": "post type ImpactStory",
+      "coefficient": 0.0019487490110521727,
+      "pValue": 0.7471751774383343,
+      "rankOrder": 26
+    },
+    {
+      "factorKey": "content_topic_EventRecap",
+      "displayName": "content topic EventRecap",
+      "coefficient": 0.0019140237846698542,
+      "pValue": 0.8395870089556223,
+      "rankOrder": 27
+    },
+    {
+      "factorKey": "call_to_action_type_DonateNow",
+      "displayName": "call to action type DonateNow",
+      "coefficient": -0.0018712533351310815,
+      "pValue": 0.6413992440634192,
+      "rankOrder": 28
+    },
+    {
+      "factorKey": "platform_WhatsApp",
+      "displayName": "platform WhatsApp",
+      "coefficient": -0.0018545475674190542,
+      "pValue": 0.7968468326670073,
+      "rankOrder": 29
+    },
+    {
+      "factorKey": "post_type_EventPromotion",
+      "displayName": "post type EventPromotion",
+      "coefficient": -0.0013751637872038034,
+      "pValue": 0.8340171753616739,
+      "rankOrder": 30
+    },
+    {
+      "factorKey": "day_of_week_Saturday",
+      "displayName": "day of week Saturday",
+      "coefficient": -0.0012531792533055663,
+      "pValue": 0.8457691019428502,
+      "rankOrder": 31
+    },
+    {
+      "factorKey": "call_to_action_type_LearnMore",
+      "displayName": "call to action type LearnMore",
+      "coefficient": -0.0012033996017746344,
+      "pValue": 0.7588869647820055,
+      "rankOrder": 32
+    },
+    {
+      "factorKey": "content_topic_SafehouseLife",
+      "displayName": "content topic SafehouseLife",
+      "coefficient": -0.0007667041768587377,
+      "pValue": 0.9132603124294575,
+      "rankOrder": 33
+    },
+    {
+      "factorKey": "content_topic_Reintegration",
+      "displayName": "content topic Reintegration",
+      "coefficient": -0.0006897477982988585,
+      "pValue": 0.9301353824041549,
+      "rankOrder": 34
+    },
+    {
+      "factorKey": "day_of_week_Sunday",
+      "displayName": "day of week Sunday",
+      "coefficient": 0.0003177335961282489,
+      "pValue": 0.9618897241144096,
+      "rankOrder": 35
+    },
+    {
+      "factorKey": "post_type_ThankYou",
+      "displayName": "post type ThankYou",
+      "coefficient": -0.0002573902088140812,
+      "pValue": 0.9730665081522027,
+      "rankOrder": 36
+    },
+    {
+      "factorKey": "media_type_Photo",
+      "displayName": "media type Photo",
+      "coefficient": 0.000251320065415438,
+      "pValue": 0.9670955249557465,
+      "rankOrder": 37
+    },
+    {
+      "factorKey": "mentions_count",
+      "displayName": "mentions count",
+      "coefficient": -0.00014727031202980707,
+      "pValue": 0.9428022472327587,
+      "rankOrder": 38
+    },
+    {
+      "factorKey": "caption_length",
+      "displayName": "caption length",
+      "coefficient": 1.2851662993797506e-05,
+      "pValue": 0.8716327511740258,
+      "rankOrder": 39
+    }
+  ],
+  "predictiveMaeHoldout": 0.027354873121648006,
+  "predictiveR2Holdout": 0.4946178719641602,
+  "predictiveRmseHoldout": 0.03686453186206433
+}

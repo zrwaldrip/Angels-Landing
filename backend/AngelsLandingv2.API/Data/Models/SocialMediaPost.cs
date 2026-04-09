@@ -44,4 +44,10 @@ public class SocialMediaPost
     public double? AvgViewDurationSeconds { get; set; }
     public int? SubscriberCountAtPost { get; set; }
     public int? Forwards { get; set; }
+
+    /// <summary>Batch ML prediction from social_engagement_predictor.pkl (GitHub scorer).</summary>
+    public double? PredictedEngagementRate { get; set; }
+
+    /// <summary>ISO timestamp when PredictedEngagementRate was last written.</summary>
+    public string? EngagementScoredAt { get; set; }
 }
