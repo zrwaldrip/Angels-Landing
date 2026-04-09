@@ -4,6 +4,7 @@ using AngelsLandingv2.API.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace AngelsLandingv2.API.Controllers;
@@ -12,7 +13,8 @@ namespace AngelsLandingv2.API.Controllers;
 [Route("api/donations")]
 public class DonationsController(
     LighthouseDbContext db,
-    IForexRateService forexRateService) : ControllerBase
+    IForexRateService forexRateService,
+    ILogger<DonationsController> logger) : ControllerBase
 {
     private static readonly HashSet<string> AllowedDonationTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -93,6 +95,9 @@ public class DonationsController(
     [Authorize]
     public async Task<IActionResult> CreateMine([FromBody] MyDonationCreateRequest request)
     {
+        if (request is null)
+            return BadRequest(new { message = "Request body is required." });
+
         if (!request.Amount.HasValue || request.Amount <= 0)
             return BadRequest(new { message = "Donation amount must be greater than zero." });
 
@@ -125,19 +130,43 @@ public class DonationsController(
                 displayName = atIndex > 0 ? email[..atIndex] : email;
             }
 
+            var firstName = displayName;
+            var lastName = "Supporter";
+            var nameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (nameParts.Length > 1)
+            {
+                firstName = nameParts[0];
+                lastName = string.Join(' ', nameParts.Skip(1));
+            }
+
             var newSupporter = new Supporter
             {
                 SupporterType = "Individual",
                 DisplayName = displayName,
+                FirstName = string.IsNullOrWhiteSpace(firstName) ? "Donor" : firstName,
+                LastName = string.IsNullOrWhiteSpace(lastName) ? "Supporter" : lastName,
+                Region = "Unknown",
+                Country = "Philippines",
                 Email = email,
                 Status = "Active",
                 CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd"),
                 AcquisitionChannel = "Direct"
             };
 
-            db.Supporters.Add(newSupporter);
-            await db.SaveChangesAsync();
-            supporterId = newSupporter.SupporterId;
+            try
+            {
+                db.Supporters.Add(newSupporter);
+                await db.SaveChangesAsync();
+                supporterId = newSupporter.SupporterId;
+            }
+            catch (DbUpdateException ex)
+            {
+                logger.LogError(ex, "Failed creating supporter record for email {Email}", email);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = "Unable to create supporter profile for this account. Please contact support."
+                });
+            }
         }
 
         var draft = new Donation
@@ -159,8 +188,19 @@ public class DonationsController(
         if (normalizeResult.error is not null) return normalizeResult.error;
         var donation = normalizeResult.donation!;
 
-        db.Donations.Add(donation);
-        await db.SaveChangesAsync();
+        try
+        {
+            db.Donations.Add(donation);
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogError(ex, "Failed creating donation for supporterId {SupporterId}", supporterId.Value);
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                message = "Unable to save donation at this time. Please try again."
+            });
+        }
         return Ok(donation);
     }
 
@@ -283,6 +323,11 @@ public class DonationsController(
                 catch (InvalidOperationException ex)
                 {
                     return (null, StatusCode(StatusCodes.Status502BadGateway, new { message = $"Unable to fetch live forex rate: {ex.Message}" }));
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Unexpected forex conversion failure for donation.");
+                    return (null, StatusCode(StatusCodes.Status502BadGateway, new { message = "Unable to fetch live forex rate right now. Please try again." }));
                 }
             }
 
