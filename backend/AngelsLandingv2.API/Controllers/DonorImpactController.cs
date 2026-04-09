@@ -20,6 +20,15 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
         "Reunified"
     ];
 
+    private static string NormalizeBranding(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return value ?? string.Empty;
+
+        return value
+            .Replace("Lighthouse Sanctuary", "Angels' Landing", StringComparison.OrdinalIgnoreCase)
+            .Replace("Lighthouse", "Angels' Landing", StringComparison.OrdinalIgnoreCase);
+    }
+
     [HttpGet("summary")]
     [AllowAnonymous]
     public async Task<IActionResult> GetSummary()
@@ -93,14 +102,33 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             .FirstOrDefaultAsync();
 
         var currentYear = DateTime.UtcNow.Year;
-        var yearlyContribution = allDonations
-            .Where(d => DateTime.TryParse(d.DonationDate, out var parsedDate) && parsedDate.Year == currentYear)
-            .Sum(d => d.EstimatedValue ?? d.Amount ?? 0);
+        var currentYearDonations = allDonations
+            .Select(d =>
+            {
+                var hasDate = DateTime.TryParse(d.DonationDate, out var parsedDate);
+                return new
+                {
+                    donation = d,
+                    hasDate,
+                    parsedDate
+                };
+            })
+            .Where(row => row.hasDate && row.parsedDate.Year == currentYear)
+            .ToList();
 
-        const double CounselingMonthEquivalentPhp = 2500;
-        var counselingMonthsEquivalent = CounselingMonthEquivalentPhp == 0
+        var yearlyContribution = currentYearDonations
+            .Sum(row => row.donation.EstimatedValue ?? row.donation.Amount ?? 0);
+
+        var monthlyContributionTotals = currentYearDonations
+            .GroupBy(row => new { row.parsedDate.Year, row.parsedDate.Month })
+            .Select(group => group.Sum(row => row.donation.EstimatedValue ?? row.donation.Amount ?? 0))
+            .Where(total => total > 0)
+            .ToList();
+
+        var averageMonthlyContribution = monthlyContributionTotals.Any() ? monthlyContributionTotals.Average() : 0;
+        var counselingMonthsEquivalent = averageMonthlyContribution <= 0
             ? 0
-            : yearlyContribution / CounselingMonthEquivalentPhp;
+            : yearlyContribution / averageMonthlyContribution;
 
         var donorCampaigns = allDonations
             .Where(d => !string.IsNullOrWhiteSpace(d.CampaignName))
@@ -140,6 +168,68 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             })
             .ToList();
 
+        var recurringSharePercent = totalGivingLifetime <= 0
+            ? 0
+            : recurringValue / totalGivingLifetime * 100;
+
+        var topDonationMix = donationMix.FirstOrDefault();
+        var topCampaignOutcome = campaignOutcomes
+            .OrderByDescending(campaign => campaign.donorValue)
+            .FirstOrDefault();
+
+        var topInsights = new List<string>();
+        if (topDonationMix is not null)
+        {
+            topInsights.Add(
+                $"Largest contribution type is {topDonationMix.donationType} at {topDonationMix.percent:N1}% of all donation value.");
+        }
+
+        if (recurringCount > 0)
+        {
+            topInsights.Add(
+                $"Recurring donations represent {recurringSharePercent:N1}% of lifetime value across {recurringCount} recurring gifts.");
+        }
+        else
+        {
+            topInsights.Add("No recurring donations are currently recorded.");
+        }
+
+        topInsights.Add(
+            $"Current reintegration success is {reintegrationRate:N1}% with {healthGoalsMetRate:N1}% meeting tracked health goals.");
+
+        if (topCampaignOutcome is not null)
+        {
+            topInsights.Add(
+                $"{topCampaignOutcome.campaignName} is the strongest campaign contributor at PHP {topCampaignOutcome.donorValue:N2}.");
+        }
+
+        if (topInsights.Count == 0)
+        {
+            topInsights.Add("Additional insights will appear once donation and resident outcome records are available.");
+        }
+
+        var isPipelineBacked = !string.IsNullOrWhiteSpace(publishedSnapshot?.metricPayloadJson);
+        var explanatoryPlaceholder = isPipelineBacked
+            ? "Insights include data from the latest published impact snapshot payload."
+            : "Insights are derived from live donation, resident, education, and health records.";
+
+        var dataCoverageText =
+            $"Data coverage: {allDonations.Count} donations, {activeResidents} active residents, {campaignOutcomes.Count} campaign outcome rows.";
+
+        var monthEquivalentAssumption = averageMonthlyContribution <= 0
+            ? $"No monthly baseline is available for {currentYear} yet."
+            : $"1 month equivalent = average monthly donation volume in {currentYear} (PHP {averageMonthlyContribution:N2}).";
+
+        var normalizedPublishedSnapshot = publishedSnapshot is null
+            ? null
+            : new
+            {
+                snapshotDate = publishedSnapshot.snapshotDate,
+                headline = NormalizeBranding(publishedSnapshot.headline),
+                summaryText = NormalizeBranding(publishedSnapshot.summaryText),
+                metricPayloadJson = publishedSnapshot.metricPayloadJson
+            };
+
         return Ok(new
         {
             personalContributionSummary = new
@@ -158,28 +248,24 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
                 reintegrationSuccessRate = reintegrationRate,
                 educationalProgressAveragePercent = avgEducationProgress,
                 healthWellbeingGoalsMetPercent = healthGoalsMetRate,
-                latestPublishedSnapshot = publishedSnapshot
+                latestPublishedSnapshot = normalizedPublishedSnapshot
             },
             connection = new
             {
                 donorContributionThisYear = yearlyContribution,
                 counselingMonthsEquivalent,
-                assumption = $"1 counseling month equivalent = PHP {CounselingMonthEquivalentPhp:N0}",
+                assumption = monthEquivalentAssumption,
                 campaignOutcomes
             },
             explanatoryModel = new
             {
-                topInsights = new[]
-                {
-                    "Consistent counseling participation is typically among the strongest predictors of successful reintegration.",
-                    "Education progress and stable wellbeing scores together correlate with better transition outcomes."
-                },
-                isPipelineBacked = false,
-                placeholder = "Reserved for IS 455 explanatory model pipeline outputs."
+                topInsights,
+                isPipelineBacked,
+                placeholder = explanatoryPlaceholder
             },
             reportPlaceholders = new
             {
-                pipeline455 = "Reserved for future pipeline-driven insights and score explanations."
+                pipeline455 = dataCoverageText
             }
         });
     }

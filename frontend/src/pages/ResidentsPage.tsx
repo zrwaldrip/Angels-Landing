@@ -12,7 +12,7 @@ import {
   type Safehouse,
 } from '../lib/lighthouseAPI';
 
-const SEX_OPTIONS = ['Female'] as const;
+const SEX_OPTIONS = ['Female', 'Male', 'F', 'M'] as const;
 const CASE_STATUS_OPTIONS = ['Active', 'On Hold', 'Reintegrated', 'Transferred', 'Closed'] as const;
 const CASE_CATEGORY_OPTIONS = [
   'Abandoned',
@@ -132,6 +132,13 @@ function ResidentsPage() {
     setShowModal(true);
   }
 
+  function buildSelectOptions(staticOptions: readonly string[], dynamicOptions: string[] = [], currentValue?: string) {
+    const merged = new Set<string>(staticOptions.filter(Boolean));
+    dynamicOptions.filter(Boolean).forEach((option) => merged.add(option));
+    if (currentValue && currentValue.trim()) merged.add(currentValue.trim());
+    return Array.from(merged);
+  }
+
   function safehouseLabel(id?: number) {
     if (id == null) return 'Unassigned';
     const safehouse = safehouses.find((item) => item.safehouseId === id);
@@ -219,6 +226,9 @@ function ResidentsPage() {
   }
 
   const totalPages = Math.ceil(total / pageSize);
+  const sexOptions = buildSelectOptions(SEX_OPTIONS, residents.map((resident) => String(resident.sex ?? '')), String(editingResident?.sex ?? ''));
+  const caseCategoryOptions = buildSelectOptions(CASE_CATEGORY_OPTIONS, caseCategories, String(editingResident?.caseCategory ?? ''));
+  const birthStatusOptions = buildSelectOptions(BIRTH_STATUS_OPTIONS, residents.map((resident) => String(resident.birthStatus ?? '')), String(editingResident?.birthStatus ?? ''));
 
   return (
     <div className="container mt-4">
@@ -399,7 +409,7 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, caseCategory: e.target.value } : prev)}
                     >
                       <option value="">Select category...</option>
-                      {CASE_CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {caseCategoryOptions.map((category) => <option key={category} value={category}>{category}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -410,7 +420,7 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, sex: e.target.value } : prev)}
                     >
                       <option value="">Select sex...</option>
-                      {SEX_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {sexOptions.map((sexOption) => <option key={sexOption} value={sexOption}>{sexOption}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -429,7 +439,7 @@ function ResidentsPage() {
                       onChange={(e) => setEditingResident(prev => prev ? { ...prev, birthStatus: e.target.value } : prev)}
                     >
                       <option value="">Select birth status...</option>
-                      {BIRTH_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+                      {birthStatusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
                     </select>
                   </div>
                   <div className="col-12">

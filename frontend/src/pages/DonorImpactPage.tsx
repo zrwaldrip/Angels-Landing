@@ -95,16 +95,20 @@ function DonorImpactPage() {
 							<div className="row g-3">
 								<div className="col-md-4">
 									<div className="border rounded p-3 h-100">
-										<div className="text-muted small">Total Donations (Lifetime)</div>
-										<div className="h4 mb-0">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
+										<div className="text-muted small text-center">Total Donations (Lifetime)</div>
+										<div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ minHeight: "8.25rem", paddingTop: "0.75rem" }}>
+											<div className="display-5 fw-semibold mb-0">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
+										</div>
 									</div>
 								</div>
 								<div className="col-md-4">
 									<div className="border rounded p-3 h-100">
-										<div className="text-muted small">Recurring Donations</div>
-										<div className="h4 mb-0">{summary.personalContributionSummary.recurringStatus.recurringDonationCount}</div>
-										<div className="small text-muted">
-											{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} estimated value
+										<div className="text-muted small text-center">Recurring Donations</div>
+										<div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ minHeight: "8.25rem", paddingTop: "0.75rem" }}>
+											<div className="display-6 fw-semibold mb-1">{summary.personalContributionSummary.recurringStatus.recurringDonationCount}</div>
+											<div className="small text-muted">
+												{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} estimated value
+											</div>
 										</div>
 									</div>
 								</div>
@@ -157,15 +161,6 @@ function DonorImpactPage() {
 									</div>
 								</div>
 							</div>
-							{summary.organizationalImpact.latestPublishedSnapshot ? (
-								<div className="alert alert-light border mt-3 mb-0">
-									<div className="fw-semibold">
-										{summary.organizationalImpact.latestPublishedSnapshot.headline ?? "Latest Published Snapshot"}
-									</div>
-									<div className="small text-muted">{summary.organizationalImpact.latestPublishedSnapshot.snapshotDate}</div>
-									<div>{summary.organizationalImpact.latestPublishedSnapshot.summaryText}</div>
-								</div>
-							) : null}
 						</div>
 					</div>
 
