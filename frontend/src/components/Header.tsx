@@ -56,6 +56,7 @@ function Header() {
 			"admin-campaign-analysis",
 			"admin-donations",
 			"admin-reports",
+			"admin-social-engagement-predictor",
 			"admin-users"
 		]);
 
@@ -182,6 +183,14 @@ function Header() {
 										</NavLink>
 										<NavLink className={`app-menu-item ${getHighlightClass("admin-reports")}`.trim()} data-tutorial-key="admin-reports" to="/admin-reports" onClick={closeMobileMenu}>
 											Reports &amp; Analytics
+										</NavLink>
+										<NavLink
+											className={`app-menu-item ${getHighlightClass("admin-social-engagement-predictor")}`.trim()}
+											data-tutorial-key="admin-social-engagement-predictor"
+											to="/social-engagement-predictor"
+											onClick={closeMobileMenu}
+										>
+											Social Engagement Predictor
 										</NavLink>
 										<NavLink className={`app-menu-item ${getHighlightClass("admin-users")}`.trim()} data-tutorial-key="admin-users" to="/users" onClick={closeMobileMenu}>
 											Users

@@ -34,6 +34,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
 import CampaignAnalysisPage from "./pages/CampaignAnalysisPage";
 import HomeVisitationCaseConferencePage from "./pages/HomeVisitationCaseConferencePage";
+import SocialEngagementPredictorPage from "./pages/SocialEngagementPredictorPage";
 
 function AppLayout() {
 	const location = useLocation();
@@ -318,6 +319,16 @@ function AppLayout() {
 							<ProtectedRoute>
 								<RoleRoute allowedRoles={["Admin"]}>
 									<AdminReportsPage />
+								</RoleRoute>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/social-engagement-predictor"
+						element={
+							<ProtectedRoute>
+								<RoleRoute allowedRoles={["Admin"]}>
+									<SocialEngagementPredictorPage />
 								</RoleRoute>
 							</ProtectedRoute>
 						}
