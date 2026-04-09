@@ -40,21 +40,43 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
         var avgHealthScore = healthRecords.Count == 0 ? 0 : healthRecords.Average(r => r.GeneralHealthScore ?? 0);
         var healthImprovementRate = healthRecords.Count == 0 ? 0 : healthRecords.Count(r => (r.GeneralHealthScore ?? 0) >= 3) * 100.0 / healthRecords.Count;
 
-        var latestMetricBySafehouse = safehouseMetrics
+        var residentToSafehouse = residents
+            .Where(r => r.ResidentId != 0 && r.SafehouseId.HasValue)
+            .ToDictionary(r => r.ResidentId, r => r.SafehouseId!.Value);
+
+        var educationFallbackBySafehouse = educationRecords
+            .Where(record => record.ResidentId.HasValue
+                             && residentToSafehouse.ContainsKey(record.ResidentId.Value)
+                             && record.ProgressPercent.HasValue)
+            .GroupBy(record => residentToSafehouse[record.ResidentId!.Value])
+            .ToDictionary(group => group.Key, group => group.Average(record => record.ProgressPercent ?? 0));
+
+        var healthFallbackBySafehouse = healthRecords
+            .Where(record => record.ResidentId.HasValue
+                             && residentToSafehouse.ContainsKey(record.ResidentId.Value)
+                             && record.GeneralHealthScore.HasValue)
+            .GroupBy(record => residentToSafehouse[record.ResidentId!.Value])
+            .ToDictionary(group => group.Key, group => group.Average(record => record.GeneralHealthScore ?? 0));
+
+        var metricsBySafehouse = safehouseMetrics
             .Where(m => m.SafehouseId.HasValue)
             .GroupBy(m => m.SafehouseId!.Value)
-            .Select(group =>
-                group
-                .OrderByDescending(m => m.MonthEnd)
-                .ThenByDescending(m => m.MonthStart)
-                .First())
-            .ToDictionary(m => m.SafehouseId!.Value);
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderByDescending(m => m.MonthEnd)
+                    .ThenByDescending(m => m.MonthStart)
+                    .ToList());
 
         var safehouseComparison = safehouses
             .Select(safehouse =>
             {
-                latestMetricBySafehouse.TryGetValue(safehouse.SafehouseId, out var metric);
-                var occupancy = safehouse.CurrentOccupancy ?? metric?.ActiveResidents ?? 0;
+                metricsBySafehouse.TryGetValue(safehouse.SafehouseId, out var metricRows);
+                var latestMetric = metricRows?.FirstOrDefault();
+                var latestEducationMetric = metricRows?.FirstOrDefault(m => m.AvgEducationProgress.HasValue);
+                var latestHealthMetric = metricRows?.FirstOrDefault(m => m.AvgHealthScore.HasValue);
+
+                var occupancy = safehouse.CurrentOccupancy ?? latestMetric?.ActiveResidents ?? 0;
                 var capacity = safehouse.CapacityGirls ?? 0;
                 var occupancyRate = capacity > 0 ? occupancy * 100.0 / capacity : 0;
                 return new
@@ -62,20 +84,43 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
                     safehouseId = safehouse.SafehouseId,
                     name = safehouse.Name ?? safehouse.SafehouseCode ?? $"Safehouse #{safehouse.SafehouseId}",
                     occupancyRate,
-                    educationProgress = metric?.AvgEducationProgress,
-                    healthScore = metric?.AvgHealthScore
+                    educationProgress = latestEducationMetric?.AvgEducationProgress
+                        ?? (educationFallbackBySafehouse.TryGetValue(safehouse.SafehouseId, out var educationFallback)
+                            ? educationFallback
+                            : null),
+                    healthScore = latestHealthMetric?.AvgHealthScore
+                        ?? (healthFallbackBySafehouse.TryGetValue(safehouse.SafehouseId, out var healthFallback)
+                            ? healthFallback
+                            : null)
                 };
             })
             .OrderByDescending(row => row.occupancyRate)
             .ToList();
+
+        static bool IsSuccessfulReintegrationStatus(string status)
+        {
+            var normalized = status.Trim().ToLowerInvariant();
+            if (normalized.Length == 0) return false;
+
+            // Match both seeded enums (e.g., "Completed") and real-world free-text variants.
+            return normalized.Contains("reintegrat")
+                   || normalized.Contains("reunif")
+                   || normalized.Contains("with family")
+                   || normalized.Contains("independent")
+                   || normalized.Contains("successful")
+                   || normalized.Contains("graduat")
+                   || normalized.Contains("complete")
+                   || normalized.Contains("completed")
+                   || normalized.Contains("done")
+                   || normalized.Contains("closed");
+        }
 
         var statuses = residents
             .Select(r => r.ReintegrationStatus?.Trim())
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Cast<string>()
             .ToList();
-        var successStatuses = new[] { "reintegrated", "successful", "independent living", "with family", "reunified" };
-        var successful = statuses.Count(status => successStatuses.Contains(status.ToLowerInvariant()));
+        var successful = statuses.Count(IsSuccessfulReintegrationStatus);
         var reintegrationSuccessRate = statuses.Count == 0 ? 0 : successful * 100.0 / statuses.Count;
 
         var caringKeywords = new[] { "care", "shelter", "nutrition", "food", "home visitation" };
