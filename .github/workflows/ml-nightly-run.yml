@@ -1,8 +1,8 @@
-name: Nightly ML Pipeline Scorer
+name: Weekly ML Pipeline Scorer
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Every day at 2:00 AM UTC
+    - cron: '0 2 * * 1' # Weekly on Monday at 2:00 AM UTC
   workflow_dispatch: # Allow manual trigger for testing
 
 jobs:
