@@ -7,6 +7,14 @@ public class LighthouseDbContext : DbContext
 {
     public LighthouseDbContext(DbContextOptions<LighthouseDbContext> options) : base(options) { }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Donation>().HasIndex(d => d.OwnerEmail);
+        modelBuilder.Entity<Donation>().HasIndex(d => d.OwnerSubject);
+    }
+
     public DbSet<Resident> Residents => Set<Resident>();
     public DbSet<Safehouse> Safehouses => Set<Safehouse>();
     public DbSet<SafehouseMonthlyMetric> SafehouseMonthlyMetrics => Set<SafehouseMonthlyMetric>();
