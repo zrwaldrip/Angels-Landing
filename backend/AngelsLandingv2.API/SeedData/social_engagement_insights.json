@@ -1,6 +1,6 @@
 {
   "modelVersion": "ols_explanatory_v1",
-  "computedAt": "2026-04-09T05:24:09Z",
+  "computedAt": "2026-04-09T17:41:32Z",
   "caveats": "Coefficients are associational (observational posts), not proof of causation. Interpret as conditional associations after controlling for other modeled fields.",
   "olsR2": 0.2644177833231117,
   "olsAdjR2": 0.228257208635244,
@@ -278,8 +278,5 @@
       "pValue": 0.8716327511740258,
       "rankOrder": 39
     }
-  ],
-  "predictiveMaeHoldout": 0.022073479251340563,
-  "predictiveR2Holdout": 0.6710404154984295,
-  "predictiveRmseHoldout": 0.029741992210844052
+  ]
 }
