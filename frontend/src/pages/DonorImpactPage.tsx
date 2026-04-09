@@ -62,10 +62,10 @@ function DonorImpactPage() {
 						<div className="impact-hero-overlay" />
 						<div className="impact-hero-content">
 							<div className="impact-hero-kicker">Angels&apos; Landing Impact</div>
-							<h2 className="impact-hero-title">From crisis to confidence: your support helps survivors rebuild their future.</h2>
+							<h2 className="impact-hero-title">Your support keeps girls in the Philippines safe from sexual abuse and housed in long-term safehouses.</h2>
 							<p className="impact-hero-copy mb-0">
-								Every gift becomes safety, therapy, education, and practical reintegration support. This is the story of how your support
-								becomes measurable progress for real people.
+								Every gift strengthens sanctuary operations, trauma recovery, and long-term reintegration for girls who have survived
+								sexual abuse. This is direct intervention, measured in real outcomes and protected lives.
 							</p>
 							<div className="impact-hero-actions mt-3">
 								{isAuthenticated ? (
@@ -84,7 +84,7 @@ function DonorImpactPage() {
 					<section className="impact-story-intro mb-3">
 						<h3 className="impact-section-title mb-1">1) What You Have Powered</h3>
 						<p className="impact-section-copy mb-0">
-							Your contributions create a stable foundation for care teams to respond quickly and consistently.
+							Your contributions fund secure shelter, trained staff, and immediate protection for girls facing abuse-related danger.
 						</p>
 					</section>
 
@@ -93,7 +93,7 @@ function DonorImpactPage() {
 							<div className="impact-panel impact-panel-primary h-100">
 								<p className="impact-panel-label mb-2">Total Donations (Lifetime)</p>
 								<div className="impact-panel-value">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
-								<p className="impact-panel-note mb-0">Directly powering resident care, operations, and reintegration support.</p>
+								<p className="impact-panel-note mb-0">Directly powering safehouse protection, survivor care, and reintegration services.</p>
 							</div>
 						</div>
 						<div className="col-lg-4">
@@ -101,7 +101,7 @@ function DonorImpactPage() {
 								<p className="impact-panel-label mb-2">Recurring Donations</p>
 								<div className="impact-panel-value impact-panel-value-sm">{summary.personalContributionSummary.recurringStatus.recurringDonationCount}</div>
 								<p className="impact-panel-note mb-0">
-									{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} in recurring estimated value.
+									{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} in sustained support for safehouse operations.
 								</p>
 							</div>
 						</div>
@@ -110,7 +110,7 @@ function DonorImpactPage() {
 					<section className="impact-story-intro mb-3">
 						<h3 className="impact-section-title mb-1">2) How Support Turns Into Services</h3>
 						<p className="impact-section-copy mb-0">
-							Funding does not sit still. It immediately translates into counseling capacity, daily essentials, and operational continuity.
+							Funding moves urgently into safehouse staffing, trauma counseling, daily essentials, and coordinated survivor protection.
 						</p>
 					</section>
 
@@ -120,10 +120,10 @@ function DonorImpactPage() {
 								<div className="card-body">
 									<h3 className="h6 mb-3">How Contributions Become Care</h3>
 									<p className="mb-2">
-										This year, contributions total <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong>.
+										This year, contributions total <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong> for direct safehouse intervention.
 									</p>
 									<p className="mb-2">
-										Equivalent support delivered: <strong>{summary.connection.counselingMonthsEquivalent.toFixed(2)}</strong> counseling-months.
+										Equivalent counseling support delivered: <strong>{summary.connection.counselingMonthsEquivalent.toFixed(2)}</strong> counseling-months for survivors.
 									</p>
 									<p className="small text-muted mb-0">{summary.connection.assumption}</p>
 								</div>
@@ -154,7 +154,7 @@ function DonorImpactPage() {
 					<section className="impact-story-intro mb-3">
 						<h3 className="impact-section-title mb-1">3) Results For Residents</h3>
 						<p className="impact-section-copy mb-0">
-							These outcomes reflect healing, stability, and momentum toward independent life.
+							These outcomes show how girls in our safehouses move from crisis and trauma toward stability, healing, and independence.
 						</p>
 					</section>
 
@@ -193,7 +193,7 @@ function DonorImpactPage() {
 					<section className="impact-story-intro mb-3">
 						<h3 className="impact-section-title mb-1">4) Where Momentum Is Building</h3>
 						<p className="impact-section-copy mb-0">
-							Campaign progress and model insights highlight where your next gift can make the strongest difference.
+							Campaign trends and program insights show where your next gift can protect more girls from sexual abuse and expand safehouse capacity.
 						</p>
 					</section>
 

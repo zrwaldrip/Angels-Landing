@@ -18,8 +18,8 @@ function LandingPage() {
           <p className="landing-eyebrow">Trusted nonprofit operations</p>
           <h1>Safety, healing, and measurable outcomes.</h1>
           <p className="landing-subtitle">
-            Angels&apos; Landing delivers secure care and recovery support for vulnerable girls with clear, data-backed
-            reporting that keeps every donor impact visible.
+            Angels&apos; Landing provides secure, long-term safehouses for girls in the Philippines, with trauma-informed
+            care and transparent reporting that keeps every donor impact visible.
           </p>
           <div className="landing-cta-group">
             {isAuthenticated ? (
@@ -39,15 +39,15 @@ function LandingPage() {
         <section className="landing-pillars" aria-label="Mission pillars">
           <article className="landing-card">
             <h3>Protect</h3>
-            <p>Deliver safe, structured housing and responsive case management for girls in crisis.</p>
+            <p>Provide safe, stable housing and responsive case management for girls recovering from sexual abuse.</p>
           </article>
           <article className="landing-card">
             <h3>Restore</h3>
-            <p>Coordinate counseling, education, and health plans with progress tracked in one system.</p>
+            <p>Coordinate counseling, education, and health support to help each resident rebuild safely.</p>
           </article>
           <article className="landing-card">
             <h3>Measure Impact</h3>
-            <p>Connect every contribution to tangible outcomes through transparent reporting and insights.</p>
+            <p>Connect each contribution to tangible safehouse outcomes through clear, transparent reporting.</p>
           </article>
         </section>
       </main>
