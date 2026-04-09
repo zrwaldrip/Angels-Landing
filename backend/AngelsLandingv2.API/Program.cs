@@ -268,6 +268,8 @@ using (var scope = app.Services.CreateScope())
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "RecurringRate", "REAL NULL");
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "TopChannel", "TEXT NULL");
         await EnsureSqliteColumnExistsAsync(lighthouseDb, "Campaigns", "MlrSignificant", "INTEGER NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialMediaPosts", "PredictedEngagementRate", "REAL NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialMediaPosts", "EngagementScoredAt", "TEXT NULL");
 
         // Create FeatureImportances table if it doesn't exist yet
         await lighthouseDb.Database.ExecuteSqlRawAsync(@"
@@ -276,6 +278,18 @@ using (var scope = app.Services.CreateScope())
                 ""Feature""      TEXT NULL,
                 ""Importance""   REAL NOT NULL DEFAULT 0,
                 ""CalculatedAt"" TEXT NULL
+            );");
+
+        await lighthouseDb.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS ""SocialEngagementInsights"" (
+                ""SocialEngagementInsightId"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                ""FactorKey"" TEXT NULL,
+                ""DisplayName"" TEXT NULL,
+                ""Coefficient"" REAL NULL,
+                ""PValue"" REAL NULL,
+                ""RankOrder"" INTEGER NULL,
+                ""ComputedAt"" TEXT NULL,
+                ""ModelVersion"" TEXT NULL
             );");
     }
     else
