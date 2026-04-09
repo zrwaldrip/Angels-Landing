@@ -231,12 +231,14 @@ function ResidentsPage() {
   const birthStatusOptions = buildSelectOptions(BIRTH_STATUS_OPTIONS, residents.map((resident) => String(resident.birthStatus ?? '')), String(editingResident?.birthStatus ?? ''));
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 residents-page">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Residents</h2>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={handleNew}>+ Add Resident</button>
+          <div className="mobile-page-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ Add Resident</button>
+          </div>
         )}
       </div>
 

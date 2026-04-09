@@ -24,6 +24,7 @@ function TutorialOverlay() {
 		let rafId = 0;
 		let timeoutId = 0;
 		let isDisposed = false;
+		let scheduledMeasure = false;
 
 		const findVisibleTarget = () => {
 			const candidates = Array.from(
@@ -108,6 +109,15 @@ function TutorialOverlay() {
 			setOpenPanelRect(activePanelRect);
 		};
 
+		const scheduleUpdateAnchor = () => {
+			if (isDisposed || scheduledMeasure) return;
+			scheduledMeasure = true;
+			window.requestAnimationFrame(() => {
+				scheduledMeasure = false;
+				updateAnchor();
+			});
+		};
+
 		updateAnchor();
 		// Dropdowns can open one tick later; re-measure a few times to lock onto the visible item.
 		rafId = window.requestAnimationFrame(() => {
@@ -115,14 +125,23 @@ function TutorialOverlay() {
 			timeoutId = window.setTimeout(updateAnchor, 90);
 		});
 
-		window.addEventListener("resize", updateAnchor);
-		window.addEventListener("scroll", updateAnchor, true);
+		const visualViewport = window.visualViewport;
+		window.addEventListener("resize", scheduleUpdateAnchor);
+		window.addEventListener("scroll", scheduleUpdateAnchor, true);
+		if (visualViewport) {
+			visualViewport.addEventListener("resize", scheduleUpdateAnchor);
+			visualViewport.addEventListener("scroll", scheduleUpdateAnchor);
+		}
 		return () => {
 			isDisposed = true;
 			if (rafId) window.cancelAnimationFrame(rafId);
 			if (timeoutId) window.clearTimeout(timeoutId);
-			window.removeEventListener("resize", updateAnchor);
-			window.removeEventListener("scroll", updateAnchor, true);
+			window.removeEventListener("resize", scheduleUpdateAnchor);
+			window.removeEventListener("scroll", scheduleUpdateAnchor, true);
+			if (visualViewport) {
+				visualViewport.removeEventListener("resize", scheduleUpdateAnchor);
+				visualViewport.removeEventListener("scroll", scheduleUpdateAnchor);
+			}
 		};
 	}, [isOpen, currentStep]);
 

@@ -172,11 +172,13 @@ function DonorPortalPage() {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 donor-portal-page">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Donor Portal</h2>
-        <button className="btn donor-portal-donate-btn" onClick={openDonateModal}>Donate Now</button>
+        <div className="mobile-page-actions">
+          <button className="btn donor-portal-donate-btn" onClick={openDonateModal}>Donate Now</button>
+        </div>
       </div>
 
       <p className="text-muted">This page shows donations associated with your supporter profile.</p>

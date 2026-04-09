@@ -192,15 +192,17 @@ function ProcessRecordingsPage() {
   return (
     <div className="container mt-4 process-recordings-page">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <div>
           <h2 className="h4 mb-1">Process Recordings</h2>
-          <div className="text-muted small">Counseling session notes and resident healing history</div>
+          <div className="text-muted small mobile-page-subtitle">Counseling session notes and resident healing history</div>
         </div>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={handleNew} disabled={selectedResidentId == null}>
-            + Add Session Note
-          </button>
+          <div className="mobile-page-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleNew} disabled={selectedResidentId == null}>
+              + Add Session Note
+            </button>
+          </div>
         )}
       </div>
 

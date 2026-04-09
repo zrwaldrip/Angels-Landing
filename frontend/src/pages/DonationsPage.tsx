@@ -128,14 +128,16 @@ function DonationsPage() {
 	const totalPages = Math.ceil(total / pageSize);
 
 	return (
-		<div className="container mt-4">
+		<div className="container mt-4 donations-page">
 			<Header />
-			<div className="d-flex align-items-center justify-content-between mb-3">
+			<div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
 				<h2 className="h4 mb-0">Donations & Supporters</h2>
 				{isAdmin && activeTab === "donations" && (
-					<button className="btn btn-primary btn-sm" onClick={handleNew}>
-						+ Add Donation
-					</button>
+					<div className="mobile-page-actions">
+						<button className="btn btn-primary btn-sm" onClick={handleNew}>
+							+ Add Donation
+						</button>
+					</div>
 				)}
 			</div>
 

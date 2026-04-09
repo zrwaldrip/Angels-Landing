@@ -88,13 +88,13 @@ export default function CampaignAnalysisPage() {
   const movingCount   = campaigns.filter(c => c.verdict === 'Moving the needle').length;
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid campaign-analysis-page">
       <Header />
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 mobile-page-header">
         <div>
           <h2 className="fw-bold mb-0">Campaign Analysis</h2>
-          <p className="text-muted mb-0 small">
+          <p className="text-muted mb-0 small mobile-page-subtitle">
             ML-scored fundraising effectiveness &mdash; updated weekly by the campaign scorer pipeline
             {lastUpdated && <> &middot; Last scored: {lastUpdated}</>}
           </p>
