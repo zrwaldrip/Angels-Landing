@@ -46,7 +46,7 @@ export const adminTutorialSteps: TutorialStep[] = [
 	{
 		highlightKey: "operations-process-recordings",
 		title: "Operations: Process Recordings",
-		description: "Capture process narratives and internal progress documentation."
+		description: "Under Operations, use Process Recordings to capture process narratives and internal progress documentation."
 	},
 	{
 		highlightKey: "operations-residents",

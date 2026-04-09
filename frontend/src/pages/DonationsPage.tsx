@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { getDonations, getSupporters, createDonation, updateDonation, deleteDonation, type Donation, type Supporter } from "../lib/lighthouseAPI";
@@ -17,9 +17,22 @@ function DonationsPage() {
 
 	const [donations, setDonations] = useState<Donation[]>([]);
 	const [supporters, setSupporters] = useState<Supporter[]>([]);
-	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(1);
-	const pageSize = 20;
+	const [pageSize, setPageSize] = useState(10);
+	const [search, setSearch] = useState("");
+	const [selectedDonationTypes, setSelectedDonationTypes] = useState<string[]>([]);
+	const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+	const [selectedRecurringFlags, setSelectedRecurringFlags] = useState<string[]>([]);
+	const [sortKey, setSortKey] = useState<"donationId" | "supporterId" | "donationType" | "donationDate" | "amount" | "currencyCode" | "channelSource" | "campaignName" | "isRecurring">("donationDate");
+	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+	const [supporterSortKey, setSupporterSortKey] = useState<"supporterId" | "displayName" | "supporterType" | "email" | "region" | "country" | "status" | "acquisitionChannel">("supporterId");
+	const [supporterSortDirection, setSupporterSortDirection] = useState<"asc" | "desc">("asc");
+	const [supporterPage, setSupporterPage] = useState(1);
+	const [supporterPageSize, setSupporterPageSize] = useState(10);
+	const [supporterSearch, setSupporterSearch] = useState("");
+	const [selectedSupporterTypes, setSelectedSupporterTypes] = useState<string[]>([]);
+	const [selectedSupporterStatuses, setSelectedSupporterStatuses] = useState<string[]>([]);
+	const [selectedSupporterChannels, setSelectedSupporterChannels] = useState<string[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 
@@ -35,15 +48,14 @@ function DonationsPage() {
 			void loadDonations();
 			void loadSupporters();
 		}
-	}, [isAuthenticated, isLoading, page]);
+	}, [isAuthenticated, isLoading]);
 
 	async function loadDonations() {
 		setLoading(true);
 		setError("");
 		try {
-			const result = await getDonations({ page, pageSize });
+			const result = await getDonations({ page: 1, pageSize: 1000 });
 			setDonations(result.items);
-			setTotal(result.total);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Failed to load donations.");
 		} finally {
@@ -125,7 +137,191 @@ function DonationsPage() {
 		}
 	}
 
-	const totalPages = Math.ceil(total / pageSize);
+	const donationTypeOptions = useMemo(
+		() => Array.from(new Set(donations.map((d) => d.donationType).filter((value): value is string => Boolean(value && value.trim())))).sort(),
+		[donations]
+	);
+	const channelOptions = useMemo(
+		() => Array.from(new Set(donations.map((d) => d.channelSource).filter((value): value is string => Boolean(value && value.trim())))).sort(),
+		[donations]
+	);
+	const supporterTypeOptions = useMemo(
+		() => Array.from(new Set(supporters.map((s) => s.supporterType).filter((value): value is string => Boolean(value && value.trim())))).sort(),
+		[supporters]
+	);
+	const supporterStatusOptions = useMemo(
+		() => Array.from(new Set(supporters.map((s) => s.status).filter((value): value is string => Boolean(value && value.trim())))).sort(),
+		[supporters]
+	);
+	const supporterChannelOptions = useMemo(
+		() => Array.from(new Set(supporters.map((s) => s.acquisitionChannel).filter((value): value is string => Boolean(value && value.trim())))).sort(),
+		[supporters]
+	);
+
+	function toggleSelection(setter: (updater: (prev: string[]) => string[]) => void, value: string) {
+		setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+	}
+
+	function amountValue(donation: Donation) {
+		return donation.amount ?? donation.estimatedValue ?? 0;
+	}
+
+	const filteredDonations = useMemo(() => {
+		const query = search.trim().toLowerCase();
+		return donations.filter((donation) => {
+			const searchMatch = !query || [
+				String(donation.donationId),
+				String(donation.supporterId),
+				donation.donationType,
+				donation.channelSource,
+				donation.campaignName,
+				donation.currencyCode,
+			].some((value) => String(value ?? "").toLowerCase().includes(query));
+			const typeMatch = selectedDonationTypes.length === 0 || selectedDonationTypes.includes(donation.donationType ?? "");
+			const channelMatch = selectedChannels.length === 0 || selectedChannels.includes(donation.channelSource ?? "");
+			const recurringBucket = donation.isRecurring ? "recurring" : "oneTime";
+			const recurringMatch = selectedRecurringFlags.length === 0 || selectedRecurringFlags.includes(recurringBucket);
+			return searchMatch && typeMatch && channelMatch && recurringMatch;
+		});
+	}, [donations, search, selectedDonationTypes, selectedChannels, selectedRecurringFlags]);
+
+	const sortedDonations = useMemo(() => {
+		const dir = sortDirection === "asc" ? 1 : -1;
+		return [...filteredDonations].sort((a, b) => {
+			let av: string | number = "";
+			let bv: string | number = "";
+			switch (sortKey) {
+				case "donationId":
+					av = a.donationId ?? 0; bv = b.donationId ?? 0; break;
+				case "supporterId":
+					av = a.supporterId ?? 0; bv = b.supporterId ?? 0; break;
+				case "donationType":
+					av = String(a.donationType ?? "").toLowerCase(); bv = String(b.donationType ?? "").toLowerCase(); break;
+				case "donationDate":
+					av = Date.parse(String(a.donationDate ?? "")) || 0; bv = Date.parse(String(b.donationDate ?? "")) || 0; break;
+				case "amount":
+					av = amountValue(a); bv = amountValue(b); break;
+				case "currencyCode":
+					av = String(a.currencyCode ?? "").toLowerCase(); bv = String(b.currencyCode ?? "").toLowerCase(); break;
+				case "channelSource":
+					av = String(a.channelSource ?? "").toLowerCase(); bv = String(b.channelSource ?? "").toLowerCase(); break;
+				case "campaignName":
+					av = String(a.campaignName ?? "").toLowerCase(); bv = String(b.campaignName ?? "").toLowerCase(); break;
+				case "isRecurring":
+					av = a.isRecurring ? 1 : 0; bv = b.isRecurring ? 1 : 0; break;
+				default:
+					av = 0; bv = 0;
+			}
+			if (av < bv) return -1 * dir;
+			if (av > bv) return 1 * dir;
+			return 0;
+		});
+	}, [filteredDonations, sortKey, sortDirection]);
+
+	const totalPages = Math.max(1, Math.ceil(sortedDonations.length / pageSize));
+	const pagedDonations = useMemo(() => {
+		const start = (page - 1) * pageSize;
+		return sortedDonations.slice(start, start + pageSize);
+	}, [sortedDonations, page, pageSize]);
+
+	useEffect(() => {
+		setPage(1);
+	}, [search, selectedDonationTypes, selectedChannels, selectedRecurringFlags, pageSize]);
+
+	useEffect(() => {
+		if (page > totalPages) setPage(totalPages);
+	}, [page, totalPages]);
+
+	function toggleSort(key: typeof sortKey) {
+		if (sortKey === key) {
+			setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+			return;
+		}
+		setSortKey(key);
+		setSortDirection("asc");
+	}
+
+	function sortIndicator(key: typeof sortKey) {
+		if (sortKey !== key) return "";
+		return sortDirection === "asc" ? " ▲" : " ▼";
+	}
+
+	const filteredSupporters = useMemo(() => {
+		const query = supporterSearch.trim().toLowerCase();
+		return supporters.filter((supporter) => {
+			const searchMatch = !query || [
+				String(supporter.supporterId),
+				supporter.displayName,
+				supporter.email,
+				supporter.region,
+				supporter.country,
+				supporter.supporterType,
+				supporter.status,
+				supporter.acquisitionChannel,
+			].some((value) => String(value ?? "").toLowerCase().includes(query));
+			const typeMatch = selectedSupporterTypes.length === 0 || selectedSupporterTypes.includes(supporter.supporterType ?? "");
+			const statusMatch = selectedSupporterStatuses.length === 0 || selectedSupporterStatuses.includes(supporter.status ?? "");
+			const channelMatch = selectedSupporterChannels.length === 0 || selectedSupporterChannels.includes(supporter.acquisitionChannel ?? "");
+			return searchMatch && typeMatch && statusMatch && channelMatch;
+		});
+	}, [supporters, supporterSearch, selectedSupporterTypes, selectedSupporterStatuses, selectedSupporterChannels]);
+
+	const sortedSupporters = useMemo(() => {
+		const dir = supporterSortDirection === "asc" ? 1 : -1;
+		return [...filteredSupporters].sort((a, b) => {
+			let av: string | number = "";
+			let bv: string | number = "";
+			switch (supporterSortKey) {
+				case "supporterId":
+					av = a.supporterId ?? 0; bv = b.supporterId ?? 0; break;
+				case "displayName":
+					av = String(a.displayName ?? "").toLowerCase(); bv = String(b.displayName ?? "").toLowerCase(); break;
+				case "supporterType":
+					av = String(a.supporterType ?? "").toLowerCase(); bv = String(b.supporterType ?? "").toLowerCase(); break;
+				case "email":
+					av = String(a.email ?? "").toLowerCase(); bv = String(b.email ?? "").toLowerCase(); break;
+				case "region":
+					av = String(a.region ?? "").toLowerCase(); bv = String(b.region ?? "").toLowerCase(); break;
+				case "country":
+					av = String(a.country ?? "").toLowerCase(); bv = String(b.country ?? "").toLowerCase(); break;
+				case "status":
+					av = String(a.status ?? "").toLowerCase(); bv = String(b.status ?? "").toLowerCase(); break;
+				case "acquisitionChannel":
+					av = String(a.acquisitionChannel ?? "").toLowerCase(); bv = String(b.acquisitionChannel ?? "").toLowerCase(); break;
+			}
+			if (av < bv) return -1 * dir;
+			if (av > bv) return 1 * dir;
+			return 0;
+		});
+	}, [filteredSupporters, supporterSortDirection, supporterSortKey]);
+
+	const supporterTotalPages = Math.max(1, Math.ceil(sortedSupporters.length / supporterPageSize));
+	const pagedSupporters = useMemo(() => {
+		const start = (supporterPage - 1) * supporterPageSize;
+		return sortedSupporters.slice(start, start + supporterPageSize);
+	}, [sortedSupporters, supporterPage, supporterPageSize]);
+
+	function toggleSupporterSort(key: typeof supporterSortKey) {
+		if (supporterSortKey === key) {
+			setSupporterSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+			return;
+		}
+		setSupporterSortKey(key);
+		setSupporterSortDirection("asc");
+	}
+
+	function supporterSortIndicator(key: typeof supporterSortKey) {
+		if (supporterSortKey !== key) return "";
+		return supporterSortDirection === "asc" ? " ▲" : " ▼";
+	}
+
+	useEffect(() => {
+		setSupporterPage(1);
+	}, [supporterSearch, selectedSupporterTypes, selectedSupporterStatuses, selectedSupporterChannels, supporterPageSize]);
+
+	useEffect(() => {
+		if (supporterPage > supporterTotalPages) setSupporterPage(supporterTotalPages);
+	}, [supporterPage, supporterTotalPages]);
 
 	return (
 		<div className="container mt-4 donations-page">
@@ -161,25 +357,73 @@ function DonationsPage() {
 					<div className="spinner-border text-primary" role="status" />
 				</div>
 			) : activeTab === "donations" ? (
-				<>
+				<div className="row g-3">
+					<div className="col-lg-3">
+						<div className="card shadow-sm">
+							<div className="card-body">
+								<h6 className="mb-3">Filters</h6>
+								<label className="form-label small mb-1">Search</label>
+								<input
+									type="text"
+									className="form-control form-control-sm mb-3"
+									placeholder="ID, supporter, type, channel..."
+									value={search}
+									onChange={(e) => setSearch(e.target.value)}
+								/>
+								<div className="small text-muted fw-semibold mb-1">Donation Type</div>
+								<div className="mb-3">
+									{donationTypeOptions.map((option) => (
+										<div className="form-check" key={`type-${option}`}>
+											<input className="form-check-input" type="checkbox" id={`type-${option}`} checked={selectedDonationTypes.includes(option)} onChange={() => toggleSelection(setSelectedDonationTypes, option)} />
+											<label className="form-check-label small" htmlFor={`type-${option}`}>{option}</label>
+										</div>
+									))}
+								</div>
+								<div className="small text-muted fw-semibold mb-1">Channel</div>
+								<div className="mb-3">
+									{channelOptions.map((option) => (
+										<div className="form-check" key={`channel-${option}`}>
+											<input className="form-check-input" type="checkbox" id={`channel-${option}`} checked={selectedChannels.includes(option)} onChange={() => toggleSelection(setSelectedChannels, option)} />
+											<label className="form-check-label small" htmlFor={`channel-${option}`}>{option}</label>
+										</div>
+									))}
+								</div>
+								<div className="small text-muted fw-semibold mb-1">Recurring</div>
+								<div className="mb-3">
+									<div className="form-check">
+										<input className="form-check-input" type="checkbox" id="recurring-only" checked={selectedRecurringFlags.includes("recurring")} onChange={() => toggleSelection(setSelectedRecurringFlags, "recurring")} />
+										<label className="form-check-label small" htmlFor="recurring-only">Recurring</label>
+									</div>
+									<div className="form-check">
+										<input className="form-check-input" type="checkbox" id="one-time-only" checked={selectedRecurringFlags.includes("oneTime")} onChange={() => toggleSelection(setSelectedRecurringFlags, "oneTime")} />
+										<label className="form-check-label small" htmlFor="one-time-only">One-time</label>
+									</div>
+								</div>
+								<button className="btn btn-outline-secondary btn-sm" onClick={() => { setSearch(""); setSelectedDonationTypes([]); setSelectedChannels([]); setSelectedRecurringFlags([]); }}>
+									Clear All Filters
+								</button>
+							</div>
+						</div>
+					</div>
+					<div className="col-lg-9">
 					<div className="table-responsive">
 						<table className="table table-sm table-hover">
 							<thead className="table-light">
 								<tr>
-									<th>ID</th>
-									<th>Supporter</th>
-									<th>Type</th>
-									<th>Date</th>
-									<th>Amount</th>
-									<th>Currency</th>
-									<th>Channel</th>
-									<th>Campaign</th>
-									<th>Recurring</th>
+									<th role="button" onClick={() => toggleSort("donationId")}>ID{sortIndicator("donationId")}</th>
+									<th role="button" onClick={() => toggleSort("supporterId")}>Supporter{sortIndicator("supporterId")}</th>
+									<th role="button" onClick={() => toggleSort("donationType")}>Type{sortIndicator("donationType")}</th>
+									<th role="button" onClick={() => toggleSort("donationDate")}>Date{sortIndicator("donationDate")}</th>
+									<th role="button" onClick={() => toggleSort("amount")}>Amount{sortIndicator("amount")}</th>
+									<th role="button" onClick={() => toggleSort("currencyCode")}>Currency{sortIndicator("currencyCode")}</th>
+									<th role="button" onClick={() => toggleSort("channelSource")}>Channel{sortIndicator("channelSource")}</th>
+									<th role="button" onClick={() => toggleSort("campaignName")}>Campaign{sortIndicator("campaignName")}</th>
+									<th role="button" onClick={() => toggleSort("isRecurring")}>Recurring{sortIndicator("isRecurring")}</th>
 									{isAdmin && <th>Actions</th>}
 								</tr>
 							</thead>
 							<tbody>
-								{donations.map((d) => (
+								{pagedDonations.map((d) => (
 									<tr key={d.donationId}>
 										<td>{d.donationId}</td>
 										<td>{d.supporterId}</td>
@@ -207,13 +451,19 @@ function DonationsPage() {
 							</tbody>
 						</table>
 					</div>
-					<div className="d-flex justify-content-between align-items-center mt-2">
-						<small className="text-muted">{total} donations total</small>
-						<div className="d-flex gap-2">
+					<div className="d-flex justify-content-between align-items-center mt-2 mb-4 gap-2 flex-wrap">
+						<small className="text-muted">{sortedDonations.length} donations total</small>
+						<div className="d-flex gap-2 align-items-center">
+							<label className="small text-muted mb-0">Per page</label>
+							<select className="form-select form-select-sm" style={{ width: 90 }} value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))}>
+								<option value="5">5</option>
+								<option value="10">10</option>
+								<option value="20">20</option>
+							</select>
 							<button className="btn btn-outline-secondary btn-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
 								Previous
 							</button>
-							<span className="btn btn-sm disabled">
+							<span className="small text-muted">
 								Page {page} of {totalPages}
 							</span>
 							<button className="btn btn-outline-secondary btn-sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
@@ -221,39 +471,112 @@ function DonationsPage() {
 							</button>
 						</div>
 					</div>
-				</>
+					</div>
+				</div>
 			) : (
-				<div className="table-responsive">
-					<table className="table table-sm table-hover">
-						<thead className="table-light">
-							<tr>
-								<th>ID</th>
-								<th>Display Name</th>
-								<th>Type</th>
-								<th>Email</th>
-								<th>Region</th>
-								<th>Country</th>
-								<th>Status</th>
-								<th>Channel</th>
-							</tr>
-						</thead>
-						<tbody>
-							{supporters.map((s) => (
-								<tr key={s.supporterId}>
-									<td>{s.supporterId}</td>
-									<td>{s.displayName}</td>
-									<td>{s.supporterType}</td>
-									<td>{s.email}</td>
-									<td>{s.region}</td>
-									<td>{s.country}</td>
-									<td>
-										<span className={`badge ${s.status === "Active" ? "text-bg-success" : "text-bg-secondary"}`}>{s.status}</span>
-									</td>
-									<td>{s.acquisitionChannel}</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+				<div className="row g-3">
+					<div className="col-lg-3">
+						<div className="card shadow-sm">
+							<div className="card-body">
+								<h6 className="mb-3">Filters</h6>
+								<label className="form-label small mb-1">Search</label>
+								<input
+									type="text"
+									className="form-control form-control-sm mb-3"
+									placeholder="ID, name, email, region..."
+									value={supporterSearch}
+									onChange={(e) => setSupporterSearch(e.target.value)}
+								/>
+								<div className="small text-muted fw-semibold mb-1">Type</div>
+								<div className="mb-3">
+									{supporterTypeOptions.map((option) => (
+										<div className="form-check" key={`supporter-type-${option}`}>
+											<input className="form-check-input" type="checkbox" id={`supporter-type-${option}`} checked={selectedSupporterTypes.includes(option)} onChange={() => toggleSelection(setSelectedSupporterTypes, option)} />
+											<label className="form-check-label small" htmlFor={`supporter-type-${option}`}>{option}</label>
+										</div>
+									))}
+								</div>
+								<div className="small text-muted fw-semibold mb-1">Status</div>
+								<div className="mb-3">
+									{supporterStatusOptions.map((option) => (
+										<div className="form-check" key={`supporter-status-${option}`}>
+											<input className="form-check-input" type="checkbox" id={`supporter-status-${option}`} checked={selectedSupporterStatuses.includes(option)} onChange={() => toggleSelection(setSelectedSupporterStatuses, option)} />
+											<label className="form-check-label small" htmlFor={`supporter-status-${option}`}>{option}</label>
+										</div>
+									))}
+								</div>
+								<div className="small text-muted fw-semibold mb-1">Channel</div>
+								<div className="mb-3">
+									{supporterChannelOptions.map((option) => (
+										<div className="form-check" key={`supporter-channel-${option}`}>
+											<input className="form-check-input" type="checkbox" id={`supporter-channel-${option}`} checked={selectedSupporterChannels.includes(option)} onChange={() => toggleSelection(setSelectedSupporterChannels, option)} />
+											<label className="form-check-label small" htmlFor={`supporter-channel-${option}`}>{option}</label>
+										</div>
+									))}
+								</div>
+								<button
+									className="btn btn-outline-secondary btn-sm"
+									onClick={() => { setSupporterSearch(""); setSelectedSupporterTypes([]); setSelectedSupporterStatuses([]); setSelectedSupporterChannels([]); }}
+								>
+									Clear All Filters
+								</button>
+							</div>
+						</div>
+					</div>
+					<div className="col-lg-9">
+						<div className="table-responsive">
+							<table className="table table-sm table-hover">
+								<thead className="table-light">
+									<tr>
+										<th role="button" onClick={() => toggleSupporterSort("supporterId")}>ID{supporterSortIndicator("supporterId")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("displayName")}>Display Name{supporterSortIndicator("displayName")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("supporterType")}>Type{supporterSortIndicator("supporterType")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("email")}>Email{supporterSortIndicator("email")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("region")}>Region{supporterSortIndicator("region")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("country")}>Country{supporterSortIndicator("country")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("status")}>Status{supporterSortIndicator("status")}</th>
+										<th role="button" onClick={() => toggleSupporterSort("acquisitionChannel")}>Channel{supporterSortIndicator("acquisitionChannel")}</th>
+									</tr>
+								</thead>
+								<tbody>
+									{pagedSupporters.map((s) => (
+										<tr key={s.supporterId}>
+											<td>{s.supporterId}</td>
+											<td>{s.displayName}</td>
+											<td>{s.supporterType}</td>
+											<td>{s.email}</td>
+											<td>{s.region}</td>
+											<td>{s.country}</td>
+											<td>
+												<span className={`badge ${s.status === "Active" ? "text-bg-success" : "text-bg-secondary"}`}>{s.status}</span>
+											</td>
+											<td>{s.acquisitionChannel}</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+						<div className="d-flex justify-content-between align-items-center mt-2 mb-4 gap-2 flex-wrap">
+							<small className="text-muted">{sortedSupporters.length} supporters total</small>
+							<div className="d-flex gap-2 align-items-center">
+								<label className="small text-muted mb-0">Per page</label>
+								<select className="form-select form-select-sm" style={{ width: 90 }} value={String(supporterPageSize)} onChange={(e) => setSupporterPageSize(Number(e.target.value))}>
+									<option value="5">5</option>
+									<option value="10">10</option>
+									<option value="20">20</option>
+								</select>
+								<button className="btn btn-outline-secondary btn-sm" disabled={supporterPage <= 1} onClick={() => setSupporterPage((p) => p - 1)}>
+									Previous
+								</button>
+								<span className="small text-muted">
+									Page {supporterPage} of {supporterTotalPages}
+								</span>
+								<button className="btn btn-outline-secondary btn-sm" disabled={supporterPage >= supporterTotalPages} onClick={() => setSupporterPage((p) => p + 1)}>
+									Next
+								</button>
+							</div>
+						</div>
+					</div>
 				</div>
 			)}
 

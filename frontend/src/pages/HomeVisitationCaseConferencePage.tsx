@@ -18,8 +18,21 @@ type Tab = 'visitations' | 'conferences';
 const VISIT_TYPES = ['Initial Assessment', 'Routine Follow-up', 'Reintegration Assessment', 'Post-placement Monitoring', 'Emergency'] as const;
 const COOP_LEVELS = ['Low', 'Moderate', 'High'] as const;
 
+function isRecordObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export default function HomeVisitationCaseConferencePage() {
+  const [pageSize, setPageSize] = useState(10);
   const [activeTab, setActiveTab] = useState<Tab>('visitations');
+  const [search, setSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [activePage, setActivePage] = useState(1);
+  const [visitSortKey, setVisitSortKey] = useState<'visitDate' | 'residentId' | 'socialWorker' | 'visitType' | 'familyCooperationLevel' | 'safetyConcernsNoted' | 'followUpNeeded'>('visitDate');
+  const [visitSortDirection, setVisitSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [conferenceSortKey, setConferenceSortKey] = useState<'date' | 'residentId' | 'planCategory' | 'status' | 'planDescription'>('date');
+  const [conferenceSortDirection, setConferenceSortDirection] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [visitations, setVisitations] = useState<HomeVisitation[]>([]);
@@ -40,8 +53,21 @@ export default function HomeVisitationCaseConferencePage() {
     setError('');
     try {
       const [visitationData, planData] = await Promise.all([getHomeVisitations(), getInterventionPlans()]);
-      setVisitations(visitationData ?? []);
-      setPlans(planData ?? []);
+      const rawVisitations = Array.isArray(visitationData)
+        ? visitationData
+        : Array.isArray((visitationData as { items?: HomeVisitation[] })?.items)
+          ? (visitationData as { items: HomeVisitation[] }).items
+          : [];
+      const rawPlans = Array.isArray(planData)
+        ? planData
+        : Array.isArray((planData as { items?: InterventionPlan[] })?.items)
+          ? (planData as { items: InterventionPlan[] }).items
+          : [];
+      const normalizedVisitations = rawVisitations.filter(isRecordObject) as HomeVisitation[];
+      const normalizedPlans = rawPlans.filter(isRecordObject) as InterventionPlan[];
+
+      setVisitations(normalizedVisitations);
+      setPlans(normalizedPlans);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load home visitation and case conference records.');
     } finally {
@@ -94,7 +120,7 @@ export default function HomeVisitationCaseConferencePage() {
   const conferences = useMemo(
     () => plans
       .filter((plan) => Boolean(plan.caseConferenceDate || plan.targetDate))
-      .sort((a, b) => (b.caseConferenceDate ?? b.targetDate ?? '').localeCompare(a.caseConferenceDate ?? a.targetDate ?? '')),
+      .sort((a, b) => String(b.caseConferenceDate ?? b.targetDate ?? '').localeCompare(String(a.caseConferenceDate ?? a.targetDate ?? ''))),
     [plans]
   );
 
@@ -102,6 +128,150 @@ export default function HomeVisitationCaseConferencePage() {
     const today = new Date().toISOString().slice(0, 10);
     return conferences.filter((conference) => (conference.caseConferenceDate ?? conference.targetDate ?? '') >= today);
   }, [conferences]);
+
+  const categoryOptions = useMemo(() => {
+    if (activeTab === 'visitations') {
+      return Array.from(new Set(visitations.map((v) => v.visitType).filter(Boolean) as string[])).sort();
+    }
+    return Array.from(new Set(conferences.map((c) => c.planCategory).filter(Boolean) as string[])).sort();
+  }, [activeTab, visitations, conferences]);
+  const statusOptions = useMemo(() => Array.from(new Set(conferences.map((c) => c.status).filter(Boolean) as string[])).sort(), [conferences]);
+
+  const filteredVisitations = useMemo(
+    () => {
+      const query = search.trim().toLowerCase();
+      return visitations.filter((v) => {
+        const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(v.visitType ?? '');
+        const searchMatch = !query || [String(v.residentId ?? ''), v.socialWorker, v.visitType, v.familyCooperationLevel]
+          .some((value) => String(value ?? '').toLowerCase().includes(query));
+        return categoryMatch && searchMatch;
+      });
+    },
+    [visitations, selectedCategories, search]
+  );
+  const filteredConferences = useMemo(
+    () => {
+      const query = search.trim().toLowerCase();
+      return conferences.filter((c) => {
+        const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(c.planCategory ?? '');
+        const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(c.status ?? '');
+        const searchMatch = !query || [String(c.residentId ?? ''), c.planDescription, c.servicesProvided, c.status]
+          .some((value) => String(value ?? '').toLowerCase().includes(query));
+        return categoryMatch && statusMatch && searchMatch;
+      });
+    },
+    [conferences, selectedCategories, selectedStatuses, search]
+  );
+
+  const sortedVisitations = useMemo(() => {
+    const dir = visitSortDirection === 'asc' ? 1 : -1;
+    return [...filteredVisitations].sort((a, b) => {
+      let av: string | number = '';
+      let bv: string | number = '';
+      switch (visitSortKey) {
+        case 'visitDate':
+          av = Date.parse(String(a.visitDate ?? '')) || 0; bv = Date.parse(String(b.visitDate ?? '')) || 0; break;
+        case 'residentId':
+          av = a.residentId ?? 0; bv = b.residentId ?? 0; break;
+        case 'socialWorker':
+          av = String(a.socialWorker ?? '').toLowerCase(); bv = String(b.socialWorker ?? '').toLowerCase(); break;
+        case 'visitType':
+          av = String(a.visitType ?? '').toLowerCase(); bv = String(b.visitType ?? '').toLowerCase(); break;
+        case 'familyCooperationLevel':
+          av = String(a.familyCooperationLevel ?? '').toLowerCase(); bv = String(b.familyCooperationLevel ?? '').toLowerCase(); break;
+        case 'safetyConcernsNoted':
+          av = a.safetyConcernsNoted ? 1 : 0; bv = b.safetyConcernsNoted ? 1 : 0; break;
+        case 'followUpNeeded':
+          av = a.followUpNeeded ? 1 : 0; bv = b.followUpNeeded ? 1 : 0; break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [filteredVisitations, visitSortDirection, visitSortKey]);
+
+  const sortedConferences = useMemo(() => {
+    const dir = conferenceSortDirection === 'asc' ? 1 : -1;
+    return [...filteredConferences].sort((a, b) => {
+      let av: string | number = '';
+      let bv: string | number = '';
+      switch (conferenceSortKey) {
+        case 'date':
+          av = Date.parse(String(a.caseConferenceDate ?? a.targetDate ?? '')) || 0;
+          bv = Date.parse(String(b.caseConferenceDate ?? b.targetDate ?? '')) || 0;
+          break;
+        case 'residentId':
+          av = a.residentId ?? 0; bv = b.residentId ?? 0; break;
+        case 'planCategory':
+          av = String(a.planCategory ?? '').toLowerCase(); bv = String(b.planCategory ?? '').toLowerCase(); break;
+        case 'status':
+          av = String(a.status ?? '').toLowerCase(); bv = String(b.status ?? '').toLowerCase(); break;
+        case 'planDescription':
+          av = String(a.planDescription ?? '').toLowerCase(); bv = String(b.planDescription ?? '').toLowerCase(); break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [filteredConferences, conferenceSortDirection, conferenceSortKey]);
+  const activeCount = activeTab === 'visitations' ? filteredVisitations.length : filteredConferences.length;
+  const totalPages = Math.max(1, Math.ceil(activeCount / pageSize));
+
+  useEffect(() => {
+    setSearch('');
+    setSelectedCategories([]);
+    setSelectedStatuses([]);
+    setActivePage(1);
+  }, [activeTab]);
+
+  useEffect(() => {
+    setActivePage(1);
+  }, [search, selectedCategories, selectedStatuses, pageSize]);
+
+  useEffect(() => {
+    if (activePage > totalPages) setActivePage(totalPages);
+  }, [activePage, totalPages]);
+
+  const pagedVisitations = useMemo(() => {
+    const start = (activePage - 1) * pageSize;
+    return sortedVisitations.slice(start, start + pageSize);
+  }, [sortedVisitations, activePage, pageSize]);
+  const pagedConferences = useMemo(() => {
+    const start = (activePage - 1) * pageSize;
+    return sortedConferences.slice(start, start + pageSize);
+  }, [sortedConferences, activePage, pageSize]);
+
+  function toggleSelection(setter: (updater: (prev: string[]) => string[]) => void, value: string) {
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  }
+
+  function toggleVisitSort(key: typeof visitSortKey) {
+    if (visitSortKey === key) {
+      setVisitSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setVisitSortKey(key);
+    setVisitSortDirection('asc');
+  }
+
+  function toggleConferenceSort(key: typeof conferenceSortKey) {
+    if (conferenceSortKey === key) {
+      setConferenceSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setConferenceSortKey(key);
+    setConferenceSortDirection('asc');
+  }
+
+  function visitSortIndicator(key: typeof visitSortKey) {
+    if (visitSortKey !== key) return '';
+    return visitSortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
+
+  function conferenceSortIndicator(key: typeof conferenceSortKey) {
+    if (conferenceSortKey !== key) return '';
+    return conferenceSortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
 
   return (
     <div className="container mt-4">
@@ -143,15 +313,39 @@ export default function HomeVisitationCaseConferencePage() {
       {loading ? (
         <div className="text-center py-4"><div className="spinner-border text-primary" role="status" /></div>
       ) : activeTab === 'visitations' ? (
+        <div className="row g-3">
+          <div className="col-lg-3">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6 className="mb-3">Filters</h6>
+                <input type="text" className="form-control form-control-sm mb-3" placeholder="Search resident, worker, type..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <div className="small text-muted fw-semibold mb-1">Visit Type</div>
+                {categoryOptions.map((option) => (
+                  <div className="form-check" key={option}>
+                    <input className="form-check-input" type="checkbox" id={`visit-cat-${option}`} checked={selectedCategories.includes(option)} onChange={() => toggleSelection(setSelectedCategories, option)} />
+                    <label className="form-check-label small" htmlFor={`visit-cat-${option}`}>{option}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="col-lg-9">
         <div className="table-responsive">
           <table className="table table-sm table-hover">
             <thead className="table-light">
               <tr>
-                <th>Date</th><th>Resident</th><th>Social Worker</th><th>Visit Type</th><th>Family Cooperation</th><th>Safety</th><th>Follow-up</th><th>Actions</th>
+                <th role="button" onClick={() => toggleVisitSort('visitDate')}>Date{visitSortIndicator('visitDate')}</th>
+                <th role="button" onClick={() => toggleVisitSort('residentId')}>Resident{visitSortIndicator('residentId')}</th>
+                <th role="button" onClick={() => toggleVisitSort('socialWorker')}>Social Worker{visitSortIndicator('socialWorker')}</th>
+                <th role="button" onClick={() => toggleVisitSort('visitType')}>Visit Type{visitSortIndicator('visitType')}</th>
+                <th role="button" onClick={() => toggleVisitSort('familyCooperationLevel')}>Family Cooperation{visitSortIndicator('familyCooperationLevel')}</th>
+                <th role="button" onClick={() => toggleVisitSort('safetyConcernsNoted')}>Safety{visitSortIndicator('safetyConcernsNoted')}</th>
+                <th role="button" onClick={() => toggleVisitSort('followUpNeeded')}>Follow-up{visitSortIndicator('followUpNeeded')}</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {visitations.map((v) => (
+              {pagedVisitations.map((v) => (
                 <tr key={v.visitationId}>
                   <td>{v.visitDate}</td>
                   <td>{v.residentId}</td>
@@ -169,8 +363,47 @@ export default function HomeVisitationCaseConferencePage() {
             </tbody>
           </table>
         </div>
+            <div className="d-flex justify-content-between align-items-center gap-2 mt-2 mb-4 flex-wrap">
+              <small className="text-muted">{sortedVisitations.length} visitations total</small>
+              <div className="d-flex align-items-center gap-2">
+                <label className="small text-muted mb-0">Per page</label>
+                <select className="form-select form-select-sm" style={{ width: 90 }} value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))}>
+                  <option value="5">5</option><option value="10">10</option><option value="20">20</option>
+                </select>
+                <button className="btn btn-outline-secondary btn-sm" disabled={activePage <= 1} onClick={() => setActivePage((p) => p - 1)}>Previous</button>
+                <span className="small text-muted">Page {activePage} of {totalPages}</span>
+                <button className="btn btn-outline-secondary btn-sm" disabled={activePage >= totalPages} onClick={() => setActivePage((p) => p + 1)}>Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
-        <>
+        <div className="row g-3">
+          <div className="col-lg-3">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6 className="mb-3">Filters</h6>
+                <input type="text" className="form-control form-control-sm mb-3" placeholder="Search resident, status, notes..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <div className="small text-muted fw-semibold mb-1">Category</div>
+                <div className="mb-3">
+                  {categoryOptions.map((option) => (
+                    <div className="form-check" key={`conf-cat-${option}`}>
+                      <input className="form-check-input" type="checkbox" id={`conf-cat-${option}`} checked={selectedCategories.includes(option)} onChange={() => toggleSelection(setSelectedCategories, option)} />
+                      <label className="form-check-label small" htmlFor={`conf-cat-${option}`}>{option}</label>
+                    </div>
+                  ))}
+                </div>
+                <div className="small text-muted fw-semibold mb-1">Status</div>
+                {statusOptions.map((option) => (
+                  <div className="form-check" key={`conf-status-${option}`}>
+                    <input className="form-check-input" type="checkbox" id={`conf-status-${option}`} checked={selectedStatuses.includes(option)} onChange={() => toggleSelection(setSelectedStatuses, option)} />
+                    <label className="form-check-label small" htmlFor={`conf-status-${option}`}>{option}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="col-lg-9">
           <div className="alert border small bg-body-secondary text-dark">
             <span className="fw-semibold">Upcoming conferences:</span>{' '}
             <span className="fw-bold">{upcomingConferences.length}</span>
@@ -179,11 +412,16 @@ export default function HomeVisitationCaseConferencePage() {
             <table className="table table-sm table-hover">
               <thead className="table-light">
                 <tr>
-                  <th>Conference Date</th><th>Resident</th><th>Type</th><th>Status</th><th>Notes</th><th>Actions</th>
+                  <th role="button" onClick={() => toggleConferenceSort('date')}>Conference Date{conferenceSortIndicator('date')}</th>
+                  <th role="button" onClick={() => toggleConferenceSort('residentId')}>Resident{conferenceSortIndicator('residentId')}</th>
+                  <th role="button" onClick={() => toggleConferenceSort('planCategory')}>Type{conferenceSortIndicator('planCategory')}</th>
+                  <th role="button" onClick={() => toggleConferenceSort('status')}>Status{conferenceSortIndicator('status')}</th>
+                  <th role="button" onClick={() => toggleConferenceSort('planDescription')}>Notes{conferenceSortIndicator('planDescription')}</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {conferences.map((c) => (
+                {pagedConferences.map((c) => (
                   <tr key={c.planId}>
                     <td>{c.caseConferenceDate ?? c.targetDate}</td>
                     <td>{c.residentId}</td>
@@ -199,7 +437,20 @@ export default function HomeVisitationCaseConferencePage() {
               </tbody>
             </table>
           </div>
-        </>
+          <div className="d-flex justify-content-between align-items-center gap-2 mt-2 mb-4 flex-wrap">
+            <small className="text-muted">{sortedConferences.length} conferences total</small>
+            <div className="d-flex align-items-center gap-2">
+              <label className="small text-muted mb-0">Per page</label>
+              <select className="form-select form-select-sm" style={{ width: 90 }} value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value="5">5</option><option value="10">10</option><option value="20">20</option>
+              </select>
+              <button className="btn btn-outline-secondary btn-sm" disabled={activePage <= 1} onClick={() => setActivePage((p) => p - 1)}>Previous</button>
+              <span className="small text-muted">Page {activePage} of {totalPages}</span>
+              <button className="btn btn-outline-secondary btn-sm" disabled={activePage >= totalPages} onClick={() => setActivePage((p) => p + 1)}>Next</button>
+            </div>
+          </div>
+          </div>
+        </div>
       )}
 
       {showVisitationModal && editingVisitation ? (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -56,15 +56,16 @@ function ResidentsPage() {
   const isAdmin = authSession.roles.includes('Admin');
 
   const [residents, setResidents] = useState<Resident[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(10);
 
   const [search, setSearch] = useState('');
-  const [caseStatusFilter, setCaseStatusFilter] = useState('');
-  const [caseCategoryFilter, setCaseCategoryFilter] = useState('');
-  const [safehouseFilter, setSafehouseFilter] = useState('');
-  const [riskLevelFilter, setRiskLevelFilter] = useState('');
+  const [selectedCaseStatuses, setSelectedCaseStatuses] = useState<string[]>([]);
+  const [selectedCaseCategories, setSelectedCaseCategories] = useState<string[]>([]);
+  const [selectedSafehouses, setSelectedSafehouses] = useState<string[]>([]);
+  const [selectedRiskLevels, setSelectedRiskLevels] = useState<string[]>([]);
+  const [sortKey, setSortKey] = useState<'residentId' | 'internalCode' | 'safehouseId' | 'caseStatus' | 'sex' | 'caseCategory' | 'currentRiskLevel' | 'assignedSocialWorker' | 'dateOfAdmission' | 'mlPredictionStatus'>('residentId');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [caseStatuses, setCaseStatuses] = useState<string[]>([]);
   const [riskLevels, setRiskLevels] = useState<string[]>([]);
   const [caseCategories, setCaseCategories] = useState<string[]>([]);
@@ -85,7 +86,7 @@ function ResidentsPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void loadResidents();
-  }, [isAuthenticated, isLoading, page, search, caseStatusFilter, caseCategoryFilter, safehouseFilter, riskLevelFilter]);
+  }, [isAuthenticated, isLoading]);
 
   async function loadFilterOptions() {
     try {
@@ -110,15 +111,8 @@ function ResidentsPage() {
     setLoading(true);
     setError('');
     try {
-      const params: Record<string, string | number> = { page, pageSize };
-      if (search) params.search = search;
-      if (caseStatusFilter) params.caseStatus = caseStatusFilter;
-      if (caseCategoryFilter) params.caseCategory = caseCategoryFilter;
-      if (safehouseFilter) params.safehouseId = Number(safehouseFilter);
-      if (riskLevelFilter) params.riskLevel = riskLevelFilter;
-      const result = await getResidents(params);
+      const result = await getResidents({ page: 1, pageSize: 1000 });
       setResidents(result.items);
-      setTotal(result.total);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load residents.');
     } finally {
@@ -225,7 +219,90 @@ function ResidentsPage() {
     }
   }
 
-  const totalPages = Math.ceil(total / pageSize);
+  function toggleSelection(setter: (updater: (prev: string[]) => string[]) => void, value: string) {
+    setter((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  }
+
+  const filteredResidents = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return residents.filter((resident) => {
+      const searchMatch = !query || [
+        resident.internalCode,
+        resident.assignedSocialWorker,
+        resident.caseCategory,
+        resident.referralSource,
+        String(resident.residentId),
+      ].some((value) => String(value ?? '').toLowerCase().includes(query));
+      const statusMatch = selectedCaseStatuses.length === 0 || selectedCaseStatuses.includes(String(resident.caseStatus ?? ''));
+      const categoryMatch = selectedCaseCategories.length === 0 || selectedCaseCategories.includes(String(resident.caseCategory ?? ''));
+      const safehouseMatch = selectedSafehouses.length === 0 || selectedSafehouses.includes(String(resident.safehouseId ?? ''));
+      const riskMatch = selectedRiskLevels.length === 0 || selectedRiskLevels.includes(String(resident.currentRiskLevel ?? ''));
+      return searchMatch && statusMatch && categoryMatch && safehouseMatch && riskMatch;
+    });
+  }, [residents, search, selectedCaseStatuses, selectedCaseCategories, selectedSafehouses, selectedRiskLevels]);
+
+  const sortedResidents = useMemo(() => {
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    return [...filteredResidents].sort((a, b) => {
+      let av: string | number = '';
+      let bv: string | number = '';
+      switch (sortKey) {
+        case 'residentId':
+          av = a.residentId ?? 0; bv = b.residentId ?? 0; break;
+        case 'internalCode':
+          av = String(a.internalCode ?? '').toLowerCase(); bv = String(b.internalCode ?? '').toLowerCase(); break;
+        case 'safehouseId':
+          av = a.safehouseId ?? 0; bv = b.safehouseId ?? 0; break;
+        case 'caseStatus':
+          av = String(a.caseStatus ?? '').toLowerCase(); bv = String(b.caseStatus ?? '').toLowerCase(); break;
+        case 'sex':
+          av = String(a.sex ?? '').toLowerCase(); bv = String(b.sex ?? '').toLowerCase(); break;
+        case 'caseCategory':
+          av = String(a.caseCategory ?? '').toLowerCase(); bv = String(b.caseCategory ?? '').toLowerCase(); break;
+        case 'currentRiskLevel':
+          av = String(a.currentRiskLevel ?? '').toLowerCase(); bv = String(b.currentRiskLevel ?? '').toLowerCase(); break;
+        case 'assignedSocialWorker':
+          av = String(a.assignedSocialWorker ?? '').toLowerCase(); bv = String(b.assignedSocialWorker ?? '').toLowerCase(); break;
+        case 'dateOfAdmission':
+          av = Date.parse(String(a.dateOfAdmission ?? '')) || 0; bv = Date.parse(String(b.dateOfAdmission ?? '')) || 0; break;
+        case 'mlPredictionStatus':
+          av = String(a.mlPredictionStatus ?? '').toLowerCase(); bv = String(b.mlPredictionStatus ?? '').toLowerCase(); break;
+        default:
+          av = 0; bv = 0;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [filteredResidents, sortDirection, sortKey]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedResidents.length / pageSize));
+  const pagedResidents = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedResidents.slice(start, start + pageSize);
+  }, [sortedResidents, page, pageSize]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedCaseStatuses, selectedCaseCategories, selectedSafehouses, selectedRiskLevels, pageSize]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  function toggleSort(key: typeof sortKey) {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    setSortKey(key);
+    setSortDirection('asc');
+  }
+
+  function sortIndicator(key: typeof sortKey) {
+    if (sortKey !== key) return '';
+    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  }
   const sexOptions = buildSelectOptions(SEX_OPTIONS, residents.map((resident) => String(resident.sex ?? '')), String(editingResident?.sex ?? ''));
   const caseCategoryOptions = buildSelectOptions(CASE_CATEGORY_OPTIONS, caseCategories, String(editingResident?.caseCategory ?? ''));
   const birthStatusOptions = buildSelectOptions(BIRTH_STATUS_OPTIONS, residents.map((resident) => String(resident.birthStatus ?? '')), String(editingResident?.birthStatus ?? ''));
@@ -242,74 +319,106 @@ function ResidentsPage() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="row g-2 mb-3">
-        <div className="col-md-4">
-          <input
-            type="text" className="form-control form-control-sm" placeholder="Search code, worker, category, referral..."
-            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          />
-        </div>
-        <div className="col-md-2">
-          <select className="form-select form-select-sm" value={caseStatusFilter}
-            onChange={(e) => { setCaseStatusFilter(e.target.value); setPage(1); }}>
-            <option value="">All statuses</option>
-            {caseStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <select className="form-select form-select-sm" value={caseCategoryFilter}
-            onChange={(e) => { setCaseCategoryFilter(e.target.value); setPage(1); }}>
-            <option value="">All case categories</option>
-            {caseCategories.map((category) => <option key={category} value={category}>{category}</option>)}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <select className="form-select form-select-sm" value={safehouseFilter}
-            onChange={(e) => { setSafehouseFilter(e.target.value); setPage(1); }}>
-            <option value="">All safehouses</option>
-            {safehouses.map((safehouse) => (
-              <option key={safehouse.safehouseId} value={safehouse.safehouseId}>
-                {safehouse.safehouseCode ?? safehouse.safehouseId} - {safehouse.name ?? 'Unnamed safehouse'}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="col-md-2">
-          <select className="form-select form-select-sm" value={riskLevelFilter}
-            onChange={(e) => { setRiskLevelFilter(e.target.value); setPage(1); }}>
-            <option value="">All risk levels</option>
-            {riskLevels.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
-      </div>
-
       {error ? <div className="alert alert-danger">{error}</div> : null}
 
       {loading ? (
         <div className="text-center py-4"><div className="spinner-border text-primary" role="status" /></div>
       ) : (
-        <>
+        <div className="row g-3">
+          <div className="col-lg-3">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h6 className="mb-3">Filters</h6>
+                <label className="form-label small mb-1">Search</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm mb-3"
+                  placeholder="Code, worker, category, referral..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+
+                <div className="small text-muted fw-semibold mb-1">Case Status</div>
+                <div className="mb-3">
+                  {caseStatuses.map((status) => (
+                    <div className="form-check" key={`status-${status}`}>
+                      <input className="form-check-input" type="checkbox" id={`status-${status}`} checked={selectedCaseStatuses.includes(status)} onChange={() => toggleSelection(setSelectedCaseStatuses, status)} />
+                      <label className="form-check-label small" htmlFor={`status-${status}`}>{status}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">Case Category</div>
+                <div className="mb-3">
+                  {caseCategories.map((category) => (
+                    <div className="form-check" key={`category-${category}`}>
+                      <input className="form-check-input" type="checkbox" id={`category-${category}`} checked={selectedCaseCategories.includes(category)} onChange={() => toggleSelection(setSelectedCaseCategories, category)} />
+                      <label className="form-check-label small" htmlFor={`category-${category}`}>{category}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">Safehouse</div>
+                <div className="mb-3">
+                  {safehouses.map((safehouse) => {
+                    const idValue = String(safehouse.safehouseId);
+                    return (
+                      <div className="form-check" key={`safehouse-${safehouse.safehouseId}`}>
+                        <input className="form-check-input" type="checkbox" id={`safehouse-${safehouse.safehouseId}`} checked={selectedSafehouses.includes(idValue)} onChange={() => toggleSelection(setSelectedSafehouses, idValue)} />
+                        <label className="form-check-label small" htmlFor={`safehouse-${safehouse.safehouseId}`}>
+                          {safehouse.safehouseCode ?? safehouse.safehouseId} - {safehouse.name ?? 'Unnamed safehouse'}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="small text-muted fw-semibold mb-1">Risk Level</div>
+                <div className="mb-3">
+                  {riskLevels.map((riskLevel) => (
+                    <div className="form-check" key={`risk-${riskLevel}`}>
+                      <input className="form-check-input" type="checkbox" id={`risk-${riskLevel}`} checked={selectedRiskLevels.includes(riskLevel)} onChange={() => toggleSelection(setSelectedRiskLevels, riskLevel)} />
+                      <label className="form-check-label small" htmlFor={`risk-${riskLevel}`}>{riskLevel}</label>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => {
+                    setSearch('');
+                    setSelectedCaseStatuses([]);
+                    setSelectedCaseCategories([]);
+                    setSelectedSafehouses([]);
+                    setSelectedRiskLevels([]);
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="col-lg-9">
           <div className="table-responsive">
             <table className="table table-sm table-hover">
               <thead className="table-light">
                 <tr>
-                  <th>ID</th>
-                  <th>Code</th>
-                  <th>Safehouse</th>
-                  <th>Status</th>
-                  <th>Sex</th>
-                  <th>Category</th>
-                  <th>Risk Level</th>
-                  <th>Social Worker</th>
-                  <th>Admitted</th>
-                  <th>Progress</th>
+                  <th role="button" onClick={() => toggleSort('residentId')}>ID{sortIndicator('residentId')}</th>
+                  <th role="button" onClick={() => toggleSort('internalCode')}>Code{sortIndicator('internalCode')}</th>
+                  <th role="button" onClick={() => toggleSort('safehouseId')}>Safehouse{sortIndicator('safehouseId')}</th>
+                  <th role="button" onClick={() => toggleSort('caseStatus')}>Status{sortIndicator('caseStatus')}</th>
+                  <th role="button" onClick={() => toggleSort('sex')}>Sex{sortIndicator('sex')}</th>
+                  <th role="button" onClick={() => toggleSort('caseCategory')}>Category{sortIndicator('caseCategory')}</th>
+                  <th role="button" onClick={() => toggleSort('currentRiskLevel')}>Risk Level{sortIndicator('currentRiskLevel')}</th>
+                  <th role="button" onClick={() => toggleSort('assignedSocialWorker')}>Social Worker{sortIndicator('assignedSocialWorker')}</th>
+                  <th role="button" onClick={() => toggleSort('dateOfAdmission')}>Admitted{sortIndicator('dateOfAdmission')}</th>
+                  <th role="button" onClick={() => toggleSort('mlPredictionStatus')}>Progress{sortIndicator('mlPredictionStatus')}</th>
                   <th className="text-center">Checked On</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {residents.map((r) => (
+                {pagedResidents.map((r) => (
                   <tr key={r.residentId}>
                     <td>{r.residentId}</td>
                     <td><code>{r.internalCode}</code></td>
@@ -353,15 +462,22 @@ function ResidentsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="d-flex justify-content-between align-items-center mt-2">
-            <small className="text-muted">{total} residents total</small>
-            <div className="d-flex gap-2">
+          <div className="d-flex justify-content-between align-items-center mt-2 mb-4 gap-2 flex-wrap">
+            <small className="text-muted">{filteredResidents.length} residents total</small>
+            <div className="d-flex gap-2 align-items-center">
+              <label className="small text-muted mb-0">Per page</label>
+              <select className="form-select form-select-sm" style={{ width: 90 }} value={String(pageSize)} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+              </select>
               <button className="btn btn-outline-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button>
-              <span className="btn btn-sm disabled">Page {page} of {totalPages}</span>
+              <span className="small text-muted">Page {page} of {totalPages}</span>
               <button className="btn btn-outline-secondary btn-sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
             </div>
           </div>
-        </>
+          </div>
+        </div>
       )}
 
       {/* Add/Edit Modal */}
