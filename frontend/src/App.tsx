@@ -426,19 +426,19 @@ function AppLayout() {
 }
 
 function App() {
-	return (
-		<CookieConsentProvider>
-			<AuthProvider>
-				<Router>
+  return (
+    <CookieConsentProvider>
+      <AuthProvider>
+        <Router>
 					<TutorialProvider>
 						<AppLayout />
 						<TutorialOverlay />
-						<CookieConsentBanner />
+          <CookieConsentBanner />
 					</TutorialProvider>
-				</Router>
-			</AuthProvider>
-		</CookieConsentProvider>
-	);
+        </Router>
+      </AuthProvider>
+    </CookieConsentProvider>
+  );
 }
 
 export default App;
