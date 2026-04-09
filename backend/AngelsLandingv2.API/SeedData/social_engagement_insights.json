@@ -279,7 +279,7 @@
       "rankOrder": 39
     }
   ],
-  "predictiveMaeHoldout": 0.027354873121648006,
-  "predictiveR2Holdout": 0.4946178719641602,
-  "predictiveRmseHoldout": 0.03686453186206433
+  "predictiveMaeHoldout": 0.022073479251340563,
+  "predictiveR2Holdout": 0.6710404154984295,
+  "predictiveRmseHoldout": 0.029741992210844052
 }
