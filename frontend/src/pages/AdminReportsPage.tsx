@@ -228,17 +228,19 @@ function AdminReportsPage() {
   }, [summary]);
 
   return (
-    <div className="container mt-2">
+    <div className="container mt-2 admin-reports-page">
       <Header />
       <div className="card">
         <div className="card-body">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mobile-page-header">
             <h2 className="h4 mb-0">Reports &amp; Analytics</h2>
-            <button className="btn btn-outline-secondary btn-sm" onClick={() => void loadReportsData()} disabled={loading}>
-              {loading ? 'Refreshing...' : 'Refresh data'}
-            </button>
+            <div className="mobile-page-actions">
+              <button className="btn btn-outline-secondary btn-sm" onClick={() => void loadReportsData()} disabled={loading}>
+                {loading ? 'Refreshing...' : 'Refresh data'}
+              </button>
+            </div>
           </div>
-          <p className="text-muted mb-4">
+          <p className="text-muted mb-4 mobile-page-subtitle">
             Aggregated insights for donation trends, resident outcomes, safehouse performance, and reintegration success,
             aligned with annual accomplishment reporting structures used by social welfare agencies.
           </p>

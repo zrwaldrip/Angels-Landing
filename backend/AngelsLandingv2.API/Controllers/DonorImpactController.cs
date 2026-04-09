@@ -57,13 +57,16 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             .OrderByDescending(row => row.value)
             .ToList();
 
-        var activeResidentsFromMetrics = await db.SafehouseMonthlyMetrics
+        var latestMetricPeriod = await db.SafehouseMonthlyMetrics
             .OrderByDescending(m => m.MonthEnd)
             .ThenByDescending(m => m.MonthStart)
-            .Select(m => m.ActiveResidents)
-            .ToListAsync();
-        var activeResidents = activeResidentsFromMetrics.Any(v => v.HasValue)
-            ? activeResidentsFromMetrics.Where(v => v.HasValue).Select(v => v!.Value).Sum()
+            .Select(m => new { m.MonthEnd, m.MonthStart })
+            .FirstOrDefaultAsync();
+
+        var activeResidents = latestMetricPeriod is not null
+            ? await db.SafehouseMonthlyMetrics
+                .Where(m => m.MonthEnd == latestMetricPeriod.MonthEnd && m.MonthStart == latestMetricPeriod.MonthStart)
+                .SumAsync(m => m.ActiveResidents ?? 0)
             : await db.Residents.CountAsync(r => r.CaseStatus != null && r.CaseStatus.ToLower() == "active");
 
         var residentsWithStatus = await db.Residents

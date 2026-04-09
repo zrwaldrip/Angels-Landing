@@ -315,7 +315,7 @@ function AppLayout() {
 				</Routes>
 
 				{showDonateModal ? (
-					<div className="modal d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.65)" }}>
+					<div className="modal d-block app-donate-modal" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.65)" }}>
 						<div className="modal-dialog">
 							<div className="modal-content">
 								<form onSubmit={handleSubmitDonation}>
@@ -416,19 +416,19 @@ function AppLayout() {
 }
 
 function App() {
-	return (
-		<CookieConsentProvider>
-			<AuthProvider>
-				<Router>
+  return (
+    <CookieConsentProvider>
+      <AuthProvider>
+        <Router>
 					<TutorialProvider>
 						<AppLayout />
 						<TutorialOverlay />
-						<CookieConsentBanner />
+          <CookieConsentBanner />
 					</TutorialProvider>
-				</Router>
-			</AuthProvider>
-		</CookieConsentProvider>
-	);
+        </Router>
+      </AuthProvider>
+    </CookieConsentProvider>
+  );
 }
 
 export default App;

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
 import { getDonorImpactSummary, type DonorImpactSummary } from "../lib/lighthouseAPI";
-import { normalizeRoles } from "../routes/roleRouting";
+import impactHeroPhoto from "../assets/images/photo6.jfif";
 
 function formatCurrencyPhp(value: number) {
 	return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 2 }).format(value);
@@ -14,10 +14,8 @@ function formatPercent(value: number) {
 }
 
 function DonorImpactPage() {
-	const { authSession, isAuthenticated } = useAuth();
-	const normalizedRoles = normalizeRoles(authSession.roles);
-	const hasDonorPrivileges = isAuthenticated && (normalizedRoles.includes("donor") || normalizedRoles.includes("admin"));
-	const donateLink = isAuthenticated ? "/donor-portal?donate=1" : "/login";
+	const { isAuthenticated } = useAuth();
+	const donateLink = "/login";
 
 	const [summary, setSummary] = useState<DonorImpactSummary | null>(null);
 	const [loadingSummary, setLoadingSummary] = useState(true);
@@ -40,46 +38,13 @@ function DonorImpactPage() {
 		}
 	}
 
-	const reportText = useMemo(() => {
-		if (!summary) return "";
-		const lines = [
-			`Organizational Impact Statement`,
-			`Generated: ${new Date().toISOString()}`,
-			"",
-			`Total Lifetime Donations (PHP equivalent): ${formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}`,
-			`Recurring Donations: ${summary.personalContributionSummary.recurringStatus.recurringDonationCount}`,
-			`Recurring Estimated Value: ${formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)}`,
-			"",
-			`Active Residents Supported: ${summary.organizationalImpact.activeResidents}`,
-			`Reintegration Success Rate: ${formatPercent(summary.organizationalImpact.reintegrationSuccessRate)}`,
-			`Educational Progress Avg: ${formatPercent(summary.organizationalImpact.educationalProgressAveragePercent)}`,
-			`Health Goals Met: ${formatPercent(summary.organizationalImpact.healthWellbeingGoalsMetPercent)}`,
-			"",
-			`This Year Funding: ${formatCurrencyPhp(summary.connection.donorContributionThisYear)}`,
-			`Counseling Month Equivalent (overall): ${summary.connection.counselingMonthsEquivalent.toFixed(2)}`,
-			`Assumption: ${summary.connection.assumption}`,
-			"",
-			`Campaign Outcomes:`,
-			...summary.connection.campaignOutcomes.map(
-				(campaign) => `- ${campaign.campaignName}: ${formatCurrencyPhp(campaign.donorValue)} (share ${formatPercent(campaign.donorSharePercent)})`,
-			),
-			"",
-			`Pipeline Placeholder: ${summary.reportPlaceholders.pipeline455}`,
-		];
-		return lines.join("\n");
-	}, [summary]);
+	function handleDonateClick() {
+		window.dispatchEvent(new Event("open-donate-modal"));
+	}
 
 	return (
-		<div className="container mt-4">
+		<div className="container mt-4 donor-impact-page donor-impact-redesign">
 			<Header />
-			<div className="d-flex justify-content-between align-items-center mb-3">
-				<h2 className="h4 mb-0">Impact Overview</h2>
-				<div>
-					<Link to={donateLink} className="btn btn-primary btn-sm">
-						Donate
-					</Link>
-				</div>
-			</div>
 
 			{error ? <div className="alert alert-danger">{error}</div> : null}
 
@@ -89,40 +54,94 @@ function DonorImpactPage() {
 				</div>
 			) : (
 				<>
-					<div className="card mb-3">
-						<div className="card-body">
-							<h3 className="h6 mb-3">1. Funding Summary</h3>
-							<div className="row g-3">
-								<div className="col-md-4">
-									<div className="border rounded p-3 h-100">
-										<div className="text-muted small text-center">Total Donations (Lifetime)</div>
-										<div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ minHeight: "8.25rem", paddingTop: "0.75rem" }}>
-											<div className="display-5 fw-semibold mb-0">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
-										</div>
-									</div>
+					<section className="impact-hero mb-4">
+						<div className="impact-hero-media" aria-hidden="true">
+							<div className="impact-hero-media-blur" style={{ backgroundImage: `url(${impactHeroPhoto})` }} />
+							<img src={impactHeroPhoto} alt="Residents and staff at Angels' Landing" className="impact-hero-photo" loading="eager" />
+						</div>
+						<div className="impact-hero-overlay" />
+						<div className="impact-hero-content">
+							<div className="impact-hero-kicker">Angels&apos; Landing Impact</div>
+							<h2 className="impact-hero-title">From crisis to confidence: your support helps survivors rebuild their future.</h2>
+							<p className="impact-hero-copy mb-0">
+								Every gift becomes safety, therapy, education, and practical reintegration support. This is the story of how your support
+								becomes measurable progress for real people.
+							</p>
+							<div className="impact-hero-actions mt-3">
+								{isAuthenticated ? (
+									<button type="button" className="btn btn-primary donor-impact-mobile-donate-btn" onClick={handleDonateClick}>
+										Donate Now
+									</button>
+								) : (
+									<Link to={donateLink} className="btn btn-primary donor-impact-mobile-donate-btn">
+										Donate Now
+									</Link>
+								)}
+							</div>
+						</div>
+					</section>
+
+					<section className="impact-story-intro mb-3">
+						<h3 className="impact-section-title mb-1">1) What You Have Powered</h3>
+						<p className="impact-section-copy mb-0">
+							Your contributions create a stable foundation for care teams to respond quickly and consistently.
+						</p>
+					</section>
+
+					<section className="row g-3 mb-3">
+						<div className="col-lg-8">
+							<div className="impact-panel impact-panel-primary h-100">
+								<p className="impact-panel-label mb-2">Total Donations (Lifetime)</p>
+								<div className="impact-panel-value">{formatCurrencyPhp(summary.personalContributionSummary.totalGivingLifetime)}</div>
+								<p className="impact-panel-note mb-0">Directly powering resident care, operations, and reintegration support.</p>
+							</div>
+						</div>
+						<div className="col-lg-4">
+							<div className="impact-panel h-100">
+								<p className="impact-panel-label mb-2">Recurring Donations</p>
+								<div className="impact-panel-value impact-panel-value-sm">{summary.personalContributionSummary.recurringStatus.recurringDonationCount}</div>
+								<p className="impact-panel-note mb-0">
+									{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} in recurring estimated value.
+								</p>
+							</div>
+						</div>
+					</section>
+
+					<section className="impact-story-intro mb-3">
+						<h3 className="impact-section-title mb-1">2) How Support Turns Into Services</h3>
+						<p className="impact-section-copy mb-0">
+							Funding does not sit still. It immediately translates into counseling capacity, daily essentials, and operational continuity.
+						</p>
+					</section>
+
+					<section className="row g-3 mb-3">
+						<div className="col-lg-5">
+							<div className="card h-100 impact-card">
+								<div className="card-body">
+									<h3 className="h6 mb-3">How Contributions Become Care</h3>
+									<p className="mb-2">
+										This year, contributions total <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong>.
+									</p>
+									<p className="mb-2">
+										Equivalent support delivered: <strong>{summary.connection.counselingMonthsEquivalent.toFixed(2)}</strong> counseling-months.
+									</p>
+									<p className="small text-muted mb-0">{summary.connection.assumption}</p>
 								</div>
-								<div className="col-md-4">
-									<div className="border rounded p-3 h-100">
-										<div className="text-muted small text-center">Recurring Donations</div>
-										<div className="d-flex flex-column justify-content-center align-items-center text-center" style={{ minHeight: "8.25rem", paddingTop: "0.75rem" }}>
-											<div className="display-6 fw-semibold mb-1">{summary.personalContributionSummary.recurringStatus.recurringDonationCount}</div>
-											<div className="small text-muted">
-												{formatCurrencyPhp(summary.personalContributionSummary.recurringStatus.recurringEstimatedValue)} estimated value
-											</div>
-										</div>
-									</div>
-								</div>
-								<div className="col-md-4">
-									<div className="border rounded p-3 h-100">
-										<div className="text-muted small mb-2">Donation Mix</div>
+							</div>
+						</div>
+						<div className="col-lg-7">
+							<div className="card h-100 impact-card">
+								<div className="card-body">
+									<h3 className="h6 mb-3">Donation Mix</h3>
+									<div className="d-flex flex-column gap-3">
 										{summary.personalContributionSummary.donationMix.map((row) => (
-											<div className="mb-2" key={row.donationType}>
-												<div className="d-flex justify-content-between small">
+											<div key={row.donationType}>
+												<div className="d-flex justify-content-between small mb-1">
 													<span>{row.donationType}</span>
 													<span>{formatPercent(row.percent)}</span>
 												</div>
-												<div className="progress" style={{ height: 8 }}>
-													<div className="progress-bar" style={{ width: `${Math.max(0, Math.min(100, row.percent))}%` }} />
+												<div className="impact-progress">
+													<div className="impact-progress-fill" style={{ width: `${Math.max(0, Math.min(100, row.percent))}%` }} role="presentation" />
 												</div>
 											</div>
 										))}
@@ -130,105 +149,96 @@ function DonorImpactPage() {
 								</div>
 							</div>
 						</div>
-					</div>
+					</section>
 
-					<div className="card mb-3">
+					<section className="impact-story-intro mb-3">
+						<h3 className="impact-section-title mb-1">3) Results For Residents</h3>
+						<p className="impact-section-copy mb-0">
+							These outcomes reflect healing, stability, and momentum toward independent life.
+						</p>
+					</section>
+
+					<section className="card mb-3 impact-card">
 						<div className="card-body">
-							<h3 className="h6 mb-3">2. Organizational Impact</h3>
+							<h3 className="h6 mb-3">Program Outcomes</h3>
 							<div className="row g-3">
-								<div className="col-md-3">
-									<div className="border rounded p-3">
-										<div className="small text-muted">Active Residents</div>
-										<div className="h5 mb-0">{summary.organizationalImpact.activeResidents}</div>
+								<div className="col-md-3 col-6">
+									<div className="impact-outcome-tile">
+										<div className="impact-outcome-number">{summary.organizationalImpact.activeResidents}</div>
+										<div className="impact-outcome-label">Active Residents</div>
 									</div>
 								</div>
-								<div className="col-md-3">
-									<div className="border rounded p-3">
-										<div className="small text-muted">Reintegration Success</div>
-										<div className="h5 mb-0">{formatPercent(summary.organizationalImpact.reintegrationSuccessRate)}</div>
+								<div className="col-md-3 col-6">
+									<div className="impact-outcome-tile">
+										<div className="impact-outcome-number">{formatPercent(summary.organizationalImpact.reintegrationSuccessRate)}</div>
+										<div className="impact-outcome-label">Reintegration Success</div>
 									</div>
 								</div>
-								<div className="col-md-3">
-									<div className="border rounded p-3">
-										<div className="small text-muted">Educational Progress</div>
-										<div className="h5 mb-0">{formatPercent(summary.organizationalImpact.educationalProgressAveragePercent)}</div>
+								<div className="col-md-3 col-6">
+									<div className="impact-outcome-tile">
+										<div className="impact-outcome-number">{formatPercent(summary.organizationalImpact.educationalProgressAveragePercent)}</div>
+										<div className="impact-outcome-label">Educational Progress</div>
 									</div>
 								</div>
-								<div className="col-md-3">
-									<div className="border rounded p-3">
-										<div className="small text-muted">Health Goals Met</div>
-										<div className="h5 mb-0">{formatPercent(summary.organizationalImpact.healthWellbeingGoalsMetPercent)}</div>
+								<div className="col-md-3 col-6">
+									<div className="impact-outcome-tile">
+										<div className="impact-outcome-number">{formatPercent(summary.organizationalImpact.healthWellbeingGoalsMetPercent)}</div>
+										<div className="impact-outcome-label">Health Goals Met</div>
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					</section>
 
-					<div className="card mb-3">
-						<div className="card-body">
-							<h3 className="h6 mb-3">3. How Funding Supports Services</h3>
-							<p className="mb-1">
-								Total contributions this year are <strong>{formatCurrencyPhp(summary.connection.donorContributionThisYear)}</strong>.
-							</p>
-							<p className="mb-1">
-								Equivalent support: <strong>{summary.connection.counselingMonthsEquivalent.toFixed(2)}</strong> counseling-months.
-							</p>
-							<p className="text-muted small">{summary.connection.assumption}</p>
-							<div className="mt-2">
-								<div className="small fw-semibold mb-2">Campaign-linked outcomes</div>
-								{summary.connection.campaignOutcomes.length === 0 ? (
-									<div className="text-muted small">No campaign-specific contributions yet.</div>
-								) : (
-									summary.connection.campaignOutcomes.map((campaign) => (
-										<div className="border rounded p-2 mb-2 small" key={campaign.campaignName}>
-											<div className="fw-semibold">{campaign.campaignName}</div>
-											<div>
-												Campaign funding: {formatCurrencyPhp(campaign.donorValue)} of {formatCurrencyPhp(campaign.campaignTotal)} campaign
-												total ({formatPercent(campaign.donorSharePercent)}).
-											</div>
+					<section className="impact-story-intro mb-3">
+						<h3 className="impact-section-title mb-1">4) Where Momentum Is Building</h3>
+						<p className="impact-section-copy mb-0">
+							Campaign progress and model insights highlight where your next gift can make the strongest difference.
+						</p>
+					</section>
+
+					<section className="row g-3 mb-3">
+						<div className="col-lg-7">
+							<div className="card h-100 impact-card">
+								<div className="card-body">
+									<h3 className="h6 mb-3">Campaign-linked Outcomes</h3>
+									{summary.connection.campaignOutcomes.length === 0 ? (
+										<div className="text-muted small">No campaign-specific contributions yet.</div>
+									) : (
+										<div className="impact-campaign-grid">
+											{summary.connection.campaignOutcomes.map((campaign) => (
+												<div className="impact-campaign-item" key={campaign.campaignName}>
+													<div className="fw-semibold">{campaign.campaignName}</div>
+													<div className="small">
+														{formatCurrencyPhp(campaign.donorValue)} raised out of {formatCurrencyPhp(campaign.campaignTotal)} total.
+													</div>
+													<div className="small text-muted">{formatPercent(campaign.donorSharePercent)} donor share</div>
+												</div>
+											))}
 										</div>
-									))
-								)}
+									)}
+								</div>
 							</div>
 						</div>
-					</div>
-
-					<div className="card mb-3">
-						<div className="card-body">
-							<h3 className="h6 mb-3">4. Machine Learning Insights (Explanatory Model)</h3>
-							<ul className="mb-2">
-								{summary.explanatoryModel.topInsights.map((insight) => (
-									<li key={insight}>{insight}</li>
-								))}
-							</ul>
-							<div className="small text-muted">
-								{summary.explanatoryModel.isPipelineBacked
-									? "Insights are currently pipeline-backed."
-									: `${summary.explanatoryModel.placeholder} (space reserved for pipeline outputs).`}
+						<div className="col-lg-5">
+							<div className="card h-100 impact-card">
+								<div className="card-body">
+									<h3 className="h6 mb-3">Insights</h3>
+									<ul className="impact-insights-list mb-3">
+										{summary.explanatoryModel.topInsights.map((insight) => (
+											<li key={insight}>{insight}</li>
+										))}
+									</ul>
+									<div className="small text-muted">
+										{summary.explanatoryModel.isPipelineBacked
+											? "Insights are pipeline-backed."
+											: `${summary.explanatoryModel.placeholder} (space reserved for pipeline outputs).`}
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
+					</section>
 
-					<div className="card mb-4">
-						<div className="card-body">
-							<h3 className="h6 mb-3">5. Interactive Elements</h3>
-							{hasDonorPrivileges ? (
-								<div className="d-flex gap-2 flex-wrap">
-									<Link to={donateLink} className="btn btn-primary btn-sm">
-										Donate
-									</Link>
-								</div>
-							) : (
-								<div className="d-flex gap-2 flex-wrap align-items-center">
-									<Link to={donateLink} className="btn btn-primary btn-sm">
-										Donate
-									</Link>
-									<span className="small text-muted">Sign in with a donor-enabled account to submit a donation.</span>
-								</div>
-							)}
-							<div className="small text-muted mt-2">{summary.reportPlaceholders.pipeline455}</div>
-						</div>
-					</div>
 				</>
 			)}
 		</div>

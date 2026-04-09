@@ -134,10 +134,12 @@ function SafehousesPage() {
   return (
     <div className="container mt-4">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Safehouses</h2>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={handleNewSafehouse}>+ Add Safehouse</button>
+          <div className="mobile-page-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleNewSafehouse}>+ Add Safehouse</button>
+          </div>
         )}
       </div>
       {error ? <div className="alert alert-danger">{error}</div> : null}

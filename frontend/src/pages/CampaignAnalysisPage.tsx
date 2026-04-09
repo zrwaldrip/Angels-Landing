@@ -197,16 +197,15 @@ export default function CampaignAnalysisPage() {
   };
 
   return (
-    <div className="container-fluid" style={{ color: TEXT_MAIN }}>
+    <div className="container-fluid campaign-analysis-page">
       <Header />
 
-      {/* ── Page title ── */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 mobile-page-header">
         <div>
-          <h2 className="fw-bold mb-0" style={{ color: TEXT_MAIN }}>Campaign Analysis</h2>
-          <p className="mb-0 small" style={{ color: TEXT_MUTED }}>
-            ML-scored fundraising effectiveness — updated weekly by the campaign scorer pipeline
-            {lastUpdated && <> · Last scored: {lastUpdated}</>}
+          <h2 className="fw-bold mb-0">Campaign Analysis</h2>
+          <p className="text-muted mb-0 small mobile-page-subtitle">
+            ML-scored fundraising effectiveness &mdash; updated weekly by the campaign scorer pipeline
+            {lastUpdated && <> &middot; Last scored: {lastUpdated}</>}
           </p>
         </div>
       </div>

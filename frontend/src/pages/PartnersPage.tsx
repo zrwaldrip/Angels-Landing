@@ -97,10 +97,12 @@ function PartnersPage() {
   return (
     <div className="container mt-4">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Partners</h2>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={handleNew}>+ Add Partner</button>
+          <div className="mobile-page-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ Add Partner</button>
+          </div>
         )}
       </div>
 

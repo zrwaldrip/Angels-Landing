@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { normalizeRoles } from '../routes/roleRouting';
 import {
   createProcessRecording,
   deleteProcessRecording,
@@ -28,7 +29,8 @@ function safeDateSortValue(value?: string) {
 
 function ProcessRecordingsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
-  const isAdmin = authSession.roles.includes('Admin');
+  const normalizedRoles = normalizeRoles(authSession.roles);
+  const isAdmin = normalizedRoles.includes('admin');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -104,10 +106,25 @@ function ProcessRecordingsPage() {
     setError('');
     try {
       const data = await getProcessRecordings({ residentId, page, pageSize });
-      setRecordings(data.items);
-      setTotalRecordings(data.total);
+      // API currently returns a plain array for process recordings (not a paged object).
+      // Keep this defensive to prevent runtime crashes if response shape changes.
+      const rawItems = Array.isArray(data)
+        ? data
+        : Array.isArray((data as { items?: ProcessRecording[] })?.items)
+          ? (data as { items: ProcessRecording[] }).items
+          : [];
+      const total = Array.isArray(data)
+        ? data.length
+        : typeof (data as { total?: number })?.total === 'number'
+          ? (data as { total: number }).total
+          : rawItems.length;
+
+      setRecordings(rawItems);
+      setTotalRecordings(total);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load process recordings.');
+      setRecordings([]);
+      setTotalRecordings(0);
     } finally {
       setLoadingRecordings(false);
     }
@@ -216,15 +233,17 @@ function ProcessRecordingsPage() {
   return (
     <div className="container mt-4 process-recordings-page">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <div>
           <h2 className="h4 mb-1">Process Recordings</h2>
-          <div className="text-muted small">Counseling session notes and resident healing history</div>
+          <div className="text-muted small mobile-page-subtitle">Counseling session notes and resident healing history</div>
         </div>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={handleNew} disabled={selectedResidentId == null}>
-            + Add Session Note
-          </button>
+          <div className="mobile-page-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleNew} disabled={selectedResidentId == null}>
+              + Add Session Note
+            </button>
+          </div>
         )}
       </div>
 

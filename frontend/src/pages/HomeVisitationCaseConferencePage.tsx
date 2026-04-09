@@ -106,22 +106,24 @@ export default function HomeVisitationCaseConferencePage() {
   return (
     <div className="container mt-4">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Home Visitation &amp; Case Conferences</h2>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={() => {
-            if (activeTab === 'visitations') {
-              setEditingVisitation({});
-              setShowVisitationModal(true);
-            } else {
-              setEditingConference({ planCategory: 'Case Conference' });
-              setShowConferenceModal(true);
-            }
-          }}
-        >
-          {activeTab === 'visitations' ? '+ Add Home Visit' : '+ Add Case Conference'}
-        </button>
+        <div className="mobile-page-actions">
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              if (activeTab === 'visitations') {
+                setEditingVisitation({});
+                setShowVisitationModal(true);
+              } else {
+                setEditingConference({ planCategory: 'Case Conference' });
+                setShowConferenceModal(true);
+              }
+            }}
+          >
+            {activeTab === 'visitations' ? '+ Add Home Visit' : '+ Add Case Conference'}
+          </button>
+        </div>
       </div>
 
       <ul className="nav nav-tabs mb-3">

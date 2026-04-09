@@ -113,11 +113,11 @@ function UserManagementPage() {
       );
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 user-management-page">
       <Header />
-      <div className="d-flex align-items-center justify-content-between mb-3">
+      <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">User Management</h2>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 mobile-page-actions">
           <input
             type="search"
             className="form-control form-control-sm"
