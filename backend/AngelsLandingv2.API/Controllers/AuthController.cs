@@ -13,7 +13,8 @@ namespace AngelsLandingv2.API.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    IWebHostEnvironment environment) : ControllerBase
 {
     private const string DefaultFrontendUrl = "http://localhost:3000";
     private const string DefaultExternalReturnPath = "/residents";
@@ -207,14 +208,50 @@ public class AuthController(
         if (!Request.Cookies.ContainsKey(cookieName))
             return;
 
+        var authCookieModeRaw = configuration["AuthCookies:Mode"]?.Trim().ToLowerInvariant();
+        var forceSameSiteCookies =
+            string.Equals(authCookieModeRaw, "same-site", StringComparison.Ordinal) ||
+            string.Equals(authCookieModeRaw, "samesite", StringComparison.Ordinal) ||
+            string.Equals(authCookieModeRaw, "same_site", StringComparison.Ordinal);
+        var forceCrossSiteCookies =
+            string.Equals(authCookieModeRaw, "cross-site", StringComparison.Ordinal) ||
+            string.Equals(authCookieModeRaw, "crosssite", StringComparison.Ordinal) ||
+            string.Equals(authCookieModeRaw, "cross_site", StringComparison.Ordinal);
+
+        var allowAnyOrigin = string.Equals(
+            configuration["Cors:AllowAnyOrigin"],
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+        var corsAllowedOriginsRaw = configuration["Cors:AllowedOrigins"];
+        var corsOrigins = new List<string>();
+        if (!string.IsNullOrWhiteSpace(corsAllowedOriginsRaw))
+        {
+            foreach (var part in corsAllowedOriginsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                corsOrigins.Add(part.TrimEnd('/'));
+            }
+        }
+        if (corsOrigins.Count == 0)
+        {
+            var frontendUrl = configuration["FrontendUrl"] ?? DefaultFrontendUrl;
+            corsOrigins.Add(frontendUrl.TrimEnd('/'));
+        }
+
+        var needsCrossSiteAuthCookies =
+            forceCrossSiteCookies
+            || (!forceSameSiteCookies && (allowAnyOrigin || corsOrigins.Exists(o => o.StartsWith("https://", StringComparison.OrdinalIgnoreCase))));
+        var authCookieRequireHttps = configuration.GetValue<bool?>("AuthCookies:RequireHttps")
+            ?? !environment.IsDevelopment();
+        if (needsCrossSiteAuthCookies) authCookieRequireHttps = true;
+
         Response.Cookies.Append(cookieName, string.Empty, new CookieOptions
         {
             Expires = DateTimeOffset.UnixEpoch,
             MaxAge = TimeSpan.Zero,
             Path = "/",
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None
+            Secure = authCookieRequireHttps,
+            SameSite = needsCrossSiteAuthCookies ? SameSiteMode.None : SameSiteMode.Lax
         });
     }
 
