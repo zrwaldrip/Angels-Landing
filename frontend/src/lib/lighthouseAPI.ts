@@ -330,6 +330,42 @@ export function getAdminReportsSummary() {
   return apiFetch<AdminReportsSummary>('/api/admin-reports/summary');
 }
 
+export interface SocialEngagementFactor {
+  factorKey?: string;
+  displayName?: string;
+  coefficient?: number;
+  pValue?: number;
+  rankOrder?: number;
+  computedAt?: string;
+  modelVersion?: string;
+}
+
+export interface SocialEngagementPostRow {
+  postId: number;
+  platform?: string;
+  postType?: string;
+  createdAt?: string;
+  engagementRate?: number;
+  predictedEngagementRate?: number;
+  engagementScoredAt?: string;
+}
+
+export interface SocialEngagementInsights {
+  caveats?: string;
+  modelVersion?: string;
+  computedAt?: string;
+  olsR2?: number;
+  olsAdjR2?: number;
+  predictiveMaeHoldout?: number;
+  predictiveR2Holdout?: number;
+  factors: SocialEngagementFactor[];
+  posts: SocialEngagementPostRow[];
+}
+
+export function getSocialEngagementInsights() {
+  return apiFetch<SocialEngagementInsights>('/api/admin-reports/social-engagement');
+}
+
 export function createDonation(d: Partial<Donation>) {
   return apiFetch<Donation>('/api/donations', { method: 'POST', body: JSON.stringify(d) });
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AngelsLandingv2.API.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +29,8 @@ public static class CsvSeedingService
         await SeedHealthWellbeingRecordsAsync(db, dataFolder);
         await SeedPublicImpactSnapshotsAsync(db, dataFolder);
         await SeedSocialMediaPostsAsync(db, dataFolder);
+        await SeedSocialEngagementInsightsAsync(db, dataFolder);
+        await SeedSocialEngagementPostPredictionsAsync(db, dataFolder);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -494,6 +497,68 @@ public static class CsvSeedingService
             });
         }
         db.SocialMediaPosts.AddRange(batch);
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedSocialEngagementInsightsAsync(LighthouseDbContext db, string dataFolder)
+    {
+        if (await db.SocialEngagementInsights.AnyAsync()) return;
+
+        var path = Path.Combine(dataFolder, "social_engagement_insights.json");
+        if (!File.Exists(path)) return;
+
+        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        var root = doc.RootElement;
+        var computedAt = root.TryGetProperty("computedAt", out var ca) ? ca.GetString() : null;
+        var modelVersion = root.TryGetProperty("modelVersion", out var mv) ? mv.GetString() : null;
+
+        if (!root.TryGetProperty("factors", out var factors) || factors.ValueKind != JsonValueKind.Array)
+            return;
+
+        var batch = new List<SocialEngagementInsight>();
+        foreach (var el in factors.EnumerateArray())
+        {
+            batch.Add(new SocialEngagementInsight
+            {
+                FactorKey = el.TryGetProperty("factorKey", out var fk) ? fk.GetString() : null,
+                DisplayName = el.TryGetProperty("displayName", out var dn) ? dn.GetString() : null,
+                Coefficient = el.TryGetProperty("coefficient", out var co) && co.TryGetDouble(out var cd) ? cd : null,
+                PValue = el.TryGetProperty("pValue", out var pv) && pv.TryGetDouble(out var pd) ? pd : null,
+                RankOrder = el.TryGetProperty("rankOrder", out var ro) && ro.TryGetInt32(out var ri) ? ri : null,
+                ComputedAt = computedAt,
+                ModelVersion = modelVersion
+            });
+        }
+
+        if (batch.Count == 0) return;
+        db.SocialEngagementInsights.AddRange(batch);
+        await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedSocialEngagementPostPredictionsAsync(LighthouseDbContext db, string dataFolder)
+    {
+        if (await db.SocialMediaPosts.AnyAsync(p => p.PredictedEngagementRate != null)) return;
+
+        var path = Path.Combine(dataFolder, "social_engagement_post_predictions.json");
+        if (!File.Exists(path)) return;
+
+        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        if (doc.RootElement.ValueKind != JsonValueKind.Array) return;
+
+        foreach (var el in doc.RootElement.EnumerateArray())
+        {
+            if (!el.TryGetProperty("postId", out var pidEl) || !pidEl.TryGetInt32(out var postId))
+                continue;
+            var pred = el.TryGetProperty("predictedEngagementRate", out var pr) && pr.TryGetDouble(out var p) ? p : (double?)null;
+            var scored = el.TryGetProperty("engagementScoredAt", out var sc) ? sc.GetString() : null;
+            if (pred is null) continue;
+
+            var post = await db.SocialMediaPosts.FindAsync(postId);
+            if (post is null) continue;
+            post.PredictedEngagementRate = pred;
+            post.EngagementScoredAt = scored;
+        }
+
         await db.SaveChangesAsync();
     }
 }
