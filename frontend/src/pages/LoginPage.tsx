@@ -18,6 +18,20 @@ function LoginPage() {
 	const [errorMessage, setErrorMessage] = useState(searchParams.get("externalError") ?? "");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	async function waitForEstablishedSession(maxAttempts = 5, delayMs = 220) {
+		let lastSession = await getAuthSession();
+		if (lastSession.isAuthenticated) return lastSession;
+
+		for (let attempt = 1; attempt < maxAttempts; attempt += 1) {
+			await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+			await refreshAuthState();
+			lastSession = await getAuthSession();
+			if (lastSession.isAuthenticated) return lastSession;
+		}
+
+		return lastSession;
+	}
+
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		setErrorMessage("");
@@ -30,9 +44,11 @@ function LoginPage() {
 		try {
 			await loginUser(email, password, rememberMe, twoFactorCode || undefined, recoveryCode || undefined);
 			await refreshAuthState();
-			const session = await getAuthSession();
+			const session = await waitForEstablishedSession();
 			if (!session.isAuthenticated) {
-				throw new Error("Sign-in did not establish a valid session. Please refresh and try again.");
+				throw new Error(
+					"Sign-in completed, but a session cookie was not confirmed. On Safari, verify cross-site cookie settings and try again."
+				);
 			}
 			const returnTo = searchParams.get("returnTo");
 
