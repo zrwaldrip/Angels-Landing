@@ -1112,10 +1112,33 @@ html.theme-light .app-main .mfa-required-popup {
 	box-shadow: 0 10px 24px rgba(0, 73, 60, 0.14);
 }
 
+html.theme-light .app-main .mfa-setup-panel {
+	background: rgba(255, 255, 255, 0.96);
+	border-color: rgba(31, 43, 64, 0.16) !important;
+	box-shadow: 0 10px 26px rgba(31, 43, 64, 0.12);
+	color: #1f2b40;
+}
+
+html.theme-light .app-main .mfa-setup-panel h3,
+html.theme-light .app-main .mfa-setup-panel strong {
+	color: #1f2b40;
+}
+
+html.theme-light .app-main .mfa-qr-image {
+	background: #ffffff;
+	border-color: rgba(31, 43, 64, 0.18) !important;
+}
+
 html.theme-light .app-main .mfa-shared-key {
 	color: #17365c;
-	background: rgba(235, 242, 252, 0.95);
-	border-color: rgba(31, 43, 64, 0.2);
+	background: #eef4fb;
+	border-color: rgba(31, 43, 64, 0.18);
+}
+
+html.theme-light .app-main .mfa-recovery-alert {
+	background: rgba(0, 113, 93, 0.1);
+	border-color: rgba(0, 113, 93, 0.28);
+	color: #11443a;
 }
 
 html.theme-light .app-main .btn-outline-secondary,
@@ -1308,6 +1331,42 @@ summary.tutorial-highlight {
 	box-shadow:
 		0 0 0 2px rgba(122, 255, 223, 0.45),
 		0 0 18px rgba(122, 255, 223, 0.45);
+}
+
+html.theme-light .tutorial-highlight {
+	filter: none;
+}
+
+html.theme-light .app-header .app-header-link.tutorial-highlight,
+html.theme-light .app-header .app-menu-summary.tutorial-highlight {
+	background: rgba(136, 255, 226, 0.44) !important;
+	color: #0f2f2a !important;
+	text-shadow: none !important;
+}
+
+html.theme-light .app-header .app-menu-item.tutorial-highlight {
+	background: rgba(136, 255, 226, 0.58) !important;
+	color: #0a2924 !important;
+	text-decoration: none !important;
+}
+
+html.theme-light .app-header .app-donate-btn.tutorial-highlight,
+html.theme-light .app-header .app-profile-trigger.tutorial-highlight {
+	filter: none;
+	opacity: 1 !important;
+}
+
+html.theme-light .app-header a.tutorial-highlight,
+html.theme-light .app-header button.tutorial-highlight,
+html.theme-light .app-header summary.tutorial-highlight {
+	color: #0f2f2a !important;
+	text-shadow: none !important;
+}
+
+html.theme-light .app-main-nav .tutorial-highlight {
+	display: inline-flex;
+	align-items: center;
+	visibility: visible !important;
 }
 
 .tutorial-dim-backdrop {
