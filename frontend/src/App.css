@@ -365,6 +365,20 @@
 	color: rgba(198, 208, 228, 0.92) !important;
 }
 
+.app-main .donor-impact-redesign .impact-mix-row {
+	color: #f8fcff !important;
+}
+
+.app-main .donor-impact-redesign .impact-mix-label,
+.app-main .donor-impact-redesign .impact-mix-percent {
+	color: #f8fcff !important;
+	font-size: 0.94rem;
+}
+
+.app-main .donor-impact-redesign .impact-mix-percent {
+	font-weight: 700;
+}
+
 .app-main .donor-impact-redesign .impact-card h3,
 .app-main .donor-impact-redesign .impact-card .fw-semibold {
 	color: #ffffff !important;
