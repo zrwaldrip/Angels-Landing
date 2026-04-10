@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CookieConsentProvider } from "./context/CookieConsentContext";
+import { ThemePreferenceProvider } from "./context/ThemePreferenceContext";
 import { useAuth } from "./context/AuthContext";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import TutorialOverlay from "./components/TutorialOverlay";
@@ -438,17 +439,19 @@ function AppLayout() {
 
 function App() {
   return (
-    <CookieConsentProvider>
-      <AuthProvider>
-        <Router>
-					<TutorialProvider>
-						<AppLayout />
-						<TutorialOverlay />
-          <CookieConsentBanner />
-					</TutorialProvider>
-        </Router>
-      </AuthProvider>
-    </CookieConsentProvider>
+		<CookieConsentProvider>
+			<ThemePreferenceProvider>
+				<AuthProvider>
+					<Router>
+						<TutorialProvider>
+							<AppLayout />
+							<TutorialOverlay />
+						<CookieConsentBanner />
+						</TutorialProvider>
+					</Router>
+				</AuthProvider>
+			</ThemePreferenceProvider>
+		</CookieConsentProvider>
   );
 }
 
