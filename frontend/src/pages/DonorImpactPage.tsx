@@ -136,9 +136,9 @@ function DonorImpactPage() {
 									<div className="d-flex flex-column gap-3">
 										{summary.personalContributionSummary.donationMix.map((row) => (
 											<div key={row.donationType}>
-												<div className="d-flex justify-content-between small mb-1">
-													<span>{row.donationType}</span>
-													<span>{formatPercent(row.percent)}</span>
+													<div className="d-flex justify-content-between impact-mix-row mb-1">
+														<span className="impact-mix-label">{row.donationType}</span>
+														<span className="impact-mix-percent">{formatPercent(row.percent)}</span>
 												</div>
 												<div className="impact-progress">
 													<div className="impact-progress-fill" style={{ width: `${Math.max(0, Math.min(100, row.percent))}%` }} role="presentation" />
