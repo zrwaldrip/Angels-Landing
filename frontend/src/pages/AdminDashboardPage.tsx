@@ -24,7 +24,7 @@ function AdminDashboardPage() {
 	const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
 	const [recentDonations, setRecentDonations] = useState<Donation[]>([]);
 	const [upcomingConferences, setUpcomingConferences] = useState<InterventionPlan[]>([]);
-	const [residentsSample, setResidentsSample] = useState<Resident[]>([]);
+	const [allResidents, setAllResidents] = useState<Resident[]>([]);
 
 	useEffect(() => {
 		void loadDashboard();
@@ -38,7 +38,7 @@ function AdminDashboardPage() {
 				getSafehouses(),
 				getDonations({ page: 1, pageSize: 5 }),
 				getInterventionPlans(),
-				getResidents({ page: 1, pageSize: 200 }),
+				getResidents({ page: 1, pageSize: 10000 }),
 			]);
 			setSafehouses(safehouseData);
 			setRecentDonations(donationData.items ?? []);
@@ -53,7 +53,7 @@ function AdminDashboardPage() {
 				.sort((a, b) => new Date(a.targetDate ?? "").getTime() - new Date(b.targetDate ?? "").getTime())
 				.slice(0, 5);
 			setUpcomingConferences(upcoming);
-			setResidentsSample(residentData.items ?? []);
+			setAllResidents(residentData.items ?? []);
 		} catch (loadError) {
 			setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard.");
 		} finally {
@@ -74,13 +74,13 @@ function AdminDashboardPage() {
 	const occupancyRate = safehouseCapacityTotal > 0 ? (activeResidentsAcrossSafehouses / safehouseCapacityTotal) * 100 : 0;
 
 	const highRiskResidents = useMemo(
-		() => residentsSample.filter((resident) => resident.currentRiskLevel === "High" || resident.currentRiskLevel === "Critical").length,
-		[residentsSample]
+		() => allResidents.filter((resident) => resident.currentRiskLevel === "High" || resident.currentRiskLevel === "Critical").length,
+		[allResidents]
 	);
 
 	const activeCases = useMemo(
-		() => residentsSample.filter((resident) => resident.caseStatus === "Active").length,
-		[residentsSample]
+		() => allResidents.filter((resident) => resident.caseStatus === "Active").length,
+		[allResidents]
 	);
 
 	return (
@@ -123,7 +123,7 @@ function AdminDashboardPage() {
 						<div className="col-md-3">
 							<div className="card h-100">
 								<div className="card-body">
-									<div className="text-muted small">Active Cases (Sample)</div>
+									<div className="text-muted small">Active Cases</div>
 									<div className="h3 mb-0">{activeCases}</div>
 								</div>
 							</div>
@@ -131,7 +131,7 @@ function AdminDashboardPage() {
 						<div className="col-md-3">
 							<div className="card h-100">
 								<div className="card-body">
-									<div className="text-muted small">High/Critical Risk (Sample)</div>
+									<div className="text-muted small">High/Critical Risk</div>
 									<div className="h3 mb-0">{highRiskResidents}</div>
 								</div>
 							</div>
@@ -214,8 +214,8 @@ function AdminDashboardPage() {
 								</div>
 								<div className="col-md-4">
 									<div className="border rounded p-3 h-100">
-										<div className="small text-muted">Tracked Resident Records (Sample)</div>
-										<div className="h5 mb-0">{residentsSample.length}</div>
+										<div className="small text-muted">Tracked Resident Records</div>
+										<div className="h5 mb-0">{allResidents.length}</div>
 									</div>
 								</div>
 							</div>

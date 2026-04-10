@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
-import { getDonations, getSupporters, createDonation, updateDonation, deleteDonation, type Donation, type Supporter } from "../lib/lighthouseAPI";
+import { getDonations, getSupporters, createDonation, updateDonation, deleteDonation, createSupporter, updateSupporter, deleteSupporter, type Donation, type Supporter } from "../lib/lighthouseAPI";
 
 const DONATION_TYPE_OPTIONS = ["Monetary", "InKind", "Time", "Skills", "SocialMedia"] as const;
 const CHANNEL_OPTIONS = ["Campaign", "Event", "Direct", "SocialMedia", "PartnerReferral"] as const;
@@ -40,6 +40,11 @@ function DonationsPage() {
 	const [editingDonation, setEditingDonation] = useState<Partial<Donation> | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [saveError, setSaveError] = useState("");
+
+	const [showSupporterModal, setShowSupporterModal] = useState(false);
+	const [editingSupporter, setEditingSupporter] = useState<Partial<Supporter> | null>(null);
+	const [savingSupporter, setSavingSupporter] = useState(false);
+	const [saveSupporterError, setSaveSupporterError] = useState("");
 
 	const [activeTab, setActiveTab] = useState<"donations" | "supporters">("donations");
 
@@ -132,6 +137,47 @@ function DonationsPage() {
 		try {
 			await deleteDonation(id);
 			await loadDonations();
+		} catch (e) {
+			alert(e instanceof Error ? e.message : "Failed to delete.");
+		}
+	}
+
+	function handleEditSupporter(supporter: Supporter) {
+		setEditingSupporter({ ...supporter });
+		setSaveSupporterError("");
+		setShowSupporterModal(true);
+	}
+
+	function handleNewSupporter() {
+		setEditingSupporter({});
+		setSaveSupporterError("");
+		setShowSupporterModal(true);
+	}
+
+	async function handleSaveSupporter() {
+		if (!editingSupporter) return;
+		setSavingSupporter(true);
+		setSaveSupporterError("");
+		try {
+			if (editingSupporter.supporterId) {
+				await updateSupporter(editingSupporter.supporterId, editingSupporter);
+			} else {
+				await createSupporter(editingSupporter);
+			}
+			setShowSupporterModal(false);
+			await loadSupporters();
+		} catch (e) {
+			setSaveSupporterError(e instanceof Error ? e.message : "Failed to save.");
+		} finally {
+			setSavingSupporter(false);
+		}
+	}
+
+	async function handleDeleteSupporter(id: number) {
+		if (!confirm("Delete this supporter?")) return;
+		try {
+			await deleteSupporter(id);
+			await loadSupporters();
 		} catch (e) {
 			alert(e instanceof Error ? e.message : "Failed to delete.");
 		}
@@ -328,11 +374,17 @@ function DonationsPage() {
 			<Header />
 			<div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
 				<h2 className="h4 mb-0">Donations & Supporters</h2>
-				{isAdmin && activeTab === "donations" && (
+				{isAdmin && (
 					<div className="mobile-page-actions">
-						<button className="btn btn-primary btn-sm" onClick={handleNew}>
-							+ Add Donation
-						</button>
+						{activeTab === "donations" ? (
+							<button className="btn btn-primary btn-sm" onClick={handleNew}>
+								+ Add Donation
+							</button>
+						) : (
+							<button className="btn btn-primary btn-sm" onClick={handleNewSupporter}>
+								+ Add Supporter
+							</button>
+						)}
 					</div>
 				)}
 			</div>
@@ -536,6 +588,7 @@ function DonationsPage() {
 										<th role="button" onClick={() => toggleSupporterSort("country")}>Country{supporterSortIndicator("country")}</th>
 										<th role="button" onClick={() => toggleSupporterSort("status")}>Status{supporterSortIndicator("status")}</th>
 										<th role="button" onClick={() => toggleSupporterSort("acquisitionChannel")}>Channel{supporterSortIndicator("acquisitionChannel")}</th>
+										{isAdmin && <th>Actions</th>}
 									</tr>
 								</thead>
 								<tbody>
@@ -551,6 +604,16 @@ function DonationsPage() {
 												<span className={`badge ${s.status === "Active" ? "text-bg-success" : "text-bg-secondary"}`}>{s.status}</span>
 											</td>
 											<td>{s.acquisitionChannel}</td>
+											{isAdmin && (
+												<td>
+													<button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEditSupporter(s)}>
+														Edit
+													</button>
+													<button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteSupporter(s.supporterId)}>
+														Delete
+													</button>
+												</td>
+											)}
 										</tr>
 									))}
 								</tbody>
@@ -731,6 +794,140 @@ function DonationsPage() {
 								</button>
 								<button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
 									{saving ? "Saving..." : "Save"}
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Supporter Modal */}
+			{showSupporterModal && editingSupporter && (
+				<div className="modal d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
+					<div className="modal-dialog modal-lg">
+						<div className="modal-content">
+							<div className="modal-header">
+								<h5 className="modal-title">{editingSupporter.supporterId ? "Edit Supporter" : "Add Supporter"}</h5>
+								<button type="button" className="btn-close" onClick={() => setShowSupporterModal(false)} />
+							</div>
+							<div className="modal-body">
+								{saveSupporterError ? <div className="alert alert-danger">{saveSupporterError}</div> : null}
+								<div className="row g-3">
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Display Name</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.displayName ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, displayName: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Organization Name</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.organizationName ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, organizationName: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">First Name</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.firstName ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, firstName: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Last Name</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.lastName ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, lastName: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Email</label>
+										<input
+											type="email"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.email ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, email: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Phone</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.phone ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, phone: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-4">
+										<label className="form-label small mb-1">Supporter Type</label>
+										<select
+											className="form-select form-select-sm"
+											value={String(editingSupporter.supporterType ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, supporterType: e.target.value } : prev))}
+										>
+											<option value="">Select...</option>
+											<option value="Individual">Individual</option>
+											<option value="Corporate">Corporate</option>
+											<option value="Foundation">Foundation</option>
+											<option value="Church">Church</option>
+										</select>
+									</div>
+									<div className="col-md-4">
+										<label className="form-label small mb-1">Status</label>
+										<select
+											className="form-select form-select-sm"
+											value={String(editingSupporter.status ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, status: e.target.value } : prev))}
+										>
+											<option value="">Select...</option>
+											<option value="Active">Active</option>
+											<option value="Inactive">Inactive</option>
+										</select>
+									</div>
+									<div className="col-md-4">
+										<label className="form-label small mb-1">Acquisition Channel</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.acquisitionChannel ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, acquisitionChannel: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Country</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.country ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, country: e.target.value } : prev))}
+										/>
+									</div>
+									<div className="col-md-6">
+										<label className="form-label small mb-1">Region</label>
+										<input
+											type="text"
+											className="form-control form-control-sm"
+											value={String(editingSupporter.region ?? "")}
+											onChange={(e) => setEditingSupporter((prev) => (prev ? { ...prev, region: e.target.value } : prev))}
+										/>
+									</div>
+								</div>
+							</div>
+							<div className="modal-footer">
+								<button type="button" className="btn btn-secondary" onClick={() => setShowSupporterModal(false)}>
+									Cancel
+								</button>
+								<button type="button" className="btn btn-primary" onClick={handleSaveSupporter} disabled={savingSupporter}>
+									{savingSupporter ? "Saving..." : "Save"}
 								</button>
 							</div>
 						</div>

@@ -17,7 +17,9 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
         "Successful",
         "Independent Living",
         "With Family",
-        "Reunified"
+        "Reunified",
+        "Completed",
+        "Complete"
     ];
 
     private static string NormalizeBranding(string? value)
@@ -88,7 +90,7 @@ public class DonorImpactController(LighthouseDbContext db) : ControllerBase
             .Where(r => r.NutritionScore.HasValue && r.SleepQualityScore.HasValue)
             .Select(r => new { nutrition = r.NutritionScore!.Value, sleep = r.SleepQualityScore!.Value })
             .ToListAsync();
-        var healthGoalsMetCount = healthRecords.Count(r => r.nutrition >= 70 && r.sleep >= 70);
+        var healthGoalsMetCount = healthRecords.Count(r => r.nutrition >= 3 && r.sleep >= 3);
         var healthGoalsMetRate = healthRecords.Count == 0 ? 0 : (double)healthGoalsMetCount / healthRecords.Count * 100;
 
         var publishedSnapshot = await db.PublicImpactSnapshots

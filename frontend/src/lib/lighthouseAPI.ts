@@ -408,6 +408,18 @@ export function getSupporters(params?: Record<string, string | number>) {
   return apiFetch<SupporterListResult>(`/api/supporters${qs ? '?' + qs : ''}`);
 }
 
+export function createSupporter(s: Partial<Supporter>) {
+  return apiFetch<Supporter>('/api/supporters', { method: 'POST', body: JSON.stringify(s) });
+}
+
+export function updateSupporter(id: number, s: Partial<Supporter>) {
+  return apiFetch<void>(`/api/supporters/${id}`, { method: 'PUT', body: JSON.stringify(s) });
+}
+
+export function deleteSupporter(id: number) {
+  return apiFetch<void>(`/api/supporters/${id}`, { method: 'DELETE' });
+}
+
 // ─── Incidents ────────────────────────────────────────────────────────────────
 export interface IncidentReport {
   incidentId: number;
