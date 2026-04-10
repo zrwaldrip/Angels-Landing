@@ -168,6 +168,24 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .Where(x => x.effective != null && x.effective.Value >= reportStart && x.effective.Value <= reportEnd)
             .ToList();
 
+        var residentToSafehouse = residents
+            .Where(r => r.ResidentId != 0 && r.SafehouseId.HasValue)
+            .ToDictionary(r => r.ResidentId, r => r.SafehouseId!.Value);
+
+        var educationFallbackBySafehouse = educationRecords
+            .Where(record => record.ResidentId.HasValue
+                             && residentToSafehouse.ContainsKey(record.ResidentId.Value)
+                             && record.ProgressPercent.HasValue)
+            .GroupBy(record => residentToSafehouse[record.ResidentId!.Value])
+            .ToDictionary(group => group.Key, group => group.Average(record => record.ProgressPercent ?? 0));
+
+        var healthFallbackBySafehouse = healthRecords
+            .Where(record => record.ResidentId.HasValue
+                             && residentToSafehouse.ContainsKey(record.ResidentId.Value)
+                             && record.GeneralHealthScore.HasValue)
+            .GroupBy(record => residentToSafehouse[record.ResidentId!.Value])
+            .ToDictionary(group => group.Key, group => group.Average(record => record.GeneralHealthScore ?? 0));
+
         var latestMetricRowsInWindow = metricsInWindow
             .Where(x => x.metric.SafehouseId != null)
             .GroupBy(x => x.metric.SafehouseId!.Value)
@@ -228,8 +246,14 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
                     safehouseId = safehouse.SafehouseId,
                     name = safehouse.Name ?? safehouse.SafehouseCode ?? $"Safehouse #{safehouse.SafehouseId}",
                     occupancyRate,
-                    educationProgress = rollup.latestWithEducation?.AvgEducationProgress,
-                    healthScore = rollup.latestWithHealth?.AvgHealthScore,
+                    educationProgress = rollup.latestWithEducation?.AvgEducationProgress
+                        ?? (educationFallbackBySafehouse.TryGetValue(safehouse.SafehouseId, out var educationFallback)
+                            ? educationFallback
+                            : null),
+                    healthScore = rollup.latestWithHealth?.AvgHealthScore
+                        ?? (healthFallbackBySafehouse.TryGetValue(safehouse.SafehouseId, out var healthFallback)
+                            ? healthFallback
+                            : null),
                     educationAsOfMonth = MetricPeriodLabel(rollup.latestWithEducation),
                     healthAsOfMonth = MetricPeriodLabel(rollup.latestWithHealth)
                 };
@@ -237,8 +261,24 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .OrderByDescending(row => row.occupancyRate)
             .ToList();
 
+        static bool IsSuccessfulReintegrationStatus(string status)
+        {
+            var normalized = status.Trim().ToLowerInvariant();
+            if (normalized.Length == 0) return false;
+
+            return normalized.Contains("reintegrat")
+                   || normalized.Contains("reunif")
+                   || normalized.Contains("with family")
+                   || normalized.Contains("independent")
+                   || normalized.Contains("successful")
+                   || normalized.Contains("graduat")
+                   || normalized.Contains("complete")
+                   || normalized.Contains("completed")
+                   || normalized.Contains("done")
+                   || normalized.Contains("closed");
+        }
+
         // Reintegration: include only residents whose DateClosed (or CreatedAt fallback) falls inside the reporting window.
-        var successStatuses = new[] { "reintegrated", "successful", "independent living", "with family", "reunified", "completed" };
         var reintegrationRows = residents
             .Select(r =>
             {
@@ -249,7 +289,7 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .Where(r => !string.IsNullOrWhiteSpace(r.status) && r.effectiveDate != null && r.effectiveDate.Value >= reportStart && r.effectiveDate.Value <= reportEnd)
             .ToList();
         var assessed = reintegrationRows.Count;
-        var successful = reintegrationRows.Count(r => successStatuses.Contains((r.status ?? string.Empty).ToLowerInvariant()));
+        var successful = reintegrationRows.Count(r => r.status != null && IsSuccessfulReintegrationStatus(r.status));
         var reintegrationSuccessRate = assessed == 0 ? 0 : successful * 100.0 / assessed;
 
         // Annual accomplishment: keyword matching on intervention plans inside the window.

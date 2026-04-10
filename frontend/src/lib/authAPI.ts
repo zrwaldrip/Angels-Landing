@@ -42,7 +42,8 @@ export interface AdminUser {
 }
 
 export async function getAuthSession(): Promise<AuthSession> {
-  const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
+  const cacheBust = Date.now();
+  const response = await fetch(`${apiBaseUrl}/api/auth/me?cb=${cacheBust}`, {
     credentials: 'include',
     cache: 'no-store',
   });

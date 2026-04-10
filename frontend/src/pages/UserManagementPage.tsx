@@ -16,7 +16,7 @@ function UserManagementPage() {
   const [selectedEmailConfirmed, setSelectedEmailConfirmed] = useState<string[]>([]);
   const [selectedLockout, setSelectedLockout] = useState<string[]>([]);
   const [selectedMfa, setSelectedMfa] = useState<string[]>([]);
-  const [sortKey, setSortKey] = useState<'email' | 'userName' | 'roles' | 'emailConfirmed' | 'lockoutEnabled' | 'twoFactorEnabled'>('email');
+  const [sortKey, setSortKey] = useState<'email' | 'roles' | 'emailConfirmed' | 'lockoutEnabled' | 'twoFactorEnabled'>('email');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -62,7 +62,8 @@ function UserManagementPage() {
       if (!prev) return prev;
       return {
         ...prev,
-        roles: level === 'Admin' ? ['Admin', 'Donor'] : ['Donor'],
+        // Admin users inherit donor capabilities through authorization checks.
+        roles: level === 'Admin' ? ['Admin'] : ['Donor'],
       };
     });
   }
@@ -142,8 +143,6 @@ function UserManagementPage() {
       switch (sortKey) {
         case 'email':
           av = String(a.email ?? '').toLowerCase(); bv = String(b.email ?? '').toLowerCase(); break;
-        case 'userName':
-          av = String(a.userName ?? '').toLowerCase(); bv = String(b.userName ?? '').toLowerCase(); break;
         case 'roles':
           av = a.roles.join(', ').toLowerCase(); bv = b.roles.join(', ').toLowerCase(); break;
         case 'emailConfirmed':
@@ -288,7 +287,6 @@ function UserManagementPage() {
             <thead className="table-light">
               <tr>
                 <th role="button" onClick={() => toggleSort('email')}>Email{sortIndicator('email')}</th>
-                <th role="button" onClick={() => toggleSort('userName')}>User Name{sortIndicator('userName')}</th>
                 <th role="button" onClick={() => toggleSort('roles')}>Roles{sortIndicator('roles')}</th>
                 <th role="button" onClick={() => toggleSort('emailConfirmed')}>Email Confirmed{sortIndicator('emailConfirmed')}</th>
                 <th role="button" onClick={() => toggleSort('lockoutEnabled')}>Lockout Enabled{sortIndicator('lockoutEnabled')}</th>
@@ -300,7 +298,6 @@ function UserManagementPage() {
               {pagedUsers.map((user) => (
                 <tr key={user.id}>
                   <td>{user.email ?? '—'}</td>
-                  <td>{user.userName ?? '—'}</td>
                   <td>{user.roles.join(', ') || '—'}</td>
                   <td>{user.emailConfirmed ? 'Yes' : 'No'}</td>
                   <td>{user.lockoutEnabled ? 'Yes' : 'No'}</td>
