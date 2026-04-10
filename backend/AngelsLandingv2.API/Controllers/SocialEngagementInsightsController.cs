@@ -14,22 +14,34 @@ public class SocialEngagementInsightsController(LighthouseDbContext db) : Contro
     [HttpGet("social-engagement")]
     public async Task<IActionResult> GetSocialEngagement()
     {
+        var minP = 0.05;
+        if (Request.Query.TryGetValue("minP", out var minPValues)
+            && double.TryParse(minPValues.FirstOrDefault(), out var parsedMinP)
+            && parsedMinP > 0
+            && parsedMinP < 1)
+        {
+            minP = parsedMinP;
+        }
+
         var insights = await db.SocialEngagementInsights
             .AsNoTracking()
             .OrderBy(i => i.RankOrder ?? int.MaxValue)
             .ToListAsync();
 
         var metaRow = insights.FirstOrDefault();
-        var factors = insights.Select(i => new FactorDto
-        {
-            factorKey = i.FactorKey,
-            displayName = i.DisplayName,
-            coefficient = i.Coefficient,
-            pValue = i.PValue,
-            rankOrder = i.RankOrder,
-            computedAt = i.ComputedAt,
-            modelVersion = i.ModelVersion
-        }).ToList();
+        var factors = insights
+            .Where(i => i.PValue != null && i.PValue < minP)
+            .Select(i => new FactorDto
+            {
+                factorKey = i.FactorKey,
+                displayName = i.DisplayName,
+                coefficient = i.Coefficient,
+                pValue = i.PValue,
+                rankOrder = i.RankOrder,
+                computedAt = i.ComputedAt,
+                modelVersion = i.ModelVersion
+            })
+            .ToList();
 
         var posts = await db.SocialMediaPosts
             .AsNoTracking()
@@ -57,6 +69,7 @@ public class SocialEngagementInsightsController(LighthouseDbContext db) : Contro
             olsAdjR2 = metaRow?.OlsAdjR2,
             predictiveMaeHoldout = metaRow?.PredictiveMaeHoldout,
             predictiveR2Holdout = metaRow?.PredictiveR2Holdout,
+            minP,
             factors,
             posts
         });

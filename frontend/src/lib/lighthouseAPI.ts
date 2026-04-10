@@ -280,6 +280,11 @@ export interface DonorImpactSummary {
 }
 
 export interface AdminReportsSummary {
+  reportPeriod?: {
+    startUtc?: string;
+    endUtc?: string;
+  };
+  methodologyNotes?: string[];
   donationTrends: Array<{ month: string; totalValue: number }>;
   residentOutcomeMetrics: {
     avgEducationProgress: number;
@@ -360,6 +365,7 @@ export interface SocialEngagementInsights {
   olsAdjR2?: number;
   predictiveMaeHoldout?: number;
   predictiveR2Holdout?: number;
+  minP?: number;
   factors: SocialEngagementFactor[];
   posts: SocialEngagementPostRow[];
 }
