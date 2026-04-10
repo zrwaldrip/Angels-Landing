@@ -115,6 +115,23 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .Select(key => new { month = key, totalValue = monthlyTotals[key] })
             .ToList();
 
+        // Prefer SafehouseMonthlyMetrics for education/health rollups when available, since it is the
+        // pre-aggregated operational snapshot used by stakeholders.
+        var metricsInWindow = safehouseMetrics
+            .Select(m => new
+            {
+                metric = m,
+                effective = ParseDateLoose(m.MonthEnd) ?? ParseDateLoose(m.MonthStart)
+            })
+            .Where(x => x.effective != null && x.effective.Value >= reportStart && x.effective.Value <= reportEnd)
+            .ToList();
+
+        var latestMetricRowsInWindow = metricsInWindow
+            .Where(x => x.metric.SafehouseId != null)
+            .GroupBy(x => x.metric.SafehouseId!.Value)
+            .Select(g => g.OrderByDescending(x => x.effective).First().metric)
+            .ToList();
+
         // Education: latest record per resident within the window, averaged across residents with data.
         var educationLatestByResident = educationRecords
             .Select(r => new { r.ResidentId, r.ProgressPercent, recordDate = ParseDateLoose(r.RecordDate) })
@@ -122,9 +139,15 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .GroupBy(r => r.ResidentId!.Value)
             .Select(g => g.OrderByDescending(x => x.recordDate).First())
             .ToList();
-        var avgEducationProgress = educationLatestByResident.Count == 0
+        var avgEducationProgressFromMetrics = latestMetricRowsInWindow
+            .Where(m => m.AvgEducationProgress != null)
+            .Select(m => m.AvgEducationProgress!.Value)
+            .DefaultIfEmpty()
+            .Average();
+        var avgEducationProgressFromResidents = educationLatestByResident.Count == 0
             ? 0
             : educationLatestByResident.Average(r => r.ProgressPercent ?? 0);
+        var avgEducationProgress = avgEducationProgressFromMetrics > 0 ? avgEducationProgressFromMetrics : avgEducationProgressFromResidents;
 
         // Health: latest record per resident within the window, averaged across residents with data.
         var healthLatestByResident = healthRecords
@@ -134,19 +157,24 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .Select(g => g.OrderByDescending(x => x.recordDate).First())
             .ToList();
 
-        var avgHealthScore = healthLatestByResident.Count == 0 ? 0 : healthLatestByResident.Average(r => r.GeneralHealthScore ?? 0);
+        var avgHealthScoreFromMetrics = latestMetricRowsInWindow
+            .Where(m => m.AvgHealthScore != null)
+            .Select(m => m.AvgHealthScore!.Value)
+            .DefaultIfEmpty()
+            .Average();
+        var avgHealthScoreFromResidents = healthLatestByResident.Count == 0 ? 0 : healthLatestByResident.Average(r => r.GeneralHealthScore ?? 0);
+        var avgHealthScore = avgHealthScoreFromMetrics > 0 ? avgHealthScoreFromMetrics : avgHealthScoreFromResidents;
+        // Sanity guard: this score is expected to be on a 0–5 scale in the UI. Clamp implausible values.
+        if (avgHealthScore < 0) avgHealthScore = 0;
+        if (avgHealthScore > 5) avgHealthScore = 5;
+
         var healthImprovementRate = healthLatestByResident.Count == 0
             ? 0
             : healthLatestByResident.Count(r => (r.GeneralHealthScore ?? 0) >= 3) * 100.0 / healthLatestByResident.Count;
 
         // Safehouse metrics: latest metric with a date inside the window.
-        var latestMetricBySafehouse = safehouseMetrics
-            .Select(m => new
-            {
-                metric = m,
-                effective = ParseDateLoose(m.MonthEnd) ?? ParseDateLoose(m.MonthStart)
-            })
-            .Where(x => x.effective != null && x.effective.Value >= reportStart && x.effective.Value <= reportEnd)
+        var latestMetricBySafehouse = metricsInWindow
+            .Where(x => x.metric.SafehouseId != null)
             .GroupBy(x => x.metric.SafehouseId!.Value)
             .Select(g => g.OrderByDescending(x => x.effective).First().metric)
             .ToDictionary(m => m.SafehouseId!.Value);
