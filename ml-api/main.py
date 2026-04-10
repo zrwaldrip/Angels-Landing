@@ -16,7 +16,11 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
 
 # Reuse the exact same feature engineering as notebooks/scorers.
-sys.path.insert(0, str(REPO_ROOT / "ml_scripts"))
+# Local dev: ../ml_scripts. Azure zip deploy: ./ml_scripts next to main.py.
+_scripts = HERE / "ml_scripts"
+if not _scripts.is_dir():
+    _scripts = REPO_ROOT / "ml_scripts"
+sys.path.insert(0, str(_scripts.resolve()))
 from social_engagement_features import enrich_raw_dataframe, features_only_from_enriched  # noqa: E402
 
 

@@ -34,10 +34,21 @@ jobs:
           mkdir -p ml-api/models
           python ml_scripts/train_social_engagement.py --out-model ml-api/models/social_engagement_predictor.pkl --out-predictions-json /tmp/ignore.json
 
+      # Azure zip deploy does not always run Oryx pip install (uvicorn missing on server). Bundle a
+      # Linux venv + app code so the Web App starts without relying on SCM_DO_BUILD_DURING_DEPLOYMENT.
+      - name: Stage runtime package (ml_scripts + antenv)
+        run: |
+          rm -rf ml-api/ml_scripts
+          cp -r ml_scripts ml-api/ml_scripts
+          cd ml-api
+          python -m venv antenv
+          ./antenv/bin/pip install --upgrade pip
+          ./antenv/bin/pip install -r requirements.txt
+
       - name: Zip deployment package
         run: |
           cd ml-api
-          zip -r ../ml-api-package.zip .
+          zip -r ../ml-api-package.zip . -x "**/__pycache__/*" -x "**/*.pyc"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
