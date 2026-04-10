@@ -27,6 +27,7 @@ function Header() {
 
 	useEffect(() => {
 		function handlePointerDown(event: MouseEvent) {
+			if (isTutorialOpen) return;
 			if (!navMenusRef.current) return;
 			const target = event.target as Node | null;
 			if (target && !navMenusRef.current.contains(target)) {
@@ -36,7 +37,7 @@ function Header() {
 
 		document.addEventListener("mousedown", handlePointerDown);
 		return () => document.removeEventListener("mousedown", handlePointerDown);
-	}, []);
+	}, [isTutorialOpen]);
 
 	useEffect(() => {
 		if (!isTutorialOpen) return;
