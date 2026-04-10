@@ -36,6 +36,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 MODEL_VERSION = os.environ.get("SOCIAL_ENGAGEMENT_OLS_VERSION", "ols_explanatory_v1")
 TOP_N = int(os.environ.get("SOCIAL_ENGAGEMENT_OLS_TOP_N", "40"))
+MIN_P = float(os.environ.get("SOCIAL_ENGAGEMENT_OLS_MIN_P", "0.05"))
 
 CAVEATS = (
     "Coefficients are associational (observational posts), not proof of causation. "
@@ -50,11 +51,45 @@ def _ols_design(X: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+_CATEGORICAL_LABELS: dict[str, str] = {
+    "platform": "Platform",
+    "day_of_week": "Day of week",
+    "post_type": "Post type",
+    "media_type": "Media type",
+    "call_to_action_type": "Call-to-action type",
+    "content_topic": "Content topic",
+}
+
+_NUMERIC_LABELS: dict[str, str] = {
+    "post_hour": "Post hour (0–23)",
+    "num_hashtags": "Hashtag count",
+    "mentions_count": "Mention count",
+    "caption_length": "Caption length",
+    "has_call_to_action": "Has a call-to-action",
+    "is_boosted": "Is boosted (paid)",
+}
+
+
 def _friendly_name(col: str) -> str:
+    # Statsmodels + pandas get_dummies names generally look like: "{field}_{category}".
+    # We want stakeholder-facing labels while preserving enough detail to interpret baselines.
+    if col in _NUMERIC_LABELS:
+        return _NUMERIC_LABELS[col]
+
+    for field, label in _CATEGORICAL_LABELS.items():
+        prefix = f"{field}_"
+        if col.startswith(prefix):
+            value = col[len(prefix):]
+            value = value.replace("_", " ").strip()
+            if value == "":
+                return label
+            return f"{label} = {value}"
+
+    # Fallback: make it readable without pretending it's a curated label.
     return (
         col.replace("x0_", "")
-        .replace("_", " ")
         .replace("T.", " = ")
+        .replace("_", " ")
         .strip()
     )
 
@@ -113,6 +148,8 @@ def run() -> None:
         if name == "const":
             continue
         pv = float(ols.pvalues.get(name, np.nan))
+        if np.isnan(pv) or pv >= MIN_P:
+            continue
         rows.append(
             {
                 "FactorKey": name,
@@ -139,11 +176,14 @@ def run() -> None:
         "PredictiveR2Holdout": None,
     }
 
-    payload = [{**r, **meta} for r in rows]
-
     delete_all_existing_insights(supabase)
+    if not rows:
+        print(f"No statistically significant OLS factors at p<{MIN_P}; cleared insights at {computed_at}")
+        return
+
+    payload = [{**r, **meta} for r in rows]
     supabase.table("SocialEngagementInsights").insert(payload).execute()
-    print(f"Wrote {len(payload)} insight rows at {computed_at}")
+    print(f"Wrote {len(payload)} insight rows (p<{MIN_P}) at {computed_at}")
 
 
 if __name__ == "__main__":
