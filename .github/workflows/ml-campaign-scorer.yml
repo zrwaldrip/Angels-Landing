@@ -1,13 +1,14 @@
-name: Weekly Campaign Scorer
+name: Daily Campaign Scorer
 
 on:
   schedule:
-    - cron: '0 3 * * 1' # Every Monday at 3:00 AM UTC
-  workflow_dispatch: # Allow manual trigger for testing
+    - cron: '0 4 * * *' # Daily 4:00 AM UTC (after other ML jobs)
+  workflow_dispatch:
 
 jobs:
   run-campaign-scorer:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

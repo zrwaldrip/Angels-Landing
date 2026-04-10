@@ -3,9 +3,9 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { getPartners, createPartner, updatePartner, deletePartner, type Partner } from '../lib/lighthouseAPI';
 
-const PARTNER_TYPE_OPTIONS = ['NGO', 'Government', 'Corporate', 'Educational', 'Healthcare', 'Community'] as const;
-const ROLE_TYPE_OPTIONS = ['Strategic Partner', 'Service Provider', 'Donor', 'Advocate', 'Research'] as const;
-const STATUS_OPTIONS = ['Active', 'Inactive', 'Pending'] as const;
+const PARTNER_TYPE_OPTIONS = ['Organization', 'Individual'] as const;
+const ROLE_TYPE_OPTIONS = ['Education', 'Evaluation', 'SafehouseOps', 'FindSafehouse', 'Logistics', 'Transport', 'Maintenance'] as const;
+const STATUS_OPTIONS = ['Active', 'Inactive'] as const;
 
 function PartnersPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();

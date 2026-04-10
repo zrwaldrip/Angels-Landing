@@ -35,6 +35,54 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from social_engagement_features import CATEGORICAL, get_x_y  # noqa: E402
 
 
+def _engagement_rf_pipeline(X: pd.DataFrame) -> Pipeline:
+    num_cols = [c for c in X.columns if c not in CATEGORICAL]
+    preprocess = ColumnTransformer(
+        transformers=[
+            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
+            ("num", StandardScaler(), num_cols),
+        ]
+    )
+    return Pipeline(
+        steps=[
+            ("prep", preprocess),
+            (
+                "rf",
+                RandomForestRegressor(
+                    n_estimators=160,
+                    max_depth=14,
+                    min_samples_leaf=3,
+                    random_state=42,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )
+
+
+def fit_engagement_pipeline_from_dataframe(df: pd.DataFrame) -> Pipeline | None:
+    """
+    Train predictive pipeline from a raw posts DataFrame (CSV or Supabase-mapped).
+    Returns None if too few labeled rows — caller should load joblib fallback.
+    """
+    X, y, _ = get_x_y(df)
+    if len(X) < 50:
+        print(f"Social engagement train: need >= 50 posts with engagement_rate; got {len(X)}.")
+        return None
+    pipe = _engagement_rf_pipeline(X)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+    pipe.fit(X_train, y_train)
+    pred = pipe.predict(X_test)
+    mae = mean_absolute_error(y_test, pred)
+    r2 = r2_score(y_test, pred)
+    print(f"Social engagement holdout MAE={mae:.5f}  R2={r2:.4f}")
+    pipe.fit(X, y)
+    print(f"Social engagement refit on full labeled set ({len(X)} rows).")
+    return pipe
+
+
 def _ols_design(X: pd.DataFrame) -> pd.DataFrame:
     return sm.add_constant(pd.get_dummies(X, columns=CATEGORICAL, drop_first=True), has_constant="add")
 
@@ -96,29 +144,7 @@ def train_and_export(
     print(f"Wrote insights JSON: {out_insights_json}")
 
     # --- Predictive sklearn Pipeline ---
-    num_cols = [c for c in X.columns if c not in CATEGORICAL]
-    preprocess = ColumnTransformer(
-        transformers=[
-            ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
-            ("num", StandardScaler(), num_cols),
-        ]
-    )
-    pipe = Pipeline(
-        steps=[
-            ("prep", preprocess),
-            (
-                "rf",
-                RandomForestRegressor(
-                    n_estimators=160,
-                    max_depth=14,
-                    min_samples_leaf=3,
-                    random_state=42,
-                    n_jobs=-1,
-                ),
-            ),
-        ]
-    )
-
+    pipe = _engagement_rf_pipeline(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )

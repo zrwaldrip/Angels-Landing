@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import {
   getAdminReportsSummary,
@@ -8,17 +9,80 @@ import {
   type SocialEngagementInsights
 } from '../lib/lighthouseAPI';
 
-function normalizeMonthKey(dateText: string | undefined) {
-  if (!dateText) return null;
-  const date = new Date(dateText);
+/**
+ * Normalize API month keys (e.g. "2024-7", "2024-07", "2024-07-01") to "YYYY-MM" without local timezone drift.
+ * Using `new Date("YYYY-MM")` + getMonth() breaks in many timezones (month can shift).
+ */
+function normalizeMonthKey(raw: string | undefined): string | null {
+  if (raw == null || typeof raw !== 'string') return null;
+  const t = raw.trim();
+  const ym = /^(\d{4})-(\d{1,2})(?:-\d{1,2})?/.exec(t);
+  if (ym) {
+    const y = Number(ym[1]);
+    const m = Number(ym[2]);
+    if (y >= 1 && m >= 1 && m <= 12) return `${y}-${String(m).padStart(2, '0')}`;
+  }
+  const date = new Date(t);
   if (Number.isNaN(date.getTime())) return null;
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 function monthLabel(monthKey: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
+  if (m) {
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const date = new Date(Date.UTC(y, mo - 1, 1));
+    return date.toLocaleDateString(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
   const [year, month] = monthKey.split('-');
   const date = new Date(Number(year), Number(month) - 1, 1);
   return date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+}
+
+/** HTML `type="month"` value (YYYY-MM) → UTC yyyy-MM-dd for the last calendar day of that month (for API endUtc). */
+function endOfSelectedMonthUtcDate(ym: string): string | null {
+  const t = ym.trim();
+  if (!/^\d{4}-\d{2}$/.test(t)) return null;
+  const [ys, ms] = t.split('-');
+  const y = Number(ys);
+  const mo = Number(ms);
+  if (y < 1 || mo < 1 || mo > 12) return null;
+  const d = new Date(Date.UTC(y, mo, 0));
+  return d.toISOString().slice(0, 10);
+}
+
+function escapeCsvCell(value: string) {
+  const s = String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+function downloadAdminReportsCsv(summary: AdminReportsSummary) {
+  const lines: string[][] = [
+    ['Reporting snapshot', summary.computedAt ?? ''],
+    ['Window months', String(summary.reportParameters?.months ?? '')],
+    ['Effective start', summary.reportParameters?.effectiveStartUtc ?? summary.reportPeriod?.startUtc ?? ''],
+    ['Effective end', summary.reportParameters?.effectiveEndUtc ?? summary.reportPeriod?.endUtc ?? ''],
+    [],
+    ['Safehouse', 'Occupancy_pct', 'Education_pct', 'Health_score', 'Education_as_of', 'Health_as_of'],
+    ...summary.safehouseComparison.map((r) => [
+      r.name,
+      String(Math.round(r.occupancyRate * 100) / 100),
+      r.educationProgress != null ? String(r.educationProgress) : '',
+      r.healthScore != null ? String(r.healthScore) : '',
+      r.educationAsOfMonth ?? '',
+      r.healthAsOfMonth ?? '',
+    ]),
+  ];
+  const csv = lines.map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `admin-reports-${(summary.computedAt ?? 'export').replace(/[:]/g, '-')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function progressVariant(percent: number) {
@@ -36,93 +100,71 @@ function factorConfidenceTier(pValue: number | undefined | null): string {
   return 'Weak / uncertain';
 }
 
-const SOCIAL_FACTOR_TOP_N = 5;
+const SOCIAL_FACTOR_TOP_N = 10;
 
-/** Top N factors by rank order within positive vs negative coefficient groups. */
-function splitFactorsHigherLower(factors: SocialEngagementFactor[] | undefined): {
-  higher: SocialEngagementFactor[];
-  lower: SocialEngagementFactor[];
-} {
-  const list = (factors ?? []).filter(
-    (f) => f.coefficient != null && !Number.isNaN(f.coefficient)
-  );
-  const byRank = (a: SocialEngagementFactor, b: SocialEngagementFactor) =>
-    (a.rankOrder ?? Number.MAX_SAFE_INTEGER) - (b.rankOrder ?? Number.MAX_SAFE_INTEGER);
-  return {
-    higher: list.filter((f) => (f.coefficient as number) > 0).sort(byRank).slice(0, SOCIAL_FACTOR_TOP_N),
-    lower: list.filter((f) => (f.coefficient as number) < 0).sort(byRank).slice(0, SOCIAL_FACTOR_TOP_N)
-  };
-}
-
-function SocialEngagementFactorTable({
-  title,
-  subtitle,
-  rows,
-  emptyText,
-  className = 'mb-3'
+function SocialEngagementFactorList({
+  factors,
+  minP
 }: {
-  title: string;
-  subtitle?: string;
-  rows: SocialEngagementFactor[];
-  emptyText: string;
-  className?: string;
+  factors: SocialEngagementFactor[];
+  minP?: number;
 }) {
-  return (
-    <div className={className}>
-      <h6 className="h6 mb-1">{title}</h6>
-      {subtitle ? <p className="small text-muted mb-2">{subtitle}</p> : null}
-      {rows.length === 0 ? (
-        <p className="text-muted small mb-0">{emptyText}</p>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Factor</th>
-                <th>Confidence (statistical)</th>
-                <th className="text-end small text-muted">Model detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((f) => {
-                const tier = factorConfidenceTier(f.pValue ?? null);
-                return (
-                  <tr key={`${f.rankOrder}-${f.factorKey ?? ''}-${String(f.coefficient)}`}>
-                    <td>{f.rankOrder ?? ''}</td>
-                    <td>{f.displayName ?? f.factorKey}</td>
-                    <td>{tier}</td>
-                    <td className="text-end small text-muted text-nowrap">
-                      coef {f.coefficient != null ? f.coefficient.toFixed(4) : '—'}, p{' '}
-                      {f.pValue != null ? f.pValue.toFixed(4) : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
+  const rows = useMemo(() => {
+    const list = (factors ?? [])
+      .filter((f) => f.coefficient != null && !Number.isNaN(f.coefficient))
+      .slice()
+      .sort((a, b) => Math.abs((b.coefficient as number) ?? 0) - Math.abs((a.coefficient as number) ?? 0));
+    return list.slice(0, SOCIAL_FACTOR_TOP_N);
+  }, [factors]);
 
-function SocialEngagementFactorPair({ factors }: { factors: SocialEngagementFactor[] }) {
-  const { higher, lower } = splitFactorsHigherLower(factors);
+  if (rows.length === 0) {
+    return (
+      <p className="text-muted small mb-0">
+        No statistically significant patterns were found in this snapshot{minP != null ? ` (p < ${minP}).` : '.'}
+      </p>
+    );
+  }
+
   return (
-    <>
-      <SocialEngagementFactorTable
-        title={`Top ${SOCIAL_FACTOR_TOP_N}: associated with higher engagement (vs. baseline)`}
-        rows={higher}
-        emptyText="No factors with a positive association appear in this snapshot."
-      />
-      <SocialEngagementFactorTable
-        title={`Top ${SOCIAL_FACTOR_TOP_N}: associated with lower engagement (vs. baseline)`}
-        rows={lower}
-        emptyText="No factors with a negative association appear in this snapshot."
-        className="mb-0"
-      />
-    </>
+    <div className="table-responsive">
+      <table className="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th style={{ width: 160 }}>Direction</th>
+            <th style={{ width: 170 }}>Confidence</th>
+            <th className="text-end small text-muted">Model detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((f) => {
+            const coef = f.coefficient ?? null;
+            const direction = coef == null ? null : coef > 0 ? 'Higher' : 'Lower';
+            const directionBadge = direction === 'Higher'
+              ? 'text-bg-success'
+              : direction === 'Lower'
+                ? 'text-bg-danger'
+                : 'text-bg-secondary';
+            const tier = factorConfidenceTier(f.pValue ?? null);
+            return (
+              <tr key={`${f.rankOrder ?? ''}-${f.factorKey ?? ''}-${String(f.coefficient)}`}>
+                <td>{f.displayName ?? f.factorKey ?? '—'}</td>
+                <td>
+                  <span className={`badge ${directionBadge}`}>{direction ?? '—'}</span>
+                </td>
+                <td>
+                  <span className="small">{tier}</span>
+                  {minP != null ? <span className="text-muted small"> (p &lt; {minP})</span> : null}
+                </td>
+                <td className="text-end small text-muted text-nowrap">
+                  coef {coef != null ? coef.toFixed(4) : '—'}, p {f.pValue != null ? f.pValue.toFixed(4) : '—'}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -133,17 +175,19 @@ function AdminReportsPage() {
   const [social, setSocial] = useState<SocialEngagementInsights | null>(null);
   const [socialError, setSocialError] = useState('');
   const [hoveredTrendPointIndex, setHoveredTrendPointIndex] = useState<number | null>(null);
+  const [reportMonths, setReportMonths] = useState(12);
+  const [reportEndMonth, setReportEndMonth] = useState('');
 
-  useEffect(() => {
-    void loadReportsData();
-  }, []);
-
-  async function loadReportsData() {
+  const loadReportsData = useCallback(async () => {
     setLoading(true);
     setError('');
     setSocialError('');
     try {
-      const reportSummary = await getAdminReportsSummary();
+      const endUtc = endOfSelectedMonthUtcDate(reportEndMonth) ?? undefined;
+      const reportSummary = await getAdminReportsSummary({
+        months: reportMonths,
+        endUtc,
+      });
       setSummary(reportSummary);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load analytics reports.');
@@ -157,7 +201,11 @@ function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [reportMonths, reportEndMonth]);
+
+  useEffect(() => {
+    void loadReportsData();
+  }, [loadReportsData]);
 
   const donationTrendRows = useMemo(() => {
     return (summary?.donationTrends ?? [])
@@ -165,8 +213,7 @@ function AdminReportsPage() {
         const monthKey = normalizeMonthKey(row.month) ?? row.month;
         return { month: monthKey, label: monthLabel(monthKey), totalValue: row.totalValue ?? 0 };
       })
-      .sort((a, b) => a.month.localeCompare(b.month))
-      .slice(-12);
+      .sort((a, b) => a.month.localeCompare(b.month));
   }, [summary]);
 
   const donationTrendMax = useMemo(
@@ -176,11 +223,11 @@ function AdminReportsPage() {
 
   const donationTrendChart = useMemo(() => {
     const width = 760;
-    const height = 240;
+    const height = 300;
     const left = 56;
     const right = 16;
     const top = 14;
-    const bottom = 36;
+    const bottom = 78;
     const plotWidth = width - left - right;
     const plotHeight = height - top - bottom;
 
@@ -222,21 +269,87 @@ function AdminReportsPage() {
   const annualAccomplishment = useMemo(() => {
     return summary?.annualAccomplishment ?? {
       serviceCounts: { caring: 0, healing: 0, teaching: 0 },
-      beneficiaries: { caring: 0, healing: 0, teaching: 0, totalBeneficiaries: 0 },
+      beneficiaries: {
+        caring: 0,
+        healing: 0,
+        teaching: 0,
+        totalBeneficiaries: 0,
+        residentsInCatalog: 0,
+        distinctBeneficiariesWithAnyPillarInWindow: 0
+      },
       outcomes: { activeCases: 0, avgEducation: 0, reintegrationRate: 0 }
     };
   }, [summary]);
 
+  const windowMonthsLabel = summary?.reportParameters?.months ?? reportMonths;
+
+  const reportPeriodText = useMemo(() => {
+    const start = summary?.reportPeriod?.startUtc ? new Date(summary.reportPeriod.startUtc) : null;
+    const end = summary?.reportPeriod?.endUtc ? new Date(summary.reportPeriod.endUtc) : null;
+    if (!start || Number.isNaN(start.getTime()) || !end || Number.isNaN(end.getTime())) return null;
+    const fmt: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString(undefined, fmt)} – ${end.toLocaleDateString(undefined, fmt)}`;
+  }, [summary?.reportPeriod?.endUtc, summary?.reportPeriod?.startUtc]);
+
   return (
-    <div className="container mt-2 admin-reports-page">
+    <div className="container mt-2 admin-reports-page admin-reports-print-root">
       <Header />
       <div className="card">
         <div className="card-body">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mobile-page-header">
             <h2 className="h4 mb-0">Reports &amp; Analytics</h2>
-            <div className="mobile-page-actions">
+            <div className="mobile-page-actions d-flex flex-wrap gap-2 align-items-center admin-reports-toolbar">
+              <div className="d-flex flex-wrap gap-2 align-items-center">
+                <label className="small text-muted mb-0 text-nowrap" htmlFor="admin-reports-months">
+                  Window
+                </label>
+                <select
+                  id="admin-reports-months"
+                  className="form-select form-select-sm"
+                  style={{ width: '5.5rem' }}
+                  value={reportMonths}
+                  onChange={(e) => setReportMonths(Number(e.target.value))}
+                  disabled={loading}
+                >
+                  {[3, 6, 12, 24, 36].map((m) => (
+                    <option key={m} value={m}>
+                      {m} mo
+                    </option>
+                  ))}
+                </select>
+                <label className="small text-muted mb-0 text-nowrap" htmlFor="admin-reports-end-month">
+                  End month
+                </label>
+                <input
+                  id="admin-reports-end-month"
+                  type="month"
+                  className="form-control form-control-sm admin-reports-month-input"
+                  value={reportEndMonth}
+                  onChange={(e) => setReportEndMonth(e.target.value)}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm py-0 px-1 text-nowrap"
+                  onClick={() => setReportEndMonth('')}
+                  disabled={loading || !reportEndMonth}
+                >
+                  Clear
+                </button>
+              </div>
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => window.print()} disabled={loading}>
+                Print
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => summary && downloadAdminReportsCsv(summary)}
+                disabled={loading || !summary}
+              >
+                Export CSV
+              </button>
               <button className="btn btn-outline-secondary btn-sm" onClick={() => void loadReportsData()} disabled={loading}>
-                {loading ? 'Refreshing...' : 'Refresh data'}
+                {loading ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
           </div>
@@ -244,21 +357,51 @@ function AdminReportsPage() {
             Aggregated insights for donation trends, resident outcomes, safehouse performance, and reintegration success,
             aligned with annual accomplishment reporting structures used by social welfare agencies.
           </p>
+          {reportPeriodText ? (
+            <div className="small text-muted mb-3">
+              <div>
+                Reporting window (rolling <strong>{windowMonthsLabel}</strong> months): <strong>{reportPeriodText}</strong>
+              </div>
+              {summary?.computedAt ? (
+                <div className="mt-1">Summary generated: {new Date(summary.computedAt).toLocaleString()}</div>
+              ) : null}
+              {(summary?.methodologyNotes ?? []).length > 0 ? (
+                <details className="mt-2">
+                  <summary className="text-muted" style={{ cursor: 'pointer' }}>
+                    Methodology notes
+                  </summary>
+                  <ul className="mt-2 mb-0 ps-3">
+                    {(summary?.methodologyNotes ?? []).map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          ) : null}
 
           {error ? <div className="alert alert-danger">{error}</div> : null}
           {loading ? (
             <div className="text-center py-4"><div className="spinner-border text-primary" role="status" /></div>
           ) : (
             <>
-              <div className="row g-3 mb-4">
-                <div className="col-lg-6">
-                  <div className="border rounded p-3 h-100">
-                    <h4 className="h6 mb-3">Donation Trends Over Time (12 months)</h4>
+              <div className="row g-3 mb-4 align-items-stretch">
+                <div className="col-lg-6 d-flex">
+                  <div className="border rounded p-3 h-100 w-100">
+                    <h4 className="h6 mb-3">Donation trends ({windowMonthsLabel} months)</h4>
                     {donationTrendRows.length === 0 ? (
                       <p className="text-muted small mb-0">No donation trend data available.</p>
                     ) : (
-                      <div className="w-100 position-relative" role="img" aria-label="Line chart showing monthly donation totals for the last 12 months">
-                        <svg viewBox={`0 0 ${donationTrendChart.width} ${donationTrendChart.height}`} className="w-100" preserveAspectRatio="none">
+                      <div
+                        className="w-100 position-relative admin-reports-donation-chart-wrap"
+                        role="img"
+                        aria-label={`Line chart showing monthly donation totals for the last ${windowMonthsLabel} months`}
+                      >
+                        <svg
+                          viewBox={`0 0 ${donationTrendChart.width} ${donationTrendChart.height}`}
+                          className="w-100 admin-reports-donation-svg"
+                          preserveAspectRatio="xMidYMid meet"
+                        >
                           <defs>
                             <linearGradient id="donationTrendArea" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#0d6efd" stopOpacity="0.3" />
@@ -289,32 +432,51 @@ function AdminReportsPage() {
                           <path d={donationTrendChart.areaPath} fill="url(#donationTrendArea)" />
                           <path d={donationTrendChart.path} fill="none" stroke="#0d6efd" strokeWidth="2.5" />
 
-                          {donationTrendChart.points.map((point, index) => (
-                            <g key={point.month}>
-                              <circle
-                                cx={point.x}
-                                cy={point.y}
-                                r={11}
-                                fill="transparent"
-                                style={{ cursor: 'pointer' }}
-                                tabIndex={0}
-                                aria-label={`${point.label}: PHP ${point.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                                onMouseEnter={() => setHoveredTrendPointIndex(index)}
-                                onMouseLeave={() => setHoveredTrendPointIndex((current) => (current === index ? null : current))}
-                                onFocus={() => setHoveredTrendPointIndex(index)}
-                                onBlur={() => setHoveredTrendPointIndex((current) => (current === index ? null : current))}
-                              />
-                              <circle
-                                cx={point.x}
-                                cy={point.y}
-                                r={3.5}
-                                fill="#0d6efd"
-                              />
-                              <text x={point.x} y={donationTrendChart.height - 14} textAnchor="middle" fontSize="10" fill="#6c757d">
-                                {point.label}
-                              </text>
-                            </g>
-                          ))}
+                          {donationTrendChart.points.map((point, index) => {
+                            const n = donationTrendChart.points.length;
+                            const labelBaseY = donationTrendChart.height - 10;
+                            const showLabel =
+                              n <= 12 || index % 2 === 0 || index === n - 1;
+                            const useHorizontal = n <= 18;
+                            return (
+                              <g key={point.month}>
+                                <circle
+                                  cx={point.x}
+                                  cy={point.y}
+                                  r={11}
+                                  fill="transparent"
+                                  style={{ cursor: 'pointer' }}
+                                  tabIndex={0}
+                                  aria-label={`${point.label}: PHP ${point.totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                                  onMouseEnter={() => setHoveredTrendPointIndex(index)}
+                                  onMouseLeave={() => setHoveredTrendPointIndex((current) => (current === index ? null : current))}
+                                  onFocus={() => setHoveredTrendPointIndex(index)}
+                                  onBlur={() => setHoveredTrendPointIndex((current) => (current === index ? null : current))}
+                                />
+                                <circle cx={point.x} cy={point.y} r={3.5} fill="#0d6efd" />
+                                {showLabel ? (
+                                  useHorizontal ? (
+                                    <text
+                                      x={point.x}
+                                      y={labelBaseY}
+                                      textAnchor="middle"
+                                      dominantBaseline="hanging"
+                                      fontSize="10"
+                                      fill="#6c757d"
+                                    >
+                                      {point.label}
+                                    </text>
+                                  ) : (
+                                    <g transform={`translate(${point.x},${labelBaseY}) rotate(-35)`}>
+                                      <text x={0} y={0} textAnchor="end" fontSize="9" fill="#6c757d">
+                                        {point.label}
+                                      </text>
+                                    </g>
+                                  )
+                                ) : null}
+                              </g>
+                            );
+                          })}
                         </svg>
                         {hoveredTrendPoint ? (
                           <div
@@ -342,9 +504,12 @@ function AdminReportsPage() {
                   </div>
                 </div>
 
-                <div className="col-lg-6">
-                  <div className="border rounded p-3 h-100">
-                    <h4 className="h6 mb-3">Resident Outcome Metrics</h4>
+                <div className="col-lg-6 d-flex">
+                  <div className="border rounded p-3 h-100 w-100">
+                    <h4 className="h6 mb-2">Resident outcome metrics</h4>
+                    <p className="small text-muted mb-3">
+                      Scoped to the reporting window above (resident-level records); not the same as all-time safehouse snapshots.
+                    </p>
                     <div className="row g-2">
                       <div className="col-12">
                         <div className="small text-muted">Education Progress (Average)</div>
@@ -359,7 +524,7 @@ function AdminReportsPage() {
                         </div>
                       </div>
                       <div className="col-12">
-                        <div className="small text-muted">Health Improvement Rate</div>
+                        <div className="small text-muted">Health score at/above threshold (≥ 3)</div>
                         <div className="d-flex align-items-center gap-2">
                           <div className="progress flex-grow-1">
                             <div
@@ -380,10 +545,16 @@ function AdminReportsPage() {
                 </div>
               </div>
 
-              <div className="row g-3 mb-4">
-                <div className="col-lg-8">
-                  <div className="border rounded p-3 h-100">
-                    <h4 className="h6 mb-3">Safehouse Performance Comparison</h4>
+              <div className="row g-3 mb-4 align-items-stretch">
+                <div className="col-lg-8 d-flex">
+                  <div className="border rounded p-3 h-100 w-100">
+                    <h4 className="h6 mb-2">Safehouse Performance Comparison</h4>
+                    <p className="small text-muted mb-3">
+                      <strong>Education</strong> and <strong>Health</strong> use the <strong>latest month on file</strong> per
+                      safehouse (<strong>all time</strong>) where that value is actually recorded — placeholder or future months
+                      with empty averages are ignored. <strong>Occupancy</strong> uses each safehouse’s current occupancy vs.
+                      capacity, or active residents from the chronologically latest monthly row when occupancy is not set.
+                    </p>
                     <div className="table-responsive">
                       <table className="table table-sm align-middle mb-0">
                         <thead>
@@ -406,8 +577,30 @@ function AdminReportsPage() {
                                   <span className="small">{row.occupancyRate.toFixed(0)}%</span>
                                 </div>
                               </td>
-                              <td className="text-center">{row.educationProgress == null ? <span className="text-muted">No data</span> : `${row.educationProgress.toFixed(1)}%`}</td>
-                              <td className="text-center">{row.healthScore == null ? <span className="text-muted">No data</span> : row.healthScore.toFixed(2)}</td>
+                              <td className="text-center">
+                                {row.educationProgress == null ? (
+                                  <span className="text-muted">No data</span>
+                                ) : (
+                                  <>
+                                    <div className="fw-semibold">{row.educationProgress.toFixed(1)}%</div>
+                                    {row.educationAsOfMonth ? (
+                                      <div className="small text-muted text-nowrap">{row.educationAsOfMonth}</div>
+                                    ) : null}
+                                  </>
+                                )}
+                              </td>
+                              <td className="text-center">
+                                {row.healthScore == null ? (
+                                  <span className="text-muted">No data</span>
+                                ) : (
+                                  <>
+                                    <div className="fw-semibold">{row.healthScore.toFixed(2)}</div>
+                                    {row.healthAsOfMonth ? (
+                                      <div className="small text-muted text-nowrap">{row.healthAsOfMonth}</div>
+                                    ) : null}
+                                  </>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -415,137 +608,53 @@ function AdminReportsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-4">
-                  <div className="border rounded p-3 h-100">
+                <div className="col-lg-4 d-flex">
+                  <div className="border rounded p-3 h-100 w-100 d-flex flex-column">
                     <h4 className="h6 mb-3">Reintegration Success Rate</h4>
                     <div className="display-6 mb-1">{reintegrationReport.successRate.toFixed(1)}%</div>
-                    <p className="small text-muted mb-0">
+                    <p className="small text-muted mb-0 mt-auto">
                       {reintegrationReport.successful} successful outcomes out of {reintegrationReport.assessed} residents with tracked reintegration statuses.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="border rounded p-3 mb-4">
-                <h4 className="h6 mb-2">Social posts: what relates to engagement</h4>
-                <p className="text-muted small mb-2">
-                  Past posts were analyzed to spot patterns in engagement. Forecasts are estimates based on history—they are
-                  not guarantees for future posts.
-                </p>
-                <ul className="small text-muted mb-3 ps-3">
-                  <li>This highlights <strong>associations</strong> in historical data, not proof that changing one thing will change results.</li>
-                  <li>Use it to guide questions and experiments, not as the only input to content decisions.</li>
-                  <li>
-                    Predictions use the same kinds of post details as the analysis; unusual campaigns or platform changes may
-                    differ.
-                  </li>
-                </ul>
-                <details className="small mb-3">
-                  <summary className="text-primary" style={{ cursor: 'pointer' }}>
-                    How to read the &quot;patterns&quot; table
-                  </summary>
-                  <div className="mt-2 ps-1 text-muted border-start border-2 ps-2">
-                    <p className="mb-2">
-                      For categories (platform, sentiment, post type, etc.), each row compares that option to a{' '}
-                      <strong>baseline</strong> category that is not shown. A negative direction does not mean &quot;bad&quot;—it
-                      means <strong>lower typical engagement than that baseline</strong>, after accounting for other factors in
-                      the model.
-                    </p>
-                    <p className="mb-0">
-                      &quot;Confidence&quot; is a statistical shorthand (how unlikely the pattern is to be pure chance)—not
-                      certainty about what will happen next time.
-                    </p>
-                  </div>
-                </details>
-                {socialError ? <div className="alert alert-warning py-2 small">{socialError}</div> : null}
-                {!social ? (
-                  <p className="text-muted small mb-0">Loading social insights…</p>
-                ) : (
-                  <>
-                    {social.caveats ? <p className="small text-muted border-start border-3 ps-2 mb-3">{social.caveats}</p> : null}
-                    <div className="small mb-3">
-                      {social.olsR2 != null ? (
-                        <p className="mb-1">
-                          <strong>How much past variation we can describe with these patterns:</strong> roughly{' '}
-                          <strong>{(social.olsR2 * 100).toFixed(0)}%</strong> of how engagement differed across posts in the
-                          historical data.
-                        </p>
-                      ) : null}
-                      {social.predictiveMaeHoldout != null ? (
-                        <p className="mb-1 text-muted">
-                          <strong>Typical forecast gap on held-out posts:</strong> about ±{social.predictiveMaeHoldout.toFixed(3)}{' '}
-                          on the engagement rate scale (typically 0–1).
-                        </p>
-                      ) : null}
-                      {social.predictiveR2Holdout != null && social.olsR2 != null ? (
-                        <p className="mb-1 text-muted">
-                          The forest model&apos;s fit on a held-out slice is about{' '}
-                          <strong>{(social.predictiveR2Holdout * 100).toFixed(0)}%</strong> (higher means forecasts tracked
-                          actual engagement more closely on that test set).
-                        </p>
-                      ) : null}
-                    </div>
-                    <details className="small mb-3">
-                      <summary className="text-muted" style={{ cursor: 'pointer' }}>
-                        Technical details (R², MAE, timestamps)
-                      </summary>
-                      <div className="row g-2 text-muted mt-2">
-                        {social.olsR2 != null ? <div className="col-auto">Pattern model R²: {social.olsR2.toFixed(3)}</div> : null}
-                        {social.olsAdjR2 != null ? (
-                          <div className="col-auto">Adjusted R²: {social.olsAdjR2.toFixed(3)}</div>
-                        ) : null}
-                        {social.predictiveR2Holdout != null ? (
-                          <div className="col-auto">Forecast model R² (holdout): {social.predictiveR2Holdout.toFixed(3)}</div>
-                        ) : null}
-                        {social.predictiveMaeHoldout != null ? (
-                          <div className="col-auto">MAE (holdout): {social.predictiveMaeHoldout.toFixed(4)}</div>
-                        ) : null}
-                        {social.computedAt ? (
-                          <div className="col-12">Insights last updated: {social.computedAt}</div>
-                        ) : null}
-                      </div>
-                    </details>
-                    <h5 className="h6">Patterns in past posts</h5>
-                    <p className="small text-muted mb-3">
-                      Each list shows up to five factors from the explanatory model, chosen by importance rank within
-                      factors that point toward higher or lower engagement compared to the baseline category.
-                    </p>
-                    {(social.factors ?? []).length === 0 ? (
-                      <p className="text-muted small">
-                        No pattern rows loaded yet—run the training notebooks or seed the database with insights.
-                      </p>
-                    ) : (
-                      <SocialEngagementFactorPair factors={social.factors ?? []} />
-                    )}
-                  </>
-                )}
-              </div>
-
               <div className="border rounded p-3">
-                <h4 className="h6 mb-3">Annual Accomplishment Report Alignment</h4>
-                <p className="text-muted small">
-                  Service tracking follows the Caring, Healing, Teaching framework with beneficiary and outcome summaries.
+                <h4 className="h6 mb-2">Accomplishment alignment (Caring, Healing, Teaching)</h4>
+                <p className="text-muted small mb-2">
+                  Plan keyword matches and beneficiary counts are limited to the <strong>same reporting window</strong> as donations
+                  and reintegration — not a calendar fiscal year unless your window is set that way.
                 </p>
-                <div className="row g-3 mb-3">
-                  <div className="col-md-4">
-                    <div className="border rounded p-3 h-100">
-                      <div className="text-muted small">Caring Services</div>
+                <p className="text-muted small mb-3">
+                  Each pillar count is <strong>intervention plans</strong> that matched keywords; “distinct residents” counts unique
+                  residents with at least one matching plan in that pillar during the window.
+                </p>
+                <div className="row g-3 mb-3 align-items-stretch">
+                  <div className="col-md-4 d-flex">
+                    <div className="border rounded p-3 h-100 w-100">
+                      <div className="text-muted small">Caring services</div>
                       <div className="h4 mb-0">{annualAccomplishment.serviceCounts.caring}</div>
-                      <div className="small text-muted">{annualAccomplishment.beneficiaries.caring} beneficiaries reached</div>
+                      <div className="small text-muted">
+                        {annualAccomplishment.beneficiaries.caring} distinct residents (≥1 caring match)
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-4">
-                    <div className="border rounded p-3 h-100">
-                      <div className="text-muted small">Healing Services</div>
+                  <div className="col-md-4 d-flex">
+                    <div className="border rounded p-3 h-100 w-100">
+                      <div className="text-muted small">Healing services</div>
                       <div className="h4 mb-0">{annualAccomplishment.serviceCounts.healing}</div>
-                      <div className="small text-muted">{annualAccomplishment.beneficiaries.healing} beneficiaries reached</div>
+                      <div className="small text-muted">
+                        {annualAccomplishment.beneficiaries.healing} distinct residents (≥1 healing match)
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-4">
-                    <div className="border rounded p-3 h-100">
-                      <div className="text-muted small">Teaching Services</div>
+                  <div className="col-md-4 d-flex">
+                    <div className="border rounded p-3 h-100 w-100">
+                      <div className="text-muted small">Teaching services</div>
                       <div className="h4 mb-0">{annualAccomplishment.serviceCounts.teaching}</div>
-                      <div className="small text-muted">{annualAccomplishment.beneficiaries.teaching} beneficiaries reached</div>
+                      <div className="small text-muted">
+                        {annualAccomplishment.beneficiaries.teaching} distinct residents (≥1 teaching match)
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -553,22 +662,85 @@ function AdminReportsPage() {
                   <table className="table table-sm mb-0">
                     <thead>
                       <tr>
-                        <th>Total Beneficiaries</th>
-                        <th>Active Cases</th>
-                        <th>Avg Education Progress</th>
-                        <th>Reintegration Success</th>
+                        <th>Residents in catalog</th>
+                        <th>Distinct with any pillar match</th>
+                        <th>Active cases</th>
+                        <th>Avg education progress</th>
+                        <th>Reintegration success</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>{annualAccomplishment.beneficiaries.totalBeneficiaries}</td>
-                        <td>{annualAccomplishment.outcomes.activeCases}</td>
+                        <td>{annualAccomplishment.beneficiaries.residentsInCatalog ?? annualAccomplishment.beneficiaries.totalBeneficiaries}</td>
+                        <td>
+                          {annualAccomplishment.beneficiaries.distinctBeneficiariesWithAnyPillarInWindow != null
+                            ? annualAccomplishment.beneficiaries.distinctBeneficiariesWithAnyPillarInWindow
+                            : '—'}
+                        </td>
+                        <td>
+                          <Link to="/residents?caseStatus=Active" className="fw-semibold">
+                            {annualAccomplishment.outcomes.activeCases}
+                          </Link>
+                        </td>
                         <td>{annualAccomplishment.outcomes.avgEducation.toFixed(1)}%</td>
                         <td>{annualAccomplishment.outcomes.reintegrationRate.toFixed(1)}%</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
+                <p className="small text-muted mt-2 mb-0">
+                  “Residents in catalog” is all residents in the system. “Distinct with any pillar match” is residents who had at least
+                  one plan in the window matching caring, healing, or teaching keywords (they can appear in multiple pillars).
+                </p>
+              </div>
+
+              <div className="border rounded p-3 mt-4">
+                <h4 className="h6 mb-2">Social posts: what relates to engagement</h4>
+                <p className="text-muted small mb-3">
+                  A quick summary of what has historically been associated with <strong>higher</strong> or <strong>lower</strong>{' '}
+                  engagement. Use these to guide experiments—not as guarantees.
+                </p>
+                {socialError ? <div className="alert alert-warning py-2 small">{socialError}</div> : null}
+                {!social ? (
+                  <p className="text-muted small mb-0">Loading social insights…</p>
+                ) : (
+                  <>
+                    <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                      <h5 className="h6 mb-0">Patterns</h5>
+                      <span className="small text-muted text-end">
+                        Showing statistically significant factors (p &lt; {(social.minP ?? 0.05).toFixed(2)}).
+                        {social.computedAt ? <span className="d-block">Snapshot: {social.computedAt}</span> : null}
+                      </span>
+                    </div>
+                    <SocialEngagementFactorList factors={social.factors ?? []} minP={social.minP} />
+                    <details className="small mt-3">
+                      <summary className="text-muted" style={{ cursor: 'pointer' }}>
+                        Notes &amp; technical details
+                      </summary>
+                      <div className="mt-2 text-muted">
+                        <p className="mb-2">
+                          Each pattern compares a category choice to a baseline category that is not shown. “Lower” does not
+                          mean “bad”—it means lower typical engagement than that baseline, after accounting for other fields
+                          in the model.
+                        </p>
+                        {social.caveats ? (
+                          <p className="mb-2 border-start border-3 ps-2">{social.caveats}</p>
+                        ) : null}
+                        <div className="row g-2">
+                          {social.olsR2 != null ? <div className="col-auto">Pattern model R²: {social.olsR2.toFixed(3)}</div> : null}
+                          {social.olsAdjR2 != null ? <div className="col-auto">Adjusted R²: {social.olsAdjR2.toFixed(3)}</div> : null}
+                          {social.predictiveR2Holdout != null ? (
+                            <div className="col-auto">Forecast model R² (holdout): {social.predictiveR2Holdout.toFixed(3)}</div>
+                          ) : null}
+                          {social.predictiveMaeHoldout != null ? (
+                            <div className="col-auto">MAE (holdout): {social.predictiveMaeHoldout.toFixed(4)}</div>
+                          ) : null}
+                          {social.computedAt ? <div className="col-12">Insights last updated: {social.computedAt}</div> : null}
+                        </div>
+                      </div>
+                    </details>
+                  </>
+                )}
               </div>
             </>
           )}

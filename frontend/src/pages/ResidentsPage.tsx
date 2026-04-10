@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -12,48 +13,37 @@ import {
   type Safehouse,
 } from '../lib/lighthouseAPI';
 
-const SEX_OPTIONS = ['Female', 'Male', 'F', 'M'] as const;
-const CASE_STATUS_OPTIONS = ['Active', 'On Hold', 'Reintegrated', 'Transferred', 'Closed'] as const;
+const SEX_OPTIONS = ['F', 'M'] as const;
+const CASE_STATUS_OPTIONS = ['Active', 'Closed', 'Transferred'] as const;
 const CASE_CATEGORY_OPTIONS = [
   'Abandoned',
+  'Foundling',
+  'Surrendered',
   'Neglected',
-  'Physically Abused',
-  'Sexually Abused',
-  'Trafficked',
-  'Child Laborer',
-  'Street Child',
-  'Child With HIV',
-  'OSAEC',
-  'CICL',
-  'At Risk',
-  'Other',
 ] as const;
-const BIRTH_STATUS_OPTIONS = ['Legitimate', 'Illegitimate', 'Unknown'] as const;
+const BIRTH_STATUS_OPTIONS = ['Marital', 'Non-Marital'] as const;
 const REFERRAL_SOURCE_OPTIONS = [
-  'WCPD',
-  'DSWD',
-  'LGU',
-  'Barangay',
-  'School',
-  'Hospital',
-  'Court',
+  'Government Agency',
   'NGO',
-  'Walk-in',
-  'Other',
+  'Police',
+  'Self-Referral',
+  'Community',
+  'Court Order',
 ] as const;
 const REINTEGRATION_TYPE_OPTIONS = [
-  'Family Reintegration',
-  'Independent Living',
-  'Transfer to Another Facility',
+  'Family Reunification',
   'Foster Care',
-  'Adoption',
-  'Not Yet Planned',
+  'Adoption (Domestic)',
+  'Adoption (Inter-Country)',
+  'Independent Living',
+  'None',
 ] as const;
-const REINTEGRATION_STATUS_OPTIONS = ['Active', 'Pending', 'Completed', 'At Risk', 'Discontinued'] as const;
+const REINTEGRATION_STATUS_OPTIONS = ['Not Started', 'In Progress', 'Completed', 'On Hold'] as const;
 
 function ResidentsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
+  const [searchParams] = useSearchParams();
 
   const [residents, setResidents] = useState<Resident[]>([]);
   const [page, setPage] = useState(1);
@@ -83,6 +73,11 @@ function ResidentsPage() {
   useEffect(() => {
     void loadFilterOptions();
   }, []);
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('caseStatus');
+    if (fromUrl) setSelectedCaseStatuses([fromUrl]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void loadResidents();
@@ -440,7 +435,7 @@ function ResidentsPage() {
                     <td>
                       {r.mlPredictionStatus ? (
                         <span className={`badge ${r.mlPredictionStatus === 'Stalling' ? 'text-bg-danger' : 'text-bg-primary'} bg-opacity-75`}>
-                          {r.mlPredictionStatus}
+                          {r.mlPredictionStatus === 'Progressing' ? 'OK' : r.mlPredictionStatus}
                         </span>
                       ) : (
                         <span className="text-muted small">Pending</span>
@@ -607,36 +602,6 @@ function ResidentsPage() {
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label small">Case Sub-categories</label>
-                    <div className="row g-2">
-                      {[
-                        ['subCatTrafficked', 'Trafficked'],
-                        ['subCatPhysicalAbuse', 'Physical Abuse'],
-                        ['subCatSexualAbuse', 'Sexual Abuse'],
-                        ['subCatChildLabor', 'Child Labor'],
-                        ['subCatOrphaned', 'Orphaned'],
-                        ['subCatAtRisk', 'At Risk'],
-                        ['subCatStreetChild', 'Street Child'],
-                        ['subCatChildWithHiv', 'Child With HIV'],
-                        ['subCatOsaec', 'OSAEC'],
-                        ['subCatCicl', 'CICL'],
-                      ].map(([field, label]) => (
-                        <div className="col-md-6" key={field}>
-                          <div className="form-check mt-1">
-                            <input
-                              id={field}
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={Boolean(editingResident[field as keyof Resident])}
-                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [field]: e.target.checked } : prev)}
-                            />
-                            <label className="form-check-label small" htmlFor={field}>{label}</label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="col-12">
                     <label className="form-label small">Disability / Special Needs</label>
                     <div className="row g-3">
                       <div className="col-md-4">
@@ -681,31 +646,6 @@ function ResidentsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="col-12">
-                    <label className="form-label small">Family Socio-demographic Profile</label>
-                    <div className="row g-2">
-                      {[
-                        ['familyIs4ps', '4Ps Beneficiary'],
-                        ['familySoloParent', 'Solo Parent'],
-                        ['familyIndigenous', 'Indigenous Group'],
-                        ['familyParentPwd', 'Parent/PWD in Family'],
-                        ['familyInformalSettler', 'Informal Settler'],
-                      ].map(([field, label]) => (
-                        <div className="col-md-6" key={field}>
-                          <div className="form-check mt-1">
-                            <input
-                              id={field}
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={Boolean(editingResident[field as keyof Resident])}
-                              onChange={(e) => setEditingResident(prev => prev ? { ...prev, [field]: e.target.checked } : prev)}
-                            />
-                            <label className="form-check-label small" htmlFor={field}>{label}</label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                   <div className="col-md-6">
                     <label className="form-label small">Risk Level</label>
                     <select
@@ -738,22 +678,6 @@ function ResidentsPage() {
                       <option value="">Select safehouse...</option>
                       {safehouses.map((s) => <option key={s.safehouseId} value={s.safehouseId}>{s.safehouseId} - {s.name}</option>)}
                     </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label small">Disability Type</label>
-                    <input
-                      type="text" className="form-control form-control-sm"
-                      value={String(editingResident.pwdType ?? '')}
-                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, pwdType: e.target.value, isPwd: e.target.value.trim() !== '' } : prev)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label small">Special Needs Diagnosis</label>
-                    <input
-                      type="text" className="form-control form-control-sm"
-                      value={String(editingResident.specialNeedsDiagnosis ?? '')}
-                      onChange={(e) => setEditingResident(prev => prev ? { ...prev, specialNeedsDiagnosis: e.target.value, hasSpecialNeeds: e.target.value.trim() !== '' } : prev)}
-                    />
                   </div>
                   <div className="col-12">
                     <label className="form-label small">Family Socio-Demographic Profile</label>

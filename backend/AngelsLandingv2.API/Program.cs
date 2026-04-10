@@ -317,8 +317,20 @@ using (var scope = app.Services.CreateScope())
                 ""PValue"" REAL NULL,
                 ""RankOrder"" INTEGER NULL,
                 ""ComputedAt"" TEXT NULL,
-                ""ModelVersion"" TEXT NULL
+                ""ModelVersion"" TEXT NULL,
+                ""Caveats"" TEXT NULL,
+                ""OlsR2"" REAL NULL,
+                ""OlsAdjR2"" REAL NULL,
+                ""PredictiveMaeHoldout"" REAL NULL,
+                ""PredictiveR2Holdout"" REAL NULL
             );");
+
+        // Ensure older local SQLite files gain the newer SocialEngagementInsights columns.
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialEngagementInsights", "Caveats", "TEXT NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialEngagementInsights", "OlsR2", "REAL NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialEngagementInsights", "OlsAdjR2", "REAL NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialEngagementInsights", "PredictiveMaeHoldout", "REAL NULL");
+        await EnsureSqliteColumnExistsAsync(lighthouseDb, "SocialEngagementInsights", "PredictiveR2Holdout", "REAL NULL");
     }
     else
         Console.WriteLine("Bypassing Lighthouse MigrateAsync to prevent Azure Crash.");

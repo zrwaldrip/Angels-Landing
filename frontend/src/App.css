@@ -1423,6 +1423,43 @@ summary.tutorial-highlight {
 		padding: 0.95rem;
 	}
 
+	.admin-reports-donation-chart-wrap {
+		min-height: 200px;
+		max-height: 360px;
+	}
+
+	.admin-reports-donation-svg {
+		display: block;
+		max-height: 360px;
+		margin: 0 auto;
+	}
+
+	.admin-reports-month-input {
+		min-width: 9.25rem;
+		max-width: 11rem;
+	}
+
+	@media print {
+		.admin-reports-print-root .app-header,
+		.admin-reports-print-root .admin-reports-toolbar {
+			display: none !important;
+		}
+
+		.admin-reports-print-root {
+			margin-top: 0 !important;
+			padding-top: 0.5rem !important;
+		}
+
+		.admin-reports-print-root .card {
+			border: none !important;
+			box-shadow: none !important;
+		}
+
+		.admin-reports-print-root .border.rounded {
+			border-color: #dee2e6 !important;
+		}
+	}
+
 	.app-main small,
 	.app-main .small {
 		line-height: 1.4;

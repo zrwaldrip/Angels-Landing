@@ -3,7 +3,8 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { getSafehouses, getSafehouseMetrics, createSafehouse, updateSafehouse, deleteSafehouse, createSafehouseMetric, updateSafehouseMetric, deleteSafehouseMetric, type Safehouse, type SafehouseMetric } from '../lib/lighthouseAPI';
 
-const SAFEHOUSE_STATUS_OPTIONS = ['Active', 'Inactive', 'Temporarily Closed'] as const;
+const SAFEHOUSE_STATUS_OPTIONS = ['Active', 'Inactive'] as const;
+const SAFEHOUSE_REGION_OPTIONS = ['Luzon', 'Visayas', 'Mindanao'] as const;
 
 function SafehousesPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
@@ -361,9 +362,12 @@ function SafehousesPage() {
                 </div>
                 <div className="col-md-6">
                   <label className="form-label small">Region</label>
-                  <input type="text" className="form-control form-control-sm"
+                  <select className="form-select form-select-sm"
                     value={String(editingSafehouse.region ?? '')}
-                    onChange={(e) => setEditingSafehouse(prev => prev ? { ...prev, region: e.target.value } : prev)} />
+                    onChange={(e) => setEditingSafehouse(prev => prev ? { ...prev, region: e.target.value } : prev)}>
+                    <option value="">Select region...</option>
+                    {SAFEHOUSE_REGION_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label small">City</label>

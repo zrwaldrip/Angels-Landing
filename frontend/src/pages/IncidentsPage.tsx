@@ -7,6 +7,8 @@ import {
   getHomeVisitations,
   getHealthRecords,
   getEducationRecords,
+  getResidents,
+  getSafehouses,
   createIncident,
   updateIncident,
   deleteIncident,
@@ -27,6 +29,8 @@ import {
   type HomeVisitation,
   type HealthRecord,
   type EducationRecord,
+  type Resident,
+  type Safehouse,
 } from '../lib/lighthouseAPI';
 
 type Tab = 'incidents' | 'interventions' | 'visits' | 'health' | 'education';
@@ -44,20 +48,21 @@ type VisitSortKey = 'visitationId' | 'residentId' | 'visitDate' | 'visitType' | 
 type HealthSortKey = 'healthRecordId' | 'residentId' | 'recordDate' | 'generalHealthScore' | 'nutritionScore' | 'sleepQualityScore' | 'energyLevelScore' | 'bmi';
 type EducationSortKey = 'educationRecordId' | 'residentId' | 'recordDate' | 'educationLevel' | 'schoolName' | 'enrollmentStatus' | 'attendanceRate' | 'progressPercent' | 'completionStatus';
 
-const INCIDENT_TYPE_OPTIONS = ['Physical Abuse', 'Emotional Abuse', 'Neglect', 'Safety Concern', 'HealthIssue', 'Behavioral', 'Other'] as const;
-const SEVERITY_OPTIONS = ['Low', 'Medium', 'High', 'Critical'] as const;
-const INTERVENTION_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed', 'Cancelled'] as const;
+const INCIDENT_TYPE_OPTIONS = ['Behavioral', 'Medical', 'Security', 'RunawayAttempt', 'SelfHarm', 'ConflictWithPeer', 'PropertyDamage'] as const;
+const SEVERITY_OPTIONS = ['Low', 'Medium', 'High'] as const;
+const INTERVENTION_STATUS_OPTIONS = ['Open', 'In Progress', 'Achieved', 'On Hold', 'Closed'] as const;
 const VISIT_TYPE_OPTIONS = [
   'Initial Assessment',
-  'Routine Follow-up',
+  'Routine Follow-Up',
   'Reintegration Assessment',
-  'Post-placement Monitoring',
+  'Post-Placement Monitoring',
   'Emergency',
 ] as const;
-const FAMILY_COOPERATION_OPTIONS = ['Excellent', 'Good', 'Fair', 'Limited', 'Resistant'] as const;
-const EDUCATION_LEVEL_OPTIONS = ['Elementary', 'Middle School', 'High School', 'College', 'Vocational'] as const;
-const ENROLLMENT_STATUS_OPTIONS = ['Enrolled', 'Unenrolled', 'On Leave', 'Graduated'] as const;
-const COMPLETION_STATUS_OPTIONS = ['Ongoing', 'Completed', 'Dropped Out'] as const;
+const FAMILY_COOPERATION_OPTIONS = ['Highly Cooperative', 'Cooperative', 'Neutral', 'Uncooperative'] as const;
+const EDUCATION_LEVEL_OPTIONS = ['Primary', 'Secondary', 'Vocational', 'CollegePrep'] as const;
+const ATTENDANCE_STATUS_OPTIONS = ['Present', 'Late', 'Absent'] as const;
+const COMPLETION_STATUS_OPTIONS = ['NotStarted', 'InProgress', 'Completed'] as const;
+const PLAN_CATEGORIES = ['Safety', 'Psychosocial', 'Education', 'Physical Health', 'Legal', 'Reintegration'] as const;
 
 function IncidentsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
@@ -96,6 +101,8 @@ function IncidentsPage() {
   const [visitations, setVisitations] = useState<HomeVisitation[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [educationRecords, setEducationRecords] = useState<EducationRecord[]>([]);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [safehouses, setSafehouses] = useState<Safehouse[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -132,18 +139,22 @@ function IncidentsPage() {
   async function loadAll() {
     setLoading(true); setError('');
     try {
-      const [inc, plans, visits, health, edu] = await Promise.all([
+      const [inc, plans, visits, health, edu, resResult, shList] = await Promise.all([
         getIncidents(),
         getInterventionPlans(),
         getHomeVisitations(),
         getHealthRecords(),
         getEducationRecords(),
+        getResidents({ page: 1, pageSize: 1000 }),
+        getSafehouses(),
       ]);
       setIncidents(inc);
       setInterventions(plans);
       setVisitations(visits);
       setHealthRecords(health);
       setEducationRecords(edu);
+      setResidents(resResult.items);
+      setSafehouses(shList);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load data.');
     } finally {
@@ -1317,20 +1328,34 @@ function formatEnumLabel(value?: string): string {
                 {saveError ? <div className="alert alert-danger">{saveError}</div> : null}
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label small">Resident ID</label>
-                    <input
-                      type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Resident</label>
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingIncident.residentId ?? '')}
                       onChange={(e) => setEditingIncident(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}
-                    />
+                    >
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => (
+                        <option key={r.residentId} value={r.residentId}>
+                          {r.residentId} — {r.internalCode ?? r.caseControlNo ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label small">Safehouse ID</label>
-                    <input
-                      type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Safehouse</label>
+                    <select
+                      className="form-select form-select-sm"
                       value={String(editingIncident.safehouseId ?? '')}
                       onChange={(e) => setEditingIncident(prev => prev ? { ...prev, safehouseId: Number(e.target.value) || undefined } : prev)}
-                    />
+                    >
+                      <option value="">Select safehouse...</option>
+                      {safehouses.map((s) => (
+                        <option key={s.safehouseId} value={s.safehouseId}>
+                          {s.safehouseId} — {s.name ?? s.safehouseCode ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Date</label>
@@ -1442,10 +1467,17 @@ function formatEnumLabel(value?: string): string {
                 {saveHealthError ? <div className="alert alert-danger">{saveHealthError}</div> : null}
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label small">Resident ID</label>
-                    <input type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm"
                       value={String(editingHealth.residentId ?? '')}
-                      onChange={(e) => setEditingHealth(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} />
+                      onChange={(e) => setEditingHealth(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => (
+                        <option key={r.residentId} value={r.residentId}>
+                          {r.residentId} — {r.internalCode ?? r.caseControlNo ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Record Date</label>
@@ -1545,10 +1577,17 @@ function formatEnumLabel(value?: string): string {
                 {saveEduError ? <div className="alert alert-danger">{saveEduError}</div> : null}
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label small">Resident ID</label>
-                    <input type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm"
                       value={String(editingEdu.residentId ?? '')}
-                      onChange={(e) => setEditingEdu(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} />
+                      onChange={(e) => setEditingEdu(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => (
+                        <option key={r.residentId} value={r.residentId}>
+                          {r.residentId} — {r.internalCode ?? r.caseControlNo ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Record Date</label>
@@ -1577,7 +1616,7 @@ function formatEnumLabel(value?: string): string {
                       value={String(editingEdu.enrollmentStatus ?? '')}
                       onChange={(e) => setEditingEdu(prev => prev ? { ...prev, enrollmentStatus: e.target.value } : prev)}>
                       <option value="">Select status...</option>
-                      {ENROLLMENT_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {ATTENDANCE_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="col-md-6">
@@ -1633,10 +1672,17 @@ function formatEnumLabel(value?: string): string {
                 {saveIntervError ? <div className="alert alert-danger">{saveIntervError}</div> : null}
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label small">Resident ID</label>
-                    <input type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm"
                       value={String(editingInterv.residentId ?? '')}
-                      onChange={(e) => setEditingInterv(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} />
+                      onChange={(e) => setEditingInterv(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => (
+                        <option key={r.residentId} value={r.residentId}>
+                          {r.residentId} — {r.internalCode ?? r.caseControlNo ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Status</label>
@@ -1649,9 +1695,12 @@ function formatEnumLabel(value?: string): string {
                   </div>
                   <div className="col-12">
                     <label className="form-label small">Plan Category</label>
-                    <input type="text" className="form-control form-control-sm"
+                    <select className="form-select form-select-sm"
                       value={String(editingInterv.planCategory ?? '')}
-                      onChange={(e) => setEditingInterv(prev => prev ? { ...prev, planCategory: e.target.value } : prev)} />
+                      onChange={(e) => setEditingInterv(prev => prev ? { ...prev, planCategory: e.target.value } : prev)}>
+                      <option value="">Select category...</option>
+                      {PLAN_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small">Target Date</label>
@@ -1703,10 +1752,17 @@ function formatEnumLabel(value?: string): string {
                 {saveVisitError ? <div className="alert alert-danger">{saveVisitError}</div> : null}
                 <div className="row g-3">
                   <div className="col-md-4">
-                    <label className="form-label small">Resident ID</label>
-                    <input type="number" className="form-control form-control-sm"
+                    <label className="form-label small">Resident</label>
+                    <select className="form-select form-select-sm"
                       value={String(editingVisit.residentId ?? '')}
-                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)} />
+                      onChange={(e) => setEditingVisit(prev => prev ? { ...prev, residentId: Number(e.target.value) || undefined } : prev)}>
+                      <option value="">Select resident...</option>
+                      {residents.map((r) => (
+                        <option key={r.residentId} value={r.residentId}>
+                          {r.residentId} — {r.internalCode ?? r.caseControlNo ?? ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-md-4">
                     <label className="form-label small">Visit Date</label>

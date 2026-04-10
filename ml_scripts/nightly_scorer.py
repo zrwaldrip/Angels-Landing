@@ -1,8 +1,9 @@
 import os
+import json
 import joblib
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 from supabase import create_client, Client
 from functools import reduce
 
@@ -10,7 +11,36 @@ from functools import reduce
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 MODEL_PATH = "models/resident-progress-classifier.pkl"
-THRESHOLD = 0.4  # Lowered from 0.5 to prioritize recall (catching stalling residents)
+# Optional: written by resident-progress-classifier.ipynb next to the pkl
+THRESHOLD_META_PATH = "models/resident_progress_threshold.json"
+DEFAULT_THRESHOLD = 0.5
+
+
+def load_stall_threshold() -> float:
+    """Load F1-tuned threshold from notebook export; fall back if missing."""
+    if not os.path.isfile(THRESHOLD_META_PATH):
+        return DEFAULT_THRESHOLD
+    try:
+        with open(THRESHOLD_META_PATH, encoding="utf-8") as f:
+            meta = json.load(f)
+        return float(meta["threshold"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return DEFAULT_THRESHOLD
+
+
+def stall_probability(model, row: pd.DataFrame) -> float:
+    """
+    P(label == 1) where 1 = stalling. Uses model.classes_ so class order never inverts.
+    """
+    proba = model.predict_proba(row)[0]
+    classes = getattr(model, "classes_", None)
+    if classes is None:
+        return float(proba[-1])
+    classes = np.asarray(classes)
+    pos = np.where(classes == 1)[0]
+    if pos.size:
+        return float(proba[int(pos[0])])
+    return float(proba[-1])
 
 
 def fetch_table(supabase: Client, table: str) -> pd.DataFrame:
@@ -152,30 +182,54 @@ def build_features(residents_df: pd.DataFrame, supabase: Client) -> pd.DataFrame
     return model_df
 
 
+def _use_joblib_only() -> bool:
+    return os.environ.get("ML_USE_JOBLIB_ONLY", "").strip().lower() in ("1", "true", "yes")
+
+
 def run_scorer():
     if not SUPABASE_URL or not SUPABASE_KEY:
         print("ERROR: Missing SUPABASE_URL or SUPABASE_KEY environment variables.")
         raise SystemExit(1)
 
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    model = joblib.load(MODEL_PATH)
-    print(f"Loaded model from {MODEL_PATH}")
 
-    # Fetch active residents; re-score any whose prediction is missing or >7 days old
-    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
+    model = None
+    threshold = DEFAULT_THRESHOLD
+    if _use_joblib_only():
+        print("ML_USE_JOBLIB_ONLY set: loading committed joblib artifact.")
+    else:
+        from resident_progress_train import train_and_calibrate_from_supabase
+
+        trained = train_and_calibrate_from_supabase(supabase)
+        if trained is not None:
+            model, threshold = trained
+            print("Using resident classifier trained from Supabase this run.")
+        else:
+            print("Training from Supabase unavailable; falling back to committed joblib.")
+
+    if model is None:
+        if not os.path.isfile(MODEL_PATH):
+            print(f"ERROR: Model not found at {MODEL_PATH}")
+            raise SystemExit(1)
+        model = joblib.load(MODEL_PATH)
+        threshold = load_stall_threshold()
+        print(f"Loaded model from {MODEL_PATH}")
+    print(
+        f"Decision threshold P(Stalling) >= {threshold} "
+        f"(from training or {THRESHOLD_META_PATH} or default {DEFAULT_THRESHOLD})"
+    )
+
+    # Fetch active residents; score every active resident each run
     resp = supabase.table("Residents").select("*").eq("CaseStatus", "Active").execute()
     all_active = resp.data or []
 
-    residents_to_score = [
-        r for r in all_active
-        if not r.get("MlLastCalculated") or r.get("MlLastCalculated") < seven_days_ago
-    ]
+    residents_to_score = all_active
 
     if not residents_to_score:
-        print("No residents require scoring today. Exiting.")
+        print("No active residents found. Exiting.")
         return
 
-    print(f"Scoring {len(residents_to_score)} of {len(all_active)} active residents...")
+    print(f"Scoring {len(residents_to_score)} active residents...")
 
     # Build feature dataframe from Supabase data
     residents_df = pd.DataFrame(residents_to_score)
@@ -193,8 +247,8 @@ def run_scorer():
             skipped += 1
             continue
 
-        prob = float(model.predict_proba(row)[0][1])
-        label = "Stalling" if prob >= THRESHOLD else "Progressing"
+        prob = stall_probability(model, row)
+        label = "Stalling" if prob >= threshold else "OK"
 
         supabase.table("Residents").update({
             "MlPredictionStatus": label,
