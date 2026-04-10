@@ -6,6 +6,7 @@
 *.userprefs
 .vs/
 bin/
+bin-verify/
 obj/
 out/
 publish/
@@ -50,3 +51,16 @@ Thumbs.db
 # ─── Azure publish profiles ──────────────────────────────────────────────────
 *.pubxml
 *.pubxml.user
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+# ─── Azure / deployment logs ─────────────────────────────────────────────────
+dump-logs/
+
+# ─── Scratch / debug output ──────────────────────────────────────────────────
+query_output.txt
