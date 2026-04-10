@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useThemePreference } from "../context/ThemePreferenceContext";
 import { useTutorial } from "../context/TutorialContext";
 import { normalizeRoles } from "../routes/roleRouting";
 
 function Header() {
 	const { authSession, isAuthenticated, isLoading } = useAuth();
+	const { themeMode, toggleThemeMode } = useThemePreference();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [openNavMenu, setOpenNavMenu] = useState<"operations" | "admin" | null>(null);
 	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -201,6 +203,14 @@ function Header() {
 						</nav>
 
 						<div className="app-auth-nav">
+							<button
+								type="button"
+								className="app-theme-toggle"
+								onClick={toggleThemeMode}
+								aria-label={`Switch to ${themeMode === "light" ? "dark" : "light"} mode`}
+							>
+								{themeMode === "light" ? "Dark mode" : "Light mode"}
+							</button>
 							{!isAuthenticated ? (
 								<NavLink className={navClassName} to="/login" onClick={closeMobileMenu}>
 									Login
