@@ -2,7 +2,7 @@ namespace AngelsLandingv2.API.Infrastructure
 {
     public static class SecurityHeaders
     {
-        public const string ContentSecurityPolicy = "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'";
+        public const string ContentSecurityPolicy = "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:";
 
         public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
         {

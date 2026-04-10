@@ -187,7 +187,10 @@ static string ResolveIdentityConnectionString(IConfiguration configuration)
 
 // ─── Service Registration ─────────────────────────────────────────────────────
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RequestStringSanitizationFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient<IForexRateService, ForexRateService>(client =>
