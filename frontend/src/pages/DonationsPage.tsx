@@ -12,6 +12,76 @@ function isMonetaryType(type: string | undefined) {
 	return type === "Monetary";
 }
 
+function PropensityHeader({
+	onSort,
+	indicator,
+}: {
+	onSort: () => void;
+	indicator: string;
+}) {
+	const [visible, setVisible] = useState(false);
+	const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+	const tooltipWidth = 320;
+
+	function show(e: React.MouseEvent<HTMLSpanElement>) {
+		const rect = e.currentTarget.getBoundingClientRect();
+		const margin = 8;
+		const top = Math.min(rect.bottom + margin, window.innerHeight - margin);
+		const left = Math.min(Math.max(rect.left, margin), window.innerWidth - tooltipWidth - margin);
+		setPos({ top, left });
+		setVisible(true);
+	}
+
+	function hide() {
+		setVisible(false);
+	}
+
+	return (
+		<th role="button" onClick={onSort} style={{ whiteSpace: "nowrap" }}>
+			<span
+				onMouseEnter={show}
+				onMouseLeave={hide}
+				style={{
+					cursor: "help",
+					borderBottom: "1px dotted rgba(255,255,255,0.45)",
+					paddingBottom: 1,
+				}}
+			>
+				Propensity ⓘ{indicator}
+			</span>
+			{visible && pos && (
+				<div
+					style={{
+						position: "fixed",
+						top: pos.top,
+						left: pos.left,
+						zIndex: 2000,
+						width: tooltipWidth,
+						maxWidth: tooltipWidth,
+						background: "rgba(20, 24, 38, 0.97)",
+						border: "1px solid rgba(255,255,255,0.14)",
+						borderRadius: 8,
+						padding: "10px 14px",
+						fontSize: 12,
+						lineHeight: 1.55,
+						color: "rgba(255,255,255,0.92)",
+						boxShadow: "0 8px 28px rgba(0,0,0,0.55)",
+						pointerEvents: "none",
+						whiteSpace: "normal",
+						overflowWrap: "anywhere",
+						wordBreak: "break-word",
+					}}
+				>
+					<strong style={{ color: "rgba(116, 192, 252, 0.95)" }}>Likelihood to donate again</strong>
+					<br />
+					Estimated chance this supporter will donate again in the next 90 days. Higher scores help prioritize
+					outreach when staff time is limited.
+				</div>
+			)}
+		</th>
+	);
+}
+
 function DonationsPage() {
 	const { authSession, isAuthenticated, isLoading } = useAuth();
 	const isAdmin = authSession.roles.includes("Admin");
@@ -26,7 +96,7 @@ function DonationsPage() {
 	const [selectedRecurringFlags, setSelectedRecurringFlags] = useState<string[]>([]);
 	const [sortKey, setSortKey] = useState<"donationId" | "supporterId" | "donationType" | "donationDate" | "amount" | "currencyCode" | "channelSource" | "campaignName" | "isRecurring">("donationDate");
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-	const [supporterSortKey, setSupporterSortKey] = useState<"supporterId" | "displayName" | "supporterType" | "email" | "region" | "country" | "status" | "acquisitionChannel">("supporterId");
+	const [supporterSortKey, setSupporterSortKey] = useState<"supporterId" | "displayName" | "supporterType" | "email" | "region" | "country" | "status" | "acquisitionChannel" | "propensityScore">("supporterId");
 	const [supporterSortDirection, setSupporterSortDirection] = useState<"asc" | "desc">("asc");
 	const [supporterPage, setSupporterPage] = useState(1);
 	const [supporterPageSize, setSupporterPageSize] = useState(10);
@@ -335,6 +405,8 @@ function DonationsPage() {
 					av = String(a.status ?? "").toLowerCase(); bv = String(b.status ?? "").toLowerCase(); break;
 				case "acquisitionChannel":
 					av = String(a.acquisitionChannel ?? "").toLowerCase(); bv = String(b.acquisitionChannel ?? "").toLowerCase(); break;
+				case "propensityScore":
+					av = a.propensityScore ?? -1; bv = b.propensityScore ?? -1; break;
 			}
 			if (av < bv) return -1 * dir;
 			if (av > bv) return 1 * dir;
@@ -589,6 +661,7 @@ function DonationsPage() {
 										<th role="button" onClick={() => toggleSupporterSort("country")}>Country{supporterSortIndicator("country")}</th>
 										<th role="button" onClick={() => toggleSupporterSort("status")}>Status{supporterSortIndicator("status")}</th>
 										<th role="button" onClick={() => toggleSupporterSort("acquisitionChannel")}>Channel{supporterSortIndicator("acquisitionChannel")}</th>
+										<PropensityHeader onSort={() => toggleSupporterSort("propensityScore")} indicator={supporterSortIndicator("propensityScore")} />
 										{isAdmin && <th>Actions</th>}
 									</tr>
 								</thead>
@@ -605,6 +678,9 @@ function DonationsPage() {
 												<span className={`badge ${s.status === "Active" ? "text-bg-success" : "text-bg-secondary"}`}>{s.status}</span>
 											</td>
 											<td>{s.acquisitionChannel}</td>
+											<td style={{ whiteSpace: "nowrap" }}>
+												{s.propensityScore == null ? "—" : `${(s.propensityScore * 100).toFixed(1)}%`}
+											</td>
 											{isAdmin && (
 												<td>
 													<button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleEditSupporter(s)}>

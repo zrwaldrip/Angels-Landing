@@ -420,6 +420,8 @@ export interface Supporter {
   country?: string;
   status?: string;
   acquisitionChannel?: string;
+  propensityScore?: number;
+  propensityLastCalculated?: string;
 }
 
 export interface SupporterListResult {
