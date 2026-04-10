@@ -195,7 +195,7 @@ function SafehousesPage() {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 safehouses-page">
       <Header />
       <div className="d-flex align-items-center justify-content-between mb-3 mobile-page-header">
         <h2 className="h4 mb-0">Safehouses</h2>

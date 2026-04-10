@@ -75,13 +75,15 @@
 
 .landing-btn-primary {
   color: #effffb;
-  background: rgb(0, 113, 93);
-  box-shadow: 0 12px 32px rgba(0, 70, 58, 0.35);
+  background: linear-gradient(180deg, #0d7f67 0%, #086652 100%);
+  border-color: rgba(7, 84, 68, 0.95);
+  box-shadow: 0 12px 32px rgba(0, 70, 58, 0.38);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
 }
 
 .landing-btn-primary:hover {
   color: #ffffff;
-  background: #00876f;
+  background: linear-gradient(180deg, #109178 0%, #0a735c 100%);
   box-shadow: 0 16px 34px rgba(0, 70, 58, 0.44);
 }
 
@@ -183,6 +185,7 @@ html.theme-light .landing-page .app-header {
   background: rgba(255, 255, 255, 0.94) !important;
   border-bottom: 1px solid rgba(31, 43, 64, 0.14);
   box-shadow: 0 10px 24px rgba(31, 43, 64, 0.12);
+  backdrop-filter: blur(7px);
 }
 
 html.theme-light .landing-page .app-header-link,
@@ -191,39 +194,44 @@ html.theme-light .landing-page .app-header-link-active {
   color: #1f2b40;
 }
 
-html.theme-light .landing-eyebrow {
-  color: #0f6a5b;
+html.theme-light .landing-page .landing-eyebrow {
+  color: #64e6cd !important;
+  text-shadow: 0 1px 2px rgba(7, 18, 34, 0.45);
 }
 
-html.theme-light .landing-hero h1 {
-  color: #13263d;
+html.theme-light .landing-page .landing-hero h1 {
+  color: #f8fbff !important;
+  text-shadow: 0 2px 4px rgba(7, 18, 34, 0.5);
 }
 
-html.theme-light .landing-subtitle {
-  color: #425773;
+html.theme-light .landing-page .landing-subtitle {
+  color: rgba(229, 238, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(7, 18, 34, 0.45);
 }
 
 html.theme-light .landing-btn-secondary {
-  color: #183a64;
-  border-color: rgba(31, 43, 64, 0.34);
-  background: rgba(255, 255, 255, 0.8);
+  color: #eaf2ff;
+  border-color: rgba(0, 113, 93, 0.55);
+  background: rgba(37, 40, 58, 0.6);
+  backdrop-filter: blur(3px);
 }
 
 html.theme-light .landing-btn-secondary:hover {
-  color: #102744;
-  background: rgba(227, 238, 252, 0.95);
+  color: #ffffff;
+  background: rgba(0, 113, 93, 0.4);
 }
 
 html.theme-light .landing-card {
-  border-color: rgba(31, 43, 64, 0.16);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 28px rgba(31, 43, 64, 0.12);
+  border: 1px solid rgba(0, 113, 93, 0.3);
+  background: rgba(37, 40, 58, 0.62);
+  box-shadow: 0 14px 35px rgba(3, 8, 18, 0.28);
+  backdrop-filter: blur(4px);
 }
 
 html.theme-light .landing-card h3 {
-  color: #162c45;
+  color: #f3f7ff;
 }
 
 html.theme-light .landing-card p {
-  color: #4a607d;
+  color: rgba(223, 234, 252, 0.9);
 }

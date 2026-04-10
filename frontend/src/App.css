@@ -490,11 +490,11 @@ body {
 	z-index: 2;
 }
 
-.app-main a:not(.btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link) {
+.app-main a:not(.btn):not(.landing-btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link) {
 	color: #74bfb1;
 }
 
-.app-main a:not(.btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link):hover {
+.app-main a:not(.btn):not(.landing-btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link):hover {
 	color: #95d7cb;
 }
 
@@ -1123,6 +1123,48 @@ html.theme-light .app-main .text-danger {
 	color: #b9361d !important;
 }
 
+html.theme-light .app-main .donor-impact-redesign {
+	color: #1f2b40;
+}
+
+html.theme-light .app-main .donor-impact-redesign .impact-section-title {
+	color: #173354;
+}
+
+html.theme-light .app-main .donor-impact-redesign .impact-section-copy {
+	color: #425b7a;
+}
+
+html.theme-light .app-main .donor-impact-redesign .impact-story-intro .text-muted,
+html.theme-light .app-main .donor-impact-redesign .impact-story-intro .small,
+html.theme-light .app-main .donor-impact-redesign .impact-story-intro small {
+	color: #5c7390 !important;
+}
+
+html.theme-light .app-main .safehouses-page .card-title,
+html.theme-light .app-main .safehouses-page .h4,
+html.theme-light .app-main .safehouses-page .h5 {
+	color: #1b2f49;
+}
+
+html.theme-light .app-main .safehouses-page .text-muted {
+	color: #556d8b !important;
+}
+
+html.theme-light .app-main .safehouses-page .bg-light {
+	background-color: #edf3fb !important;
+	border: 1px solid rgba(31, 43, 64, 0.18);
+}
+
+html.theme-light .app-main .safehouses-page .bg-light .fw-bold {
+	color: #1b2f49;
+}
+
+html.theme-light .app-main .safehouses-page .bg-light .text-muted,
+html.theme-light .app-main .safehouses-page .bg-light small {
+	color: #4e6583 !important;
+}
+
 html.theme-light .cookie-consent-banner {
 	background: rgba(255, 255, 255, 0.98);
 	border-color: rgba(31, 43, 64, 0.2);
@@ -1173,11 +1215,11 @@ html.theme-light .app-theme-toggle {
 	color: #1f2b40;
 }
 
-html.theme-light .app-main a:not(.btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link) {
+html.theme-light .app-main a:not(.btn):not(.landing-btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link) {
 	color: #126f61;
 }
 
-html.theme-light .app-main a:not(.btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link):hover {
+html.theme-light .app-main a:not(.btn):not(.landing-btn):not(.app-header-link):not(.app-donate-btn):not(.footer-link):hover {
 	color: #0b5d52;
 }
 
