@@ -280,6 +280,13 @@ export interface DonorImpactSummary {
 }
 
 export interface AdminReportsSummary {
+  computedAt?: string;
+  reportParameters?: {
+    months: number;
+    requestedEndUtc?: string | null;
+    effectiveEndUtc?: string;
+    effectiveStartUtc?: string;
+  };
   reportPeriod?: {
     startUtc?: string;
     endUtc?: string;
@@ -297,6 +304,8 @@ export interface AdminReportsSummary {
     occupancyRate: number;
     educationProgress: number | null;
     healthScore: number | null;
+    educationAsOfMonth?: string | null;
+    healthAsOfMonth?: string | null;
   }>;
   reintegration: {
     assessed: number;
@@ -305,7 +314,14 @@ export interface AdminReportsSummary {
   };
   annualAccomplishment: {
     serviceCounts: { caring: number; healing: number; teaching: number };
-    beneficiaries: { caring: number; healing: number; teaching: number; totalBeneficiaries: number };
+    beneficiaries: {
+      caring: number;
+      healing: number;
+      teaching: number;
+      totalBeneficiaries: number;
+      residentsInCatalog?: number;
+      distinctBeneficiariesWithAnyPillarInWindow?: number;
+    };
     outcomes: { activeCases: number; avgEducation: number; reintegrationRate: number };
   };
 }
@@ -333,8 +349,12 @@ export function getDonorImpactSummary() {
   return apiFetch<DonorImpactSummary>('/api/donor-impact/summary');
 }
 
-export function getAdminReportsSummary() {
-  return apiFetch<AdminReportsSummary>('/api/admin-reports/summary');
+export function getAdminReportsSummary(params?: { months?: number; endUtc?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.months != null && params.months > 0) qs.set('months', String(params.months));
+  if (params?.endUtc?.trim()) qs.set('endUtc', params.endUtc.trim());
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  return apiFetch<AdminReportsSummary>(`/api/admin-reports/summary${suffix}`);
 }
 
 export interface SocialEngagementFactor {

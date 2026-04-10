@@ -43,8 +43,11 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
         return null;
     }
 
+    private static string? MetricPeriodLabel(AngelsLandingv2.API.Data.Models.SafehouseMonthlyMetric? m) =>
+        m == null ? null : (string.IsNullOrWhiteSpace(m.MonthEnd) ? m.MonthStart : m.MonthEnd);
+
     [HttpGet("summary")]
-    public async Task<IActionResult> GetSummary()
+    public async Task<IActionResult> GetSummary([FromQuery] int? months, [FromQuery] DateTime? endUtc)
     {
         var residents = await db.Residents.AsNoTracking().ToListAsync();
         var safehouses = await db.Safehouses.AsNoTracking().ToListAsync();
@@ -71,10 +74,30 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             .Where(m => m.SafehouseId != null)
             .ToListAsync();
 
+        // Safehouse Performance table: chronologically latest row for occupancy fallback; Education/Health from the
+        // latest month that actually has each value (seed/production often append future placeholder months with nulls).
+        var safehouseTableMetricRollups = safehouseMetrics
+            .Select(m => new
+            {
+                metric = m,
+                effective = ParseDateLoose(m.MonthEnd) ?? ParseDateLoose(m.MonthStart)
+            })
+            .Where(x => x.effective != null)
+            .GroupBy(x => x.metric.SafehouseId!.Value)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var ordered = g.OrderByDescending(x => x.effective!.Value).ToList();
+                    var latestChronological = ordered[0].metric;
+                    var latestWithEducation = ordered.FirstOrDefault(x => x.metric.AvgEducationProgress != null)?.metric;
+                    var latestWithHealth = ordered.FirstOrDefault(x => x.metric.AvgHealthScore != null)?.metric;
+                    return (latestChronological, latestWithEducation, latestWithHealth);
+                });
+
         var plans = await db.InterventionPlans.AsNoTracking().ToListAsync();
 
-        // Reporting window: anchor to the latest available data date (prevents "all zeros" in dev/staging
-        // when seed data is older than today's date), falling back to now if no dated rows exist.
+        // Reporting window: optional client end date + month count; otherwise anchor to latest in-data date.
         DateTime? NotFuture(DateTime? dt)
         {
             if (dt == null) return null;
@@ -91,12 +114,31 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             NotFuture(plans.Select(p => ParseDateLoose(p.UpdatedAt) ?? ParseDateLoose(p.CreatedAt) ?? ParseDateLoose(p.CaseConferenceDate) ?? ParseDateLoose(p.TargetDate)).Max())
         };
 
-        var reportEnd = candidateDates.Where(d => d != null).Select(d => d!.Value).DefaultIfEmpty(DateTime.UtcNow).Max();
-        var reportStart = reportEnd.AddMonths(-12);
+        var dataAnchorEnd = candidateDates.Where(d => d != null).Select(d => d!.Value).DefaultIfEmpty(DateTime.UtcNow).Max();
+        var windowMonths = Math.Clamp(months ?? 12, 1, 36);
 
-        var monthKeys = Enumerable.Range(0, 12)
-            .Select(offset => new DateTime(reportEnd.Year, reportEnd.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-11 + offset))
-            .Select(d => $"{d.Year}-{d.Month:00}")
+        DateTime reportEnd;
+        if (endUtc.HasValue)
+        {
+            var e = endUtc.Value;
+            if (e.Kind == DateTimeKind.Unspecified)
+                e = DateTime.SpecifyKind(e, DateTimeKind.Utc);
+            else
+                e = e.ToUniversalTime();
+            reportEnd = e > DateTime.UtcNow ? DateTime.UtcNow : e;
+        }
+        else
+            reportEnd = dataAnchorEnd;
+
+        var reportStart = reportEnd.AddMonths(-windowMonths);
+
+        var monthKeys = Enumerable.Range(0, windowMonths)
+            .Select(offset =>
+            {
+                var d = new DateTime(reportEnd.Year, reportEnd.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+                    .AddMonths(-(windowMonths - 1) + offset);
+                return $"{d.Year}-{d.Month:00}";
+            })
             .ToList();
         var monthlyTotals = monthKeys.ToDictionary(k => k, _ => 0.0);
 
@@ -172,18 +214,13 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             ? 0
             : healthLatestByResident.Count(r => (r.GeneralHealthScore ?? 0) >= 3) * 100.0 / healthLatestByResident.Count;
 
-        // Safehouse metrics: latest metric with a date inside the window.
-        var latestMetricBySafehouse = metricsInWindow
-            .Where(x => x.metric.SafehouseId != null)
-            .GroupBy(x => x.metric.SafehouseId!.Value)
-            .Select(g => g.OrderByDescending(x => x.effective).First().metric)
-            .ToDictionary(m => m.SafehouseId!.Value);
-
+        // Safehouse table: Education & Health from latest month with data (all time); occupancy uses safehouse or latest row.
         var safehouseComparison = safehouses
             .Select(safehouse =>
             {
-                latestMetricBySafehouse.TryGetValue(safehouse.SafehouseId, out var metric);
-                var occupancy = safehouse.CurrentOccupancy ?? metric?.ActiveResidents ?? 0;
+                safehouseTableMetricRollups.TryGetValue(safehouse.SafehouseId, out var rollup);
+                var metricForOccupancy = rollup.latestChronological;
+                var occupancy = safehouse.CurrentOccupancy ?? metricForOccupancy?.ActiveResidents ?? 0;
                 var capacity = safehouse.CapacityGirls ?? 0;
                 var occupancyRate = capacity > 0 ? occupancy * 100.0 / capacity : 0;
                 return new
@@ -191,8 +228,10 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
                     safehouseId = safehouse.SafehouseId,
                     name = safehouse.Name ?? safehouse.SafehouseCode ?? $"Safehouse #{safehouse.SafehouseId}",
                     occupancyRate,
-                    educationProgress = metric?.AvgEducationProgress,
-                    healthScore = metric?.AvgHealthScore
+                    educationProgress = rollup.latestWithEducation?.AvgEducationProgress,
+                    healthScore = rollup.latestWithHealth?.AvgHealthScore,
+                    educationAsOfMonth = MetricPeriodLabel(rollup.latestWithEducation),
+                    healthAsOfMonth = MetricPeriodLabel(rollup.latestWithHealth)
                 };
             })
             .OrderByDescending(row => row.occupancyRate)
@@ -265,8 +304,22 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             }
         }
 
+        var distinctBeneficiariesAnyPillar = new HashSet<int>();
+        foreach (var id in beneficiarySets["caring"]) distinctBeneficiariesAnyPillar.Add(id);
+        foreach (var id in beneficiarySets["healing"]) distinctBeneficiariesAnyPillar.Add(id);
+        foreach (var id in beneficiarySets["teaching"]) distinctBeneficiariesAnyPillar.Add(id);
+        var residentsInCatalog = residents.Select(r => r.ResidentId).Distinct().Count();
+
         var payload = new
         {
+            computedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            reportParameters = new
+            {
+                months = windowMonths,
+                requestedEndUtc = endUtc.HasValue ? endUtc.Value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") : (string?)null,
+                effectiveEndUtc = reportEnd.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                effectiveStartUtc = reportStart.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            },
             reportPeriod = new
             {
                 startUtc = reportStart.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -274,10 +327,11 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
             },
             methodologyNotes = new[]
             {
-                "Donation trends: monthly totals within the last 12 months using Amount when present, otherwise EstimatedValue.",
-                "Education/health: latest record per resident within the window, averaged across residents with data.",
+                $"Donation trends: monthly totals over the selected window ({windowMonths} months) using Amount when present, otherwise EstimatedValue.",
+                "Education/health (outcome card): latest record per resident within the window, averaged across residents with data.",
                 "Health 'improvement rate' represents the share of residents with latest GeneralHealthScore ≥ 3 (threshold share, not a delta).",
-                "Safehouse comparison uses the latest SafehouseMonthlyMetric whose month falls within the window when available."
+                "Safehouse performance table — Education & Health: latest month per safehouse (all time) where each metric is non-null; future rows with empty averages are skipped.",
+                "Caring/Healing/Teaching: intervention plans in the reporting window matched by keyword on category, services, and description; pillar counts are distinct residents with ≥1 matching plan in that pillar."
             },
             donationTrends,
             residentOutcomeMetrics = new
@@ -301,7 +355,9 @@ public class AdminReportsController(LighthouseDbContext db) : ControllerBase
                     caring = beneficiarySets["caring"].Count,
                     healing = beneficiarySets["healing"].Count,
                     teaching = beneficiarySets["teaching"].Count,
-                    totalBeneficiaries = residents.Select(r => r.ResidentId).Distinct().Count()
+                    totalBeneficiaries = residentsInCatalog,
+                    residentsInCatalog,
+                    distinctBeneficiariesWithAnyPillarInWindow = distinctBeneficiariesAnyPillar.Count
                 },
                 outcomes = new
                 {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -42,6 +43,7 @@ const REINTEGRATION_STATUS_OPTIONS = ['Not Started', 'In Progress', 'Completed',
 function ResidentsPage() {
   const { authSession, isAuthenticated, isLoading } = useAuth();
   const isAdmin = authSession.roles.includes('Admin');
+  const [searchParams] = useSearchParams();
 
   const [residents, setResidents] = useState<Resident[]>([]);
   const [page, setPage] = useState(1);
@@ -71,6 +73,11 @@ function ResidentsPage() {
   useEffect(() => {
     void loadFilterOptions();
   }, []);
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('caseStatus');
+    if (fromUrl) setSelectedCaseStatuses([fromUrl]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) void loadResidents();
